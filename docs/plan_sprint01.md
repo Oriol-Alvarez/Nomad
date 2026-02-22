@@ -40,18 +40,32 @@ La versión final del sprint será publicada como Release v1.0.0 siguiendo Seman
 ---
 
 ## 3. Definition of Done (DoD)
-
-- [ ] Modelo de dominio implementado en carpeta domain
-- [ ] Paleta aplicada en Theme
-- [ ] README actualizado
-- [ ] Release publicada
+- [] Proyecto inicializado correctamente en Android Studio
+- [] Repositorio público en GitHub con estructura obligatoria
+- [] Carpeta /docs completa con:
+  - [] domain-model.(png|mmd)
+  - [] design.md
+  - [] color-palette.md
+  - [] plan_sprint01.md
+- [] README.md completo con descripción del proyecto y miembros del equipo
+- [] LICENSE añadida
+- [] CONTRIBUTING.md definido con estrategia de ramas
+- [] Pantallas principales implementadas con datos simulados
+- [] Navegación funcional entre secciones principales
+- [] Modelo de dominio implementado en carpeta /domain
+- [] Splash Screen funcional
+- [] About, Terms & Conditions y Preferences implementadas (UI mock)
+- [] Primera release publicada como v1.0.0 en GitHub
 
 ---
 
 ## 4. Riesgos identificados
 
-- Falta experiencia Git
-- Problemas configuración Android
+- Falta de experiencia en Git y gestión de ramas (merge conflicts).
+- Problemas en la configuración inicial de Android Studio.
+- Errores en la implementación de Navigation entre pantallas.
+- Mala estimación del tiempo en tareas de UI.
+- Publicación incorrecta de la Release
 
 ---
 
