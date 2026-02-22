@@ -1,7 +1,11 @@
 # Sprint 01 – Planning Document
 
 ## 1. Sprint Goal
-Definir claramente el objetivo del sprint.
+El objetivo de este sprint es construir la estructura inicial ("skeleton") de la aplicación Nomad, una aplicación de planificación de viajes diseñada para organizar rutas, itinerarios y preferencias del usuario de forma simple e intuitiva.
+
+Durante este sprint se configurará el proyecto en Android Studio, se creará el repositorio público en GitHub con la estructura obligatoria indicada en el enunciado, y se implementarán las pantallas principales con navegación funcional y datos simulados (mocked data).
+
+La versión final del sprint será publicada como Release v1.0.0 siguiendo Semantic Versioning.
 
 ---
 
@@ -52,4 +56,4 @@ Definir claramente el objetivo del sprint.
 ---
 
 ⚠ Este documento no puede modificarse después del 30% del sprint.
-Fecha límite modificación: DD/MM/YYYY
+Fecha límite modificación: 22/02/2026
