@@ -1,6 +1,7 @@
 package com.example.app
 
 object Routes {
+    const val SPLASH = "splash"
     const val HOME = "home"
     const val DETALLE_VIAJE = "detalle_viaje"
     const val GALERIA_VIAJE = "galeria_viaje"

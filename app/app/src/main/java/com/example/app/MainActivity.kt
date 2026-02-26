@@ -18,16 +18,6 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge() // contenido full screen
 
-        var isChecking = true
-        lifecycleScope.launch {
-            delay(3000L) // splash de 3 segundos
-            isChecking = false
-        }
-
-        installSplashScreen().apply {
-            setKeepOnScreenCondition { isChecking }
-        }
-
         setContent {
             AppTheme {
                 val navController = rememberNavController()

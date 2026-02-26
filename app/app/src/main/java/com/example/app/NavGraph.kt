@@ -10,6 +10,7 @@ import com.example.app.ui.screens.DetalleViajeScreen
 import com.example.app.ui.screens.GaleriaViajeScreen
 import com.example.app.ui.screens.PreferenciasScreen
 import com.example.app.ui.screens.SobreNosotrosScreen
+import com.example.app.ui.screens.SplashScreen
 import com.example.app.ui.screens.TerminosCondicionesScreen
 
 
@@ -17,8 +18,9 @@ import com.example.app.ui.screens.TerminosCondicionesScreen
 fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Routes.HOME
+        startDestination = Routes.SPLASH
     ) {
+        composable(Routes.SPLASH) { SplashScreen(navController) }
         composable(Routes.HOME) { HomeScreen(navController) }
         composable(Routes.DETALLE_VIAJE) { DetalleViajeScreen(navController) }
         composable(Routes.GALERIA_VIAJE) { GaleriaViajeScreen(navController) }
