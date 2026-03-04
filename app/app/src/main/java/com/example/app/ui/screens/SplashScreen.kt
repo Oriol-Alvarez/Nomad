@@ -5,6 +5,8 @@ import android.media.browse.MediaBrowser
 import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.annotation.RawRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -35,7 +37,11 @@ fun SplashScreen(navController: NavHostController) {
 
     var progress by remember { mutableStateOf(0f) } // 0f = 0%, 1f = 100%
     val context = LocalContext.current
-
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(100) // Opcional, para suavizar
+        visible = true
+    }
     val versionName = remember {
         try {
             context.packageManager
@@ -78,11 +84,16 @@ fun SplashScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.Center
         ) {
 
-            Image(
-                painter = painterResource(id = R.drawable.logo_nomad),
-                contentDescription = "Logo",
-                modifier = Modifier.size(240.dp)
-            )
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn()
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.logo_nomad),
+                    contentDescription = "Logo",
+                    modifier = Modifier.size(240.dp)
+                )
+            }
 
 
             Text(modifier = Modifier.align(Alignment.CenterHorizontally),

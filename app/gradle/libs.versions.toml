@@ -10,6 +10,8 @@ kotlin = "2.0.21"
 composeBom = "2024.09.00"
 androidxCoreSplashscreen = "1.0.1"
 navigationCompose = "2.9.7"
+foundation = "1.10.3"
+foundationVersion = "1.10.4"
 
 
 [libraries]
@@ -29,6 +31,8 @@ androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-te
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "androidxCoreSplashscreen" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundationVersion" }
 
 
 [plugins]

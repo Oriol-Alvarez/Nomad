@@ -13,31 +13,32 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = NomadCyan,
-    secondary = NomadBlue,
-    tertiary = Color(0xFF81D4FA),
+    primary = Color(0xFF4FC3F7),    // Azul brillante para destacar
 
-    background = NightBlue,
-    surface = SlateBlue,
+    background = DarkBg,            // #121212
+    surface = DarkSurf,             // #1E1E1E
+    surfaceVariant = DarkSurf,
 
-    onPrimary = Color.Black,
-    onSecondary = Color.White,
+    // Textos y elementos sobre fondo
+    onPrimary = Color.White,
     onBackground = Color.White,
-    onSurface = Color.White
+    onSurface = Color.White,
+    onSurfaceVariant = Color(0xFFB0BEC5), // Gris azulado suave para etiquetas
+    outline = Color(0xFF3D3D3D)
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = NomadBlue,
-    secondary = NomadCyan,
-    tertiary = Color(0xFF0077B6),
+    background = LightBg,
+    surface = LightSurf,
+    surfaceVariant = NomadBlueDark,
 
-    background = Snow,
-    surface = Color.White,
-
-    onPrimary = Color.White,
-    onSecondary = Color(0xFF243C94),
-    onBackground = Color(0xFF0F172A),
-    onSurface = Color(0xFF0F172A)
+    // Textos y elementos sobre fondo
+    onPrimary = Color.Black,
+    onBackground = Color(0xFF0F172A), // Negro azulado muy elegante
+    onSurface = Color(0xFF0F172A),
+    onSurfaceVariant = NomadBlueDark, // Azul oscuro para etiquetas/subtítulos
+    outline = Color(0xFFCBD5E1)
 )
 
 @Composable

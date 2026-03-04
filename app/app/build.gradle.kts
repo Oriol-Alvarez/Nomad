@@ -49,6 +49,8 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation("com.google.android.material:material:1.12.0")
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.foundation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
