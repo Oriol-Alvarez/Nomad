@@ -1,9 +1,293 @@
 package com.example.app.ui.screens
 
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.app.R
+import com.example.app.ui.theme.AppTheme
+import com.example.app.ui.theme.NomadBlue
+import com.example.app.ui.theme.NomadBlueDark
+
+// Modelo de datos para los viajes
+data class Trip(
+    val title: String,
+    val date: String,
+    val price: String,
+    val image: Int
+)
 
 @Composable
 fun DetalleViajeScreen(navController: NavHostController) {
-    // TODO: contenido Detalle del Viaje
+    val trips = listOf(
+        Trip("La antigua Roma", "Abr 14 - Abr 21", "€1,560", R.drawable.roma),
+        Trip("Frío en Noruega", "Sep 19 - Sep 28", "€690", R.drawable.noruega),
+        Trip("Negocios en Londres", "May 12 - May 15", "€650", R.drawable.londres)
+    )
+
+    Scaffold(
+        bottomBar = { BottomNavigationBar(navController) },
+        // El botón flotante "+" abajo a la derecha
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { /* Acción para añadir viaje */ },
+                containerColor = Color(0xFF0288D1),
+                contentColor = Color.White,
+                shape = CircleShape,
+                modifier = Modifier.padding(bottom = 16.dp, end = 8.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Añadir")
+            }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(24.dp)
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Column {
+                            Spacer(modifier = Modifier.height(30.dp))
+                            Text(
+                                text = "Mis Viajes",
+                                color = Color.White,
+                                fontSize = 42.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
+            // CONTENIDO SCROLLABLE
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 25.dp)
+            ) {
+                Spacer(modifier = Modifier.height(32.dp))
+
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp)
+                ) {
+                    items(trips) { trip ->
+                        TripCard(trip)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TripCard(trip: Trip) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column {
+            Image(
+                painter = painterResource(id = trip.image),
+                contentDescription = "Imagen de ${trip.title}",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp),
+                contentScale = ContentScale.Crop // Fundamental para que la imagen llene el espacio
+            )
+
+            // Información inferior
+            Column(modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp)) {
+                Text(
+                    text = trip.title,
+                    color = MaterialTheme.colorScheme.onPrimary, // Ojo: onPrimary suele ser blanco o negro, asegúrate de que contraste con 'surface'
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.CalendarMonth,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = Color.Gray
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = trip.date,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
+                    }
+
+                    // Etiqueta de precio
+                    Surface(
+                        color = Color(0xFFE8F5E9),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text(
+                            text = trip.price,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), // Aumenté un poco el padding horizontal
+                            color = Color(0xFF2E7D32),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BottomNavigationBar(navController: NavHostController) {
+    val currentRoute =
+        navController.currentBackStackEntryAsState().value?.destination?.route ?: "home"
+
+    Surface(
+        modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            BottomItem(
+                icon = painterResource(id = R.drawable.house_solid_full),
+                label = "Home",
+                selected = currentRoute == "home"
+            ) { navController.navigate("home") }
+
+            BottomItem(
+                icon = painterResource(id = R.drawable.plane_solid_full),
+                label = "Viajes",
+                selected = currentRoute == "viajes"
+            ) { navController.navigate("viajes") }
+
+            BottomItem(
+                icon = painterResource(id = R.drawable.image_solid_full),
+                label = "Galeria",
+                selected = currentRoute == "galeria"
+            ) { navController.navigate("galeria") }
+
+            BottomItem(
+                icon = painterResource(id = R.drawable.gear_solid_full),
+                label = "Ajustes",
+                selected = currentRoute == "ajustes"
+            ) { navController.navigate("ajustes") }
+        }
+    }
+}
+
+@Composable
+fun BottomItem(
+    icon: Painter,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        Icon(
+            painter = icon,
+            contentDescription = label,
+            tint = if (selected)
+                MaterialTheme.colorScheme.primary
+            else
+                MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp)
+        )
+
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (selected) MaterialTheme.colorScheme.primary
+            else MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DetalleViajePreview() {
+    AppTheme {
+        DetalleViajeScreen(navController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+fun DetalleViajePreview2() {
+    AppTheme {
+        DetalleViajeScreen(navController = rememberNavController())
+    }
 }
