@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.benchmark.traceprocessor)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -54,20 +54,20 @@ fun BottomNavigationBar(navController: NavHostController) {
             BottomItem(
                 icon = painterResource(id = R.drawable.plane_solid_full),
                 label = "Viajes",
-                selected = currentRoute == "viajes"
-            ) { navController.navigate("viajes") }
+                selected = currentRoute == "detalle_viaje"
+            ) { navController.navigate("detalle_viaje") }
 
             BottomItem(
                 icon = painterResource(id = R.drawable.gallery_solid_full),
                 label = "Galería",
-                selected = currentRoute == "galeria"
-            ) { navController.navigate("galeria") }
+                selected = currentRoute == "galeria_viaje"
+            ) { navController.navigate("galeria_viaje") }
 
             BottomItem(
                 icon = painterResource(id = R.drawable.settings_solid_full),
                 label = "Ajustes",
-                selected = currentRoute == "ajustes"
-            ) { navController.navigate("ajustes") }
+                selected = currentRoute == "preferencias"
+            ) { navController.navigate("preferencias") }
         }
     }
 }

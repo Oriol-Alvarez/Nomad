@@ -11,6 +11,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -58,7 +60,7 @@ fun SobreNosotrosScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(32.dp))
 
             // 🔷 HERO HEADER
-            HeroHeader()
+            HeroHeader(navController)
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -90,9 +92,15 @@ fun SobreNosotrosScreen(navController: NavHostController) {
 
                 InfoRowModern("Estado", "Producción")
                 Spacer(modifier = Modifier.height(6.dp))
+
                 InfoRowModern("Android", Build.VERSION.RELEASE)
                 Spacer(modifier = Modifier.height(6.dp))
+
                 InfoRowModern("API Level", Build.VERSION.SDK_INT.toString())
+                Spacer(modifier = Modifier.height(6.dp))
+
+                InfoRowModern("Licencia", "Apache License 2.0")
+                Spacer(modifier = Modifier.height(6.dp))
             }
 
 
@@ -108,60 +116,74 @@ fun SobreNosotrosScreen(navController: NavHostController) {
     }
 }
 @Composable
-fun HeroHeader() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+fun HeroHeader(navController: NavHostController) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 40.dp, start = 16.dp, end = 16.dp)
     ) {
 
-        // Logo con glow
-        Box(contentAlignment = Alignment.Center) {
-
-            Box(
-                modifier = Modifier
-                    .size(110.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .blur(60.dp)
-                    .background(
-                        color = Color.White
-                    )
-
+        // Flecha flotante arriba a la izquierda
+        IconButton(
+            onClick = { navController.popBackStack() },
+            modifier = Modifier.align(Alignment.TopStart)
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Volver",
+                tint = MaterialTheme.colorScheme.onPrimary
             )
-
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo_nomad),
-                    contentDescription = "Logo",
-
-                )
-            }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        // Logo + textos centrados
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.align(Alignment.Center)
+        ) {
 
-        Text(
-            text = "Nomad",
-            fontSize = 26.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimary
-        )
+            // Logo con glow
+            Box(contentAlignment = Alignment.Center) {
 
-        Spacer(modifier = Modifier.height(6.dp))
+                Box(
+                    modifier = Modifier
+                        .size(110.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .blur(60.dp)
+                        .background(Color.White)
+                )
 
-        Text(
-            text = "v1.0.0 · Sprint 01",
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
-            fontSize = 13.sp
-        )
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color.White),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_nomad),
+                        contentDescription = "Logo"
+                    )
+                }
+            }
 
+            Spacer(modifier = Modifier.height(12.dp))
 
+            Text(
+                text = "Nomad",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "v1.0.0 · Sprint 01",
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 13.sp
+            )
+        }
     }
 }
 @Composable

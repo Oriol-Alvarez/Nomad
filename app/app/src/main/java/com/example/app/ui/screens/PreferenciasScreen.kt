@@ -1,5 +1,6 @@
 package com.example.app.ui.screens
 
+import android.R.attr.onClick
 import android.content.res.Configuration
 import android.os.Build
 import androidx.compose.foundation.Image
@@ -18,6 +19,10 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,10 +38,12 @@ import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.ui.theme.AppTheme
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.rotate
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.zIndex
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.app.Routes
@@ -102,6 +109,7 @@ fun PreferenciasScreen(navController: NavHostController) {
                         name = "Tamaño del texto",
                         role = "Accesibilidad",
                         value = "Normal",
+                        options = listOf("Pequeño", "Normal", "Grande", "Extra Grande"),
                         type = "select"
                     )
                 }
@@ -137,9 +145,20 @@ fun PreferenciasScreen(navController: NavHostController) {
                         navController = navController,
                         onClick = { navController.navigate(Routes.SOBRE_NOSOTROS) }
                     )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    CajasPreferencias(
+                        image = R.drawable.clipboard_list_solid_full,
+                        name = "Términos y condiciones",
+                        role = "Info legal",
+                        value = "on",
+                        type = "nav",
+                        navController = navController,
+                        onClick = { navController.navigate(Routes.TERMINOS_CONDICIONES) }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
                     text = "Programado con mucho ☕",
                     style = MaterialTheme.typography.labelSmall,
@@ -184,12 +203,15 @@ fun HeroPreferencias() {
 
 
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CajasPreferencias(
     image: Int,
     name: String,
     role: String,
     value: String,
+    options: List<String> = emptyList(),
     type: String,
     navController: NavHostController = rememberNavController(),
     onClick: () -> Unit = {}
@@ -198,9 +220,11 @@ fun CajasPreferencias(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() }
-            .padding(top = 2.dp),
-
+            .then(
+                if (type == "nav") Modifier.clickable { onClick() }
+                else Modifier
+            )
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
@@ -243,51 +267,79 @@ fun CajasPreferencias(
         }
 
         if (type == "slider") {
-            Row(verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(12.dp)
-                    .widthIn(min = 60.dp)
-            ) {
+            // Estado local para manejar la animación visual sin persistencia aún
+            var isChecked by remember { mutableStateOf(value == "on") }
 
-                    Icon(
-                        painter =
-                        if(value == "off"){
-                            painterResource(id = R.drawable.toggle_off_solid_full)
-                        }else{
-                            painterResource(id = R.drawable.toggle_on_solid_full)
-                        }
-                        ,
-                        contentDescription = "toggle off",
-                        tint= MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(40.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
+            Switch(
+                checked = isChecked,
+                onCheckedChange = { nuevoEstado ->
+                    isChecked = nuevoEstado
+                    // El cambio en 'isChecked' dispara automáticamente la animación de deslizamiento
+                },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = MaterialTheme.colorScheme.primary, // Verde tipo iOS/Android estándar
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
+                )
+            )
+        }// ... dentro de tu if (type == "select")
+        else if (type == "select") {
+            var expanded by remember { mutableStateOf(false) }
 
-
-            }
-        }else if (type=="select"){
-            Row(verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clip(RoundedCornerShape(12.dp))
-                    .background(color = MaterialTheme.colorScheme.background)
-                    .padding(12.dp)
-                    .widthIn(min = 60.dp)
-            ) {
-
+            // El Box debe ser el contenedor inmediato
+            Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f))
+                        // IMPORTANTE: clickable aquí para activar el menú
+                        .clickable { expanded = true }
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .widthIn(min = 60.dp)
+                ) {
                     Text(
                         text = value,
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyMedium
                     )
-
                     Spacer(modifier = Modifier.width(4.dp))
-
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = "Abrir",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        // Opcional: rotar el icono cuando se expande
+                        modifier = Modifier.rotate(if (expanded) 180f else 0f)
                     )
+                }
 
-
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    // Ajusta la posición si es necesario
+                    offset = DpOffset(x = (0).dp, y = (4).dp),
+                    modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                ) {
+                    if (options.isEmpty()) {
+                        DropdownMenuItem(
+                            text = { Text("No hay opciones") },
+                            onClick = { expanded = false }
+                        )
+                    } else {
+                        options.forEach { opcion ->
+                            DropdownMenuItem(
+                                text = { Text(text = opcion) },
+                                onClick = {
+                                    expanded = false
+                                    // Aquí deberías pasar 'opcion' a una función,
+                                    // pero como tu onClick no recibe parámetros:
+                                    onClick()
+                                }
+                            )
+                        }
+                    }
+                }
             }
         }else{
             Row(
@@ -296,12 +348,12 @@ fun CajasPreferencias(
                     .padding(12.dp)
                     .widthIn(min = 60.dp)
                     .clickable {                      // 🔹 aquí manejas el click
-                        navController.navigate(Routes.SOBRE_NOSOTROS)  // ruta de tu AboutPage
+                        onClick()  // ruta de tu AboutPage
                     }
             ) {
 
                 Icon(
-                    imageVector = Icons.Default.KeyboardArrowRight,
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                     contentDescription = "Abrir",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
