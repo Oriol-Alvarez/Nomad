@@ -1,6 +1,6 @@
 # 🌍 Nomad
 
-Bienvenido a **Nomad**, la app diseñada para que explorar el mundo sea más fácil y emocionante. 🌎✈️ Ya sea que estés planeando un gran viaje o una escapada de fin de semana, Travel Planner te ayuda a organizar tus itinerarios, encontrar lugares increíbles y disfrutar de cada momento sin preocupaciones.
+Bienvenido a **Nomad**, la app diseñada para que explorar el mundo sea más fácil y emocionante. 🌎✈️ Ya sea que estés planeando un gran viaje o una escapada de fin de semana, Nomad te ayuda a organizar tus itinerarios, encontrar lugares increíbles y disfrutar de cada momento sin preocupaciones.
 
 ## 📖 Sobre el Proyecto
 
