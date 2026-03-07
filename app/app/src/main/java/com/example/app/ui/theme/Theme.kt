@@ -18,13 +18,14 @@ private val DarkColorScheme = darkColorScheme(
     background = DarkBg,            // #121212
     surface = DarkSurf,             // #1E1E1E
     surfaceVariant = DarkSurf,
-
+    tertiary = Color(0xFF2C2C2E),
     // Textos y elementos sobre fondo
     onPrimary = Color.White,
     onBackground = Color.White,
     onSurface = Color.White,
     onSurfaceVariant = Color(0xFFB0BEC5), // Gris azulado suave para etiquetas
     outline = Color(0xFF3D3D3D)
+
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -32,12 +33,13 @@ private val LightColorScheme = lightColorScheme(
     background = LightBg,
     surface = LightSurf,
     surfaceVariant = NomadBlueDark,
+    tertiary = Color(0xFFF5F5F7),
 
     // Textos y elementos sobre fondo
     onPrimary = Color.Black,
     onBackground = Color(0xFF0F172A), // Negro azulado muy elegante
     onSurface = Color(0xFF0F172A),
-    onSurfaceVariant = NomadBlueDark, // Azul oscuro para etiquetas/subtÃ­tulos
+    onSurfaceVariant = NomadBlueDark, // Azul oscuro para etiquetas/subtítulos
     outline = Color(0xFFCBD5E1)
 )
 

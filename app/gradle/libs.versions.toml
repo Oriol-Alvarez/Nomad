@@ -10,6 +10,9 @@ kotlin = "2.0.21"
 composeBom = "2024.09.00"
 androidxCoreSplashscreen = "1.0.1"
 navigationCompose = "2.9.7"
+foundation = "1.10.3"
+foundationVersion = "1.10.4"
+benchmarkTraceprocessor = "1.4.1"
 
 
 [libraries]
@@ -30,6 +33,9 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "androidxCoreSplashscreen" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundation" }
+androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundationVersion" }
+androidx-benchmark-traceprocessor = { group = "androidx.benchmark", name = "benchmark-traceprocessor", version.ref = "benchmarkTraceprocessor" }
 
 
 [plugins]

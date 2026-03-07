@@ -9,6 +9,7 @@ import androidx.core.content.PermissionChecker
 import androidx.navigation.compose.rememberNavController
 import com.example.app.ui.theme.AppTheme
 
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

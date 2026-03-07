@@ -13,7 +13,7 @@ val Pink40 = Color(0xFF7D5260)
 // Brand colors (del logo)
 // Colores base de la marca (Nomad)
 // Colores de Marca
-val NomadBlue = Color(0xFF0074FF)
+val NomadBlue = Color(0xFF2196F3)
 val NomadBlueDark = Color(0xFF0D47A1)
 
 // Colores para DARK MODE (Basados en tu imagen)
