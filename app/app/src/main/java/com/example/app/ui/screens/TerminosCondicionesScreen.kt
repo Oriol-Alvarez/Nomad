@@ -72,7 +72,7 @@ fun TerminosCondicionesScreen(navController: NavHostController) {
         ) {
 
             // Hero
-            HeroTerminosyCondiciones(navController)
+            HeroTerminosyCondiciones(navController,"Términos y condiciones","Ultima actualización 05 de marzo de 2026")
 
             Column(
                 modifier = Modifier
@@ -197,7 +197,7 @@ Guillem Talayero Carrasco
     }
 }
 @Composable
-fun HeroTerminosyCondiciones(navController: NavHostController) {
+fun HeroTerminosyCondiciones(navController: NavHostController, title: String, description: String) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surfaceVariant
@@ -223,7 +223,7 @@ fun HeroTerminosyCondiciones(navController: NavHostController) {
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "Términos y condiciones",
+                    text = title,
                     style = MaterialTheme.typography.headlineMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
@@ -233,7 +233,7 @@ fun HeroTerminosyCondiciones(navController: NavHostController) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Ultima actualización 05 de marzo de 2026",
+                text = description,
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.White.copy(alpha = 0.9f),
                 textAlign = TextAlign.Center,

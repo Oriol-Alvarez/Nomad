@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.benchmark.traceprocessor)
+    implementation(libs.androidx.compose.animation)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

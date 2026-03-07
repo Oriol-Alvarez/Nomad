@@ -108,7 +108,7 @@ fun RecomendadosSection(navController: NavHostController) {
             RecomendadoCard(
                 image = R.drawable.newyork,
                 name = "New York",
-                onClick = { navController.navigate("destino/newyork") }
+                onClick = { navController.navigate("form-viaje") }
             )
         }
         item {

@@ -12,7 +12,7 @@ import com.example.app.ui.screens.PreferenciasScreen
 import com.example.app.ui.screens.SobreNosotrosScreen
 import com.example.app.ui.screens.SplashScreen
 import com.example.app.ui.screens.TerminosCondicionesScreen
-
+import com.example.app.ui.screens.FormularioViaje
 
 @Composable
 fun NavGraph(navController: NavHostController) {
@@ -27,5 +27,7 @@ fun NavGraph(navController: NavHostController) {
         composable(Routes.PREFERENCIAS) { PreferenciasScreen(navController) }
         composable(Routes.SOBRE_NOSOTROS) { SobreNosotrosScreen(navController) }
         composable(Routes.TERMINOS_CONDICIONES) { TerminosCondicionesScreen(navController) }
+        composable(Routes.FORMVIAJE) { FormularioViaje(navController) }
+
     }
 }
