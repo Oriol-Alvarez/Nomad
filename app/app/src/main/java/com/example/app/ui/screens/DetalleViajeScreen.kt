@@ -58,7 +58,7 @@ fun DetalleViajeScreen(navController: NavHostController) {
     )
 
     Scaffold(
-        bottomBar = { DetalleBottomNavigationBar(navController) },
+        bottomBar = { BottomNavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { /* Acción para añadir viaje */ },
@@ -186,81 +186,7 @@ fun TripCard(trip: Trip) {
     }
 }
 
-@Composable
-fun DetalleBottomNavigationBar(navController: NavHostController) {
-    val currentRoute =
-        navController.currentBackStackEntryAsState().value?.destination?.route ?: "home"
 
-    Surface(
-        modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            DetalleBottomNavItem(
-                icon = painterResource(id = R.drawable.house_solid_full),
-                label = "Home",
-                selected = currentRoute == "home"
-            ) { navController.navigate("home") }
-
-            DetalleBottomNavItem(
-                icon = painterResource(id = R.drawable.plane_solid_full),
-                label = "Viajes",
-                selected = currentRoute == "viajes"
-            ) { navController.navigate("viajes") }
-
-            DetalleBottomNavItem(
-                icon = painterResource(id = R.drawable.image_solid_full),
-                label = "Galeria",
-                selected = currentRoute == "galeria"
-            ) { navController.navigate("galeria") }
-
-            DetalleBottomNavItem(
-                icon = painterResource(id = R.drawable.gear_solid_full),
-                label = "Ajustes",
-                selected = currentRoute == "ajustes"
-            ) { navController.navigate("ajustes") }
-        }
-    }
-}
-
-@Composable
-fun DetalleBottomNavItem(
-    icon: Painter,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-    ) {
-        Icon(
-            painter = icon,
-            contentDescription = label,
-            tint = if (selected)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
-
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

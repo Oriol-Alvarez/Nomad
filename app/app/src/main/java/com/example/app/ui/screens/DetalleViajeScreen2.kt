@@ -56,7 +56,7 @@ import com.example.app.ui.theme.AppTheme
 @Composable
 fun DetalleViajeScreen2(navController: NavHostController) {
     Scaffold(
-        bottomBar = { PrivateBottomNavigationBar3(navController) }
+        bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -320,81 +320,6 @@ private fun TimelineEvent(
     }
 }
 
-@Composable
-private fun PrivateBottomNavigationBar3(navController: NavHostController) {
-    val currentRoute =
-        navController.currentBackStackEntryAsState().value?.destination?.route ?: "viajes"
-
-    Surface(
-        modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            PrivateBottomItem3(
-                icon = painterResource(id = R.drawable.house_solid_full),
-                label = "Home",
-                selected = currentRoute == "home"
-            ) { navController.navigate("home") }
-
-            PrivateBottomItem3(
-                icon = painterResource(id = R.drawable.plane_solid_full),
-                label = "Viajes",
-                selected = currentRoute == "viajes" || currentRoute == "detalle_viaje_2"
-            ) { navController.navigate("viajes") }
-
-            PrivateBottomItem3(
-                icon = painterResource(id = R.drawable.image_solid_full),
-                label = "Galeria",
-                selected = currentRoute == "galeria"
-            ) { navController.navigate("galeria") }
-
-            PrivateBottomItem3(
-                icon = painterResource(id = R.drawable.gear_solid_full),
-                label = "Ajustes",
-                selected = currentRoute == "ajustes"
-            ) { navController.navigate("ajustes") }
-        }
-    }
-}
-
-@Composable
-private fun PrivateBottomItem3(
-    icon: Painter,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-    ) {
-        Icon(
-            painter = icon,
-            contentDescription = label,
-            tint = if (selected)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
-
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

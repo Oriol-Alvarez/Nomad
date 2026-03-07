@@ -62,7 +62,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
 
     Scaffold(
         // Añadimos la barra de navegación inferior
-        bottomBar = { PrivateBottomNavigationBar2(navController) },
+        bottomBar = { BottomNavigationBar(navController) },
 
     ) { innerPadding ->
         Column(
@@ -151,82 +151,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
     }
 }
 
-// Funciones privadas de la navbar (renombradas ligeramente para evitar conflictos si las tienes en otro archivo del mismo paquete)
-@Composable
-private fun PrivateBottomNavigationBar2(navController: NavHostController) {
-    val currentRoute =
-        navController.currentBackStackEntryAsState().value?.destination?.route ?: "galeria"
 
-    Surface(
-        modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 10.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            PrivateBottomItem2(
-                icon = painterResource(id = R.drawable.house_solid_full),
-                label = "Home",
-                selected = currentRoute == "home"
-            ) { navController.navigate("home") }
-
-            PrivateBottomItem2(
-                icon = painterResource(id = R.drawable.plane_solid_full),
-                label = "Viajes",
-                selected = currentRoute == "viajes"
-            ) { navController.navigate("viajes") }
-
-            PrivateBottomItem2(
-                icon = painterResource(id = R.drawable.image_solid_full),
-                label = "Galeria",
-                selected = currentRoute == "galeria" || currentRoute == "galeria_viajes_2" // Mantiene el icono encendido al entrar al álbum
-            ) { navController.navigate("galeria") }
-
-            PrivateBottomItem2(
-                icon = painterResource(id = R.drawable.gear_solid_full),
-                label = "Ajustes",
-                selected = currentRoute == "ajustes"
-            ) { navController.navigate("ajustes") }
-        }
-    }
-}
-
-@Composable
-private fun PrivateBottomItem2(
-    icon: Painter,
-    label: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-    ) {
-        Icon(
-            painter = icon,
-            contentDescription = label,
-            tint = if (selected)
-                MaterialTheme.colorScheme.primary
-            else
-                MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
-
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = if (selected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
