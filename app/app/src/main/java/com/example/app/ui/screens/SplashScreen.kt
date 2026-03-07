@@ -89,7 +89,7 @@ fun SplashScreen(navController: NavHostController) {
                 text = "NOMAD",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSecondary)
+                color = MaterialTheme.colorScheme.onBackground)
             Spacer(modifier = Modifier.height(32.dp))
             // BARRA HORIZONTAL CON PORCENTAJE
             LinearProgressIndicator(

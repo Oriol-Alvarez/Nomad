@@ -48,16 +48,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.ui.theme.AppTheme
-import com.example.app.ui.theme.NomadBlue
-import com.example.app.ui.theme.NomadBlueDark
-
-// Modelo de datos para los viajes
-data class Trip(
-    val title: String,
-    val date: String,
-    val price: String,
-    val image: Int
-)
 
 @Composable
 fun DetalleViajeScreen(navController: NavHostController) {
@@ -68,8 +58,7 @@ fun DetalleViajeScreen(navController: NavHostController) {
     )
 
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController) },
-        // El botón flotante "+" abajo a la derecha
+        bottomBar = { DetalleBottomNavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { /* Acción para añadir viaje */ },
@@ -114,7 +103,6 @@ fun DetalleViajeScreen(navController: NavHostController) {
                 }
             }
 
-            // CONTENIDO SCROLLABLE
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -150,14 +138,13 @@ fun TripCard(trip: Trip) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
-                contentScale = ContentScale.Crop // Fundamental para que la imagen llene el espacio
+                contentScale = ContentScale.Crop
             )
 
-            // Información inferior
             Column(modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp)) {
                 Text(
                     text = trip.title,
-                    color = MaterialTheme.colorScheme.onPrimary, // Ojo: onPrimary suele ser blanco o negro, asegúrate de que contraste con 'surface'
+                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -182,14 +169,13 @@ fun TripCard(trip: Trip) {
                         )
                     }
 
-                    // Etiqueta de precio
                     Surface(
                         color = Color(0xFFE8F5E9),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
                             text = trip.price,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), // Aumenté un poco el padding horizontal
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             color = Color(0xFF2E7D32),
                             fontWeight = FontWeight.Bold
                         )
@@ -201,7 +187,7 @@ fun TripCard(trip: Trip) {
 }
 
 @Composable
-fun BottomNavigationBar(navController: NavHostController) {
+fun DetalleBottomNavigationBar(navController: NavHostController) {
     val currentRoute =
         navController.currentBackStackEntryAsState().value?.destination?.route ?: "home"
 
@@ -215,25 +201,25 @@ fun BottomNavigationBar(navController: NavHostController) {
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            BottomItem(
+            DetalleBottomNavItem(
                 icon = painterResource(id = R.drawable.house_solid_full),
                 label = "Home",
                 selected = currentRoute == "home"
             ) { navController.navigate("home") }
 
-            BottomItem(
+            DetalleBottomNavItem(
                 icon = painterResource(id = R.drawable.plane_solid_full),
                 label = "Viajes",
                 selected = currentRoute == "viajes"
             ) { navController.navigate("viajes") }
 
-            BottomItem(
+            DetalleBottomNavItem(
                 icon = painterResource(id = R.drawable.image_solid_full),
                 label = "Galeria",
                 selected = currentRoute == "galeria"
             ) { navController.navigate("galeria") }
 
-            BottomItem(
+            DetalleBottomNavItem(
                 icon = painterResource(id = R.drawable.gear_solid_full),
                 label = "Ajustes",
                 selected = currentRoute == "ajustes"
@@ -243,7 +229,7 @@ fun BottomNavigationBar(navController: NavHostController) {
 }
 
 @Composable
-fun BottomItem(
+fun DetalleBottomNavItem(
     icon: Painter,
     label: String,
     selected: Boolean,

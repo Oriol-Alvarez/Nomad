@@ -10,20 +10,20 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -45,36 +45,26 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.app.R
+import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
 
-// Modelo de datos simplificado para la galería
-data class GalleryTrip(
+// Modelo de datos para la galería
+data class GalleryAlbum(
     val title: String,
-    val image: Int
+    val images: List<Int>
 )
 
 @Composable
-fun GaleriaViajesScreen(navController: NavHostController) {
-    val trips = listOf(
-        GalleryTrip("La antigua Roma", R.drawable.roma),
-        GalleryTrip("Frío en Noruega", R.drawable.noruega),
-        GalleryTrip("Negocios en Londres", R.drawable.londres)
+fun GaleriaViajeScreen(navController: NavHostController) {
+    // Simulamos viajes con diferentes cantidades de fotos
+    val albums = listOf(
+        GalleryAlbum("La antigua Roma", listOf(R.drawable.roma, R.drawable.noruega, R.drawable.londres, R.drawable.roma, R.drawable.noruega, R.drawable.londres, R.drawable.roma)), // 7 fotos (Mostrará +4)
+        GalleryAlbum("Frío en Noruega", emptyList()), // 0 fotos (Mostrará el botón de añadir + 2 espacios vacíos)
+        GalleryAlbum("Negocios en Londres", listOf(R.drawable.noruega, R.drawable.noruega, R.drawable.londres, R.drawable.noruega)), // 4 fotos
     )
 
     Scaffold(
-        bottomBar = { PrivateBottomNavigationBar(navController) },
-        // El botón flotante "+" abajo a la derecha
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { /* Acción para añadir foto/viaje */ },
-                containerColor = Color(0xFF0288D1),
-                contentColor = Color.White,
-                shape = CircleShape,
-                modifier = Modifier.padding(bottom = 16.dp, end = 8.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Añadir")
-            }
-        }
+        bottomBar = { PrivateBottomNavigationBar(navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -82,6 +72,7 @@ fun GaleriaViajesScreen(navController: NavHostController) {
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
+            // CABECERA AZUL
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -98,7 +89,7 @@ fun GaleriaViajesScreen(navController: NavHostController) {
                         Column {
                             Spacer(modifier = Modifier.height(30.dp))
                             Text(
-                                text = "Galería", // Título cambiado
+                                text = "Galería",
                                 color = Color.White,
                                 fontSize = 42.sp,
                                 fontWeight = FontWeight.Bold
@@ -108,21 +99,76 @@ fun GaleriaViajesScreen(navController: NavHostController) {
                 }
             }
 
-            // CONTENIDO SCROLLABLE
-            Column(
+            // SECCIÓN: Barra de búsqueda estilo "Píldora + Botón"
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 25.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 32.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(modifier = Modifier.height(32.dp))
-
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp)
+                // Barra de texto (Píldora)
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.outline,
+                    shadowElevation = 4.dp // Sombra imitando la imagen
                 ) {
-                    items(trips) { trip ->
-                        GalleryCard(trip)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Text(
+                            text = "Search...",
+                            color = Color.Gray,
+                            fontSize = 16.sp
+                        )
                     }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Botón circular de la lupa
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.outline,
+                    shadowElevation = 4.dp // Sombra imitando la imagen
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clickable { /* Aquí irá la lógica de búsqueda */ },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Buscar",
+                            tint = Color.Gray
+                        )
+                    }
+                }
+            }
+
+            // CONTENIDO SCROLLABLE DE ÁLBUMES
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(top = 28.dp, bottom = 80.dp)
+            ) {
+                items(albums) { album ->
+                    AlbumSection(
+                        album = album,
+                        onAddImageClick = {
+                            navController.navigate(Routes.GALERIA_VIAJE_2)
+                        },
+                        onMoreImagesClick = {
+                            navController.navigate(Routes.GALERIA_VIAJE_2)
+                        }
+                    )
                 }
             }
         }
@@ -130,39 +176,106 @@ fun GaleriaViajesScreen(navController: NavHostController) {
 }
 
 @Composable
-fun GalleryCard(trip: GalleryTrip) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+fun AlbumSection(
+    album: GalleryAlbum,
+    onAddImageClick: () -> Unit,
+    onMoreImagesClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 24.dp)
     ) {
-        Column {
-            Image(
-                painter = painterResource(id = trip.image),
-                contentDescription = "Imagen de ${trip.title}",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    // Si al ser una galería quieres que la foto se vea más grande,
-                    // puedes subir este valor (ej. 180.dp o 200.dp)
-                    .height(160.dp),
-                contentScale = ContentScale.Crop
-            )
+        // Título del viaje
+        Text(
+            text = album.title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 12.dp)
+        )
 
-            // Información inferior solo con el título
-            Column(modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp)) {
-                Text(
-                    text = trip.title,
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+        // Fila de máximo 3 imágenes
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            val displayImages = album.images.take(3)
+            val extraCount = album.images.size - 3
+
+            // Dibujamos las fotos existentes
+            displayImages.forEachIndexed { index, imageRes ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                ) {
+                    Image(
+                        painter = painterResource(id = imageRes),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    // Capa oscura con el "+X" interactivo
+                    if (index == 2 && extraCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.5f))
+                                .clickable { onMoreImagesClick() }, // <-- Clic para ver más fotos
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "+$extraCount",
+                                color = Color.White,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Si el álbum tiene menos de 3 fotos, mostramos el botón de añadir en el siguiente hueco
+            if (displayImages.size < 3) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                        //.clickable { onAddImageClick() }
+                        ,
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Añadir imagen a ${album.title}",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+
+                // Y si AÚN quedan huecos, metemos Spacers invisibles
+                val espaciosRestantes = 3 - displayImages.size - 1
+                if (espaciosRestantes > 0) {
+                    repeat(espaciosRestantes) {
+                        Spacer(modifier = Modifier.weight(1f).aspectRatio(1f))
+                    }
+                }
             }
         }
     }
 }
 
-// Marcado como 'private' para evitar conflictos con DetalleViajeScreen.kt
 @Composable
 private fun PrivateBottomNavigationBar(navController: NavHostController) {
     val currentRoute =
@@ -241,16 +354,16 @@ private fun PrivateBottomItem(
 
 @Preview(showBackground = true)
 @Composable
-fun GaleriaViajesPreview() {
+fun GaleriaViajePreview() {
     AppTheme {
-        GaleriaViajesScreen(navController = rememberNavController())
+        GaleriaViajeScreen(navController = rememberNavController())
     }
 }
 
 @Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
 @Composable
-fun GaleriaViajesPreviewNight() {
+fun GaleriaViajePreviewNight() {
     AppTheme {
-        GaleriaViajesScreen(navController = rememberNavController())
+        GaleriaViajeScreen(navController = rememberNavController())
     }
 }

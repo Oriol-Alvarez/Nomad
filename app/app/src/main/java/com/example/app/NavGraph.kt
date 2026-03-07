@@ -4,10 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.app.*
 import com.example.app.ui.screens.HomeScreen
-import com.example.app.ui.screens.DetalleViajeScreen
+import com.example.app.ui.screens.DetalleViajeScreen2
 import com.example.app.ui.screens.GaleriaViajeScreen
+import com.example.app.ui.screens.GaleriaViajeScreen2
 import com.example.app.ui.screens.PreferenciasScreen
 import com.example.app.ui.screens.SobreNosotrosScreen
 import com.example.app.ui.screens.SplashScreen
@@ -22,8 +22,10 @@ fun NavGraph(navController: NavHostController) {
     ) {
         composable(Routes.SPLASH) { SplashScreen(navController) }
         composable(Routes.HOME) { HomeScreen(navController) }
-        composable(Routes.DETALLE_VIAJE) { DetalleViajeScreen(navController) }
+        composable(Routes.DETALLE_VIAJE) { DetalleViajeScreen2(navController) }
+        composable(Routes.DETALLE_VIAJE2) { DetalleViajeScreen2(navController) }
         composable(Routes.GALERIA_VIAJE) { GaleriaViajeScreen(navController) }
+        composable(Routes.GALERIA_VIAJE_2) { GaleriaViajeScreen2(navController) }
         composable(Routes.PREFERENCIAS) { PreferenciasScreen(navController) }
         composable(Routes.SOBRE_NOSOTROS) { SobreNosotrosScreen(navController) }
         composable(Routes.TERMINOS_CONDICIONES) { TerminosCondicionesScreen(navController) }
