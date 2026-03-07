@@ -12,4 +12,5 @@ object Routes {
     const val PREFERENCIAS = "preferencias"
     const val SOBRE_NOSOTROS = "sobre_nosotros"
     const val TERMINOS_CONDICIONES = "terminos_condiciones"
+    const val FORMVIAJE = "form-viaje"
 }
