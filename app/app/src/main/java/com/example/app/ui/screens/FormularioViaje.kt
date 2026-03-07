@@ -4,7 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.with
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,17 +12,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -30,27 +30,27 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.app.domain.ItineraryItem
 import com.example.app.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
 fun FormularioViaje(
     navController: NavHostController,
-    previewStep: Int? = null
+    previewStep: Int? = null,
+    ciudadDestino: String = ""
 ) {
     // 1. Estados de la "Página 1" (Datos Generales)
-    var title by remember { mutableStateOf("") }
-    var country by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    var title by rememberSaveable { mutableStateOf("") }
+    var country by rememberSaveable { mutableStateOf(ciudadDestino) }
+    var description by rememberSaveable { mutableStateOf("") }
 
     // 2. Estados de la "Página 2" (Itinerarios - Guardados como Lista de Mapas)
     // Cada mapa tendrá: "nombre", "hora", "precio", "tipo"
-    var listaItinerarios by remember { mutableStateOf(listOf<Map<String, String>>()) }
+    var listaItinerarios by rememberSaveable { mutableStateOf(listOf<Map<String, String>>()) }
 
     // 3. Control de Navegación y Diálogo
-    var etapaActual by remember { mutableIntStateOf(previewStep ?: 0) }
-    var mostrarDialogo by remember { mutableStateOf(false) }
+    var etapaActual by rememberSaveable { mutableIntStateOf(previewStep ?: 0) }
+    var mostrarDialogo by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
@@ -72,7 +72,7 @@ fun FormularioViaje(
             // Animación entre formularios
             AnimatedContent(
                 targetState = etapaActual,
-                transitionSpec = { fadeIn() with fadeOut() }
+                transitionSpec = { fadeIn().togetherWith(fadeOut()) }
             ) { targetEtapa ->
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -113,14 +113,14 @@ fun FormularioViaje(
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text("AÑADIR ITINERARIO", fontWeight = FontWeight.Bold)
-                            Icon(Icons.Default.ArrowForward, null)
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
                         }
 
                     } else {
                         // --- VISTA 2: LISTA DE ITINERARIOS ---
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = { etapaActual = 0 }) {
-                                Icon(Icons.Default.ArrowBack, null)
+                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                             }
                             Text("Actividades para $title", style = MaterialTheme.typography.titleMedium)
                         }
@@ -181,99 +181,107 @@ fun FormularioViaje(
         }
     }
 
-    // --- MINI FORMULARIO (DIALOGO) ---
     if (mostrarDialogo) {
-        var n by remember { mutableStateOf("") }
-        var h by remember { mutableStateOf("") }
-        var p by remember { mutableStateOf("") }
-        var t by remember { mutableStateOf("Vuelo") }
-        var exp by remember { mutableStateOf(false) }
-        // Dentro del bloque if (mostrarDialogo)
-        var mostrarReloj by remember { mutableStateOf(false) }
-        val state = rememberTimePickerState(initialHour = 12, initialMinute = 0, is24Hour = true)
-
-        AlertDialog(
-            onDismissRequest = { mostrarDialogo = false },
-            title = { Text("Nueva Actividad") },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = n, onValueChange = { n = it }, label = { Text("Nombre") })
-                    OutlinedTextField(
-                        value = h,
-                        onValueChange = { },
-                        readOnly = true, // Evita que se abra el teclado
-                        label = { Text("Hora") },
-                        leadingIcon = { Icon(Icons.Filled.DateRange, null) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { mostrarReloj = true }, // Al tocar el campo, se abre el reloj
-                        enabled = false, // Lo ponemos en falso para que el click lo gestione el Modifier
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                            disabledBorderColor = MaterialTheme.colorScheme.outline,
-                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
-                    OutlinedTextField(value = p, onValueChange = { p = it }, label = { Text("Precio") })
-
-                    // Selector simple
-                    Box {
-                        OutlinedTextField(
-                            value = t,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Tipo") },
-                            trailingIcon = { IconButton(onClick = { exp = true }) { Icon(Icons.Default.KeyboardArrowDown, null) } },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        DropdownMenu(expanded = exp, onDismissRequest = { exp = false }) {
-                            listOf("Vuelo", "Restaurante", "Museo", "Hotel").forEach { opcion ->
-                                DropdownMenuItem(
-                                    text = { Text(opcion) },
-                                    onClick = { t = opcion; exp = false }
-                                )
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    // Guardamos como un simple Mapa de Strings
-                    val nuevaAct = mapOf("nombre" to n, "hora" to h, "precio" to p, "tipo" to t)
-                    listaItinerarios = listaItinerarios + nuevaAct
-                    mostrarDialogo = false
-                }) { Text("Guardar") }
+        DialogoNuevaActividad(
+            onDismiss = { mostrarDialogo = false },
+            onGuardar = { nuevaAct ->
+                listaItinerarios = listaItinerarios + nuevaAct
+                mostrarDialogo = false
             }
         )
-        if (mostrarReloj) {
-            AlertDialog(
-                onDismissRequest = { mostrarReloj = false },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            h = String.format("%02d:%02d", state.hour, state.minute)
-                            mostrarReloj = false
-                        }
-                    ) {
-                        Text("Aceptar")
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { mostrarReloj = false }
-                    ) {
-                        Text("Cancelar")
-                    }
-                },
-                text = {
-                    TimePicker(state = state)
-                }
-            )
-        }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DialogoNuevaActividad(
+    onDismiss: () -> Unit,
+    onGuardar: (Map<String, String>) -> Unit
+) {
+    var n by rememberSaveable { mutableStateOf("") }
+    var d by rememberSaveable { mutableStateOf("") }
+    var h by rememberSaveable { mutableStateOf("") }
+    var p by rememberSaveable { mutableStateOf("") }
+    var t by rememberSaveable { mutableStateOf("Vuelo") }
+    var exp by rememberSaveable { mutableStateOf(false) }
+    var mostrarReloj by rememberSaveable { mutableStateOf(false) }
+    var mostrarCalendario by rememberSaveable { mutableStateOf(false) }
+
+    val timeState = rememberTimePickerState()
+    val datePickerState = rememberDatePickerState()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.background,
+        title = { Text("Nueva Actividad", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(value = n, onValueChange = { n = it }, label = { Text("Nombre") })
+
+                // Campo Día
+                OutlinedTextField(
+                    value = d, onValueChange = {}, readOnly = true, label = { Text("Día") },
+                    leadingIcon = { Icon(Icons.Default.DateRange, null) },
+                    modifier = Modifier.fillMaxWidth().clickable { mostrarCalendario = true },
+                    enabled = false,
+                    colors = OutlinedTextFieldDefaults.colors(disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledBorderColor = MaterialTheme.colorScheme.outline)
+                )
+
+                // Campo Hora
+                OutlinedTextField(
+                    value = h, onValueChange = {}, readOnly = true, label = { Text("Hora") },
+                    leadingIcon = { Icon(Icons.Default.AccessTime, null) },
+                    modifier = Modifier.fillMaxWidth().clickable { mostrarReloj = true },
+                    enabled = false,
+                    colors = OutlinedTextFieldDefaults.colors(disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledBorderColor = MaterialTheme.colorScheme.outline)
+                )
+
+                OutlinedTextField(value = p, onValueChange = { p = it }, label = { Text("Precio") })
+
+                // Desplegable Tipo
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = t, onValueChange = {}, readOnly = true, label = { Text("Tipo") },
+                        trailingIcon = { IconButton(onClick = { exp = true }) { Icon(Icons.Default.KeyboardArrowDown, null) } },
+                        modifier = Modifier.fillMaxWidth().clickable { exp = true },
+                        enabled = false,
+                        colors = OutlinedTextFieldDefaults.colors(disabledTextColor = MaterialTheme.colorScheme.onSurface, disabledBorderColor = MaterialTheme.colorScheme.outline)
+                    )
+                    DropdownMenu(expanded = exp, onDismissRequest = { exp = false }, containerColor = MaterialTheme.colorScheme.background) {
+                        listOf("Vuelo", "Restaurante", "Museo", "Hotel", "Ocio").forEach { opcion ->
+                            DropdownMenuItem(text = { Text(opcion) }, onClick = { t = opcion; exp = false })
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onGuardar(mapOf("nombre" to n, "dia" to d, "hora" to h, "precio" to p, "tipo" to t)) }) {
+                Text("Guardar")
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
+
+    // Selectores (Calendario y Reloj)
+    if (mostrarCalendario) {
+        DatePickerDialog(onDismissRequest = { mostrarCalendario = false }, confirmButton = {
+            TextButton(onClick = {
+                d = datePickerState.selectedDateMillis?.let { java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date(it)) } ?: ""
+                mostrarCalendario = false
+            }) { Text("Aceptar") }
+        }) { DatePicker(state = datePickerState) }
+    }
+
+    if (mostrarReloj) {
+        AlertDialog(onDismissRequest = { mostrarReloj = false }, confirmButton = {
+            Button(onClick = {
+                h = String.format("%02d:%02d", timeState.hour, timeState.minute)
+                mostrarReloj = false
+            }) { Text("Aceptar") }
+        }, text = { TimePicker(state = timeState) })
+    }
+}
 
 
 @Preview(
@@ -328,6 +336,22 @@ fun PreviewFormularioPaso2() {
         FormularioViaje(
             navController = rememberNavController(),
             previewStep = 1
+        )
+    }
+}
+
+@Preview(
+    name = "Preview Unificada Itinerario",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+fun PreviewDialogoLimpio() {
+    AppTheme {
+        // Simplemente llamamos a la función real
+        DialogoNuevaActividad(
+            onDismiss = { /* No hace nada en preview */ },
+            onGuardar = { /* No hace nada en preview */ }
         )
     }
 }

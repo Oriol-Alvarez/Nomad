@@ -113,7 +113,7 @@ fun PreferenciasScreen(navController: NavHostController) {
                         type = "select"
                     )
                 }
-
+                Spacer(modifier = Modifier.height(16.dp))
                 GlassCard(title = "Notificaciones") {
                     CajasPreferencias(
                         image = R.drawable.bell_solid_full,

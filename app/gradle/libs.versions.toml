@@ -14,6 +14,7 @@ foundation = "1.10.3"
 foundationVersion = "1.10.4"
 benchmarkTraceprocessor = "1.4.1"
 animation = "1.10.4"
+runtimeSaveable = "1.10.4"
 
 
 [libraries]
@@ -38,6 +39,7 @@ androidx-compose-foundation = { group = "androidx.compose.foundation", name = "f
 androidx-foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "foundationVersion" }
 androidx-benchmark-traceprocessor = { group = "androidx.benchmark", name = "benchmark-traceprocessor", version.ref = "benchmarkTraceprocessor" }
 androidx-compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
+androidx-compose-runtime-saveable = { group = "androidx.compose.runtime", name = "runtime-saveable", version.ref = "runtimeSaveable" }
 
 
 [plugins]

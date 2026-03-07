@@ -43,28 +43,23 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.app.R
+import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
-
-data class Trip(
-    val title: String,
-    val date: String,
-    val price: String,
-    val image: Int
-)
 
 @Composable
 fun DetalleViajeScreen(navController: NavHostController) {
-    val trips = listOf(
-        Trip("La antigua Roma", "Abr 14 - Abr 21", "€1,560", R.drawable.roma),
-        Trip("Frío en Noruega", "Sep 19 - Sep 28", "€690", R.drawable.noruega),
-        Trip("Negocios en Londres", "May 12 - May 15", "€650", R.drawable.londres)
+    // Usamos una lista de Maps o pares para evitar el uso de una clase personalizada
+    val tripsData = listOf(
+        Triple("La antigua Roma", "Abr 14 - Abr 21", "€1,560" to R.drawable.roma),
+        Triple("Frío en Noruega", "Sep 19 - Sep 28", "€690" to R.drawable.noruega),
+        Triple("Negocios en Londres", "May 12 - May 15", "€650" to R.drawable.londres)
     )
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* Acción para añadir viaje */ },
+                onClick = { navController.navigate("form-viaje?ciudad=") },
                 containerColor = Color(0xFF0288D1),
                 contentColor = Color.White,
                 shape = CircleShape,
@@ -80,74 +75,74 @@ fun DetalleViajeScreen(navController: NavHostController) {
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
+            // Cabecera idéntica
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)// Color azul para que coincida con el FAB
                     .padding(24.dp)
             ) {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Column {
-                            Spacer(modifier = Modifier.height(30.dp))
-                            Text(
-                                text = "Mis Viajes",
-                                color = Color.White,
-                                fontSize = 42.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
+                Text(
+                    text = "Mis Viajes",
+                    color = Color.White,
+                    fontSize = 42.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.BottomStart)
+                )
             }
 
-            Column(
+            LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 25.dp)
+                    .padding(horizontal = 25.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(top = 32.dp, bottom = 80.dp)
             ) {
-                Spacer(modifier = Modifier.height(32.dp))
-
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp)
-                ) {
-                    items(trips) { trip ->
-                        TripCard(trip)
-                    }
+                items(tripsData) { trip ->
+                    // Llamamos al módulo pasando los parámetros uno a uno
+                    TripCardModule(
+                        title = trip.first,
+                        date = trip.second,
+                        price = trip.third.first,
+                        imageRes = trip.third.second,
+                        onClick = { navController.navigate(Routes.DETALLE_VIAJE2) }
+                    )
                 }
             }
         }
     }
 }
 
+
 @Composable
-fun TripCard(trip: Trip) {
+fun TripCardModule(
+    title: String,
+    date: String,
+    price: String,
+    imageRes: Int,
+    onClick: () -> Unit,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = { onClick() }
     ) {
         Column {
             Image(
-                painter = painterResource(id = trip.image),
-                contentDescription = "Imagen de ${trip.title}",
+                painter = painterResource(id = imageRes),
+                contentDescription = null,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
                 contentScale = ContentScale.Crop
             )
 
-            Column(modifier = Modifier.padding(vertical = 18.dp, horizontal = 16.dp)) {
+            Column(modifier = Modifier.padding(18.dp)) {
                 Text(
-                    text = trip.title,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    text = title,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -166,18 +161,19 @@ fun TripCard(trip: Trip) {
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = trip.date,
+                            text = date,
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.Gray
                         )
                     }
 
+                    // Badge de precio
                     Surface(
                         color = Color(0xFFE8F5E9),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = trip.price,
+                            text = price,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             color = Color(0xFF2E7D32),
                             fontWeight = FontWeight.Bold

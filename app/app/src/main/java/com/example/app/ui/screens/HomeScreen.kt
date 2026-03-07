@@ -108,14 +108,14 @@ fun RecomendadosSection(navController: NavHostController) {
             RecomendadoCard(
                 image = R.drawable.newyork,
                 name = "New York",
-                onClick = { navController.navigate("form-viaje") }
+                onClick = { navController.navigate("form-viaje?ciudad=New York") }
             )
         }
         item {
             RecomendadoCard(
                 image = R.drawable.paris,
                 name = "París",
-                onClick = { navController.navigate("destino/paris") }
+                onClick = { navController.navigate("form-viaje?ciudad=Paris") }
             )
         }
     }
@@ -135,21 +135,21 @@ fun DestacadosSection(navController: NavHostController) {
             DestacadoCard(
                 image = R.drawable.bcn,
                 name = "Barcelona",
-                onClick = { navController.navigate("destino/barcelona") }
+                onClick = { navController.navigate("form-viaje?ciudad=Barcelona") }
             )
         }
         item {
             DestacadoCard(
                 image = R.drawable.londres,
                 name = "Londres",
-                onClick = { navController.navigate("destino/londres") }
+                onClick = { navController.navigate("form-viaje?ciudad=Londres") }
             )
         }
         item {
             DestacadoCard(
                 image = R.drawable.republica_checa,
                 name = "República checa",
-                onClick = { navController.navigate("destino/republica_checa") }
+                onClick = { navController.navigate("form-viaje?ciudad=República checa") }
             )
         }
     }

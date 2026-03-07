@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import com.example.app.ui.screens.DetalleViajeScreen
 import com.example.app.ui.screens.HomeScreen
 import com.example.app.ui.screens.DetalleViajeScreen2
@@ -31,7 +32,16 @@ fun NavGraph(navController: NavHostController) {
         composable(Routes.PREFERENCIAS) { PreferenciasScreen(navController) }
         composable(Routes.SOBRE_NOSOTROS) { SobreNosotrosScreen(navController) }
         composable(Routes.TERMINOS_CONDICIONES) { TerminosCondicionesScreen(navController) }
-        composable(Routes.FORMVIAJE) { FormularioViaje(navController) }
+        composable(
+            route = Routes.FORMVIAJE, // Esto es "form-viaje?ciudad={ciudad}"
+            arguments = listOf(navArgument("ciudad") { defaultValue = "" })
+        ) { backStackEntry ->
+            // ESTA LÍNEA ES LA CLAVE: Extrae el valor real
+            val ciudadReal = backStackEntry.arguments?.getString("ciudad") ?: ""
+
+            // Pasa 'ciudadReal', NO la ruta
+            FormularioViaje(navController = navController, ciudadDestino = ciudadReal)
+        }
 
     }
 }
