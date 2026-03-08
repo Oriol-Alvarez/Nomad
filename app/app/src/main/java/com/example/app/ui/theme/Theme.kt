@@ -9,47 +9,69 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = Color(0xFF4FC3F7),    // Azul brillante para destacar
+
+    background = DarkBg,            // #121212
+    surface = DarkSurf,             // #1E1E1E
+    surfaceVariant = DarkSurf,
+    tertiary = Color(0xFF2C2C2E),
+    // Textos y elementos sobre fondo
+    onPrimary = Color.White,
+    primaryContainer = Color.DarkGray,
+    inversePrimary = Color.Black,
+    onBackground = Color.White,
+    onSurface = Color.White,
+    onSurfaceVariant = Color(0xFFB0BEC5), // Gris azulado suave para etiquetas
+    outline = Color(0xFF3D3D3D),
+    surfaceContainer = Color(0xFF4FC3F7)
+
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = NomadBlue,
+    background = LightBg,
+    surface = LightSurf,
+    surfaceVariant = NomadBlueDark,
+    tertiary = Color(0xFFF5F5F7),
+    primaryContainer = NomadBlue,
 
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    // Textos y elementos sobre fondo
+    onPrimary = Color.Black,
+    inversePrimary = Color.White,
+    onBackground = Color(0xFF0F172A), // Negro azulado muy elegante
+    onSurface = Color(0xFF0F172A),
+    onSurfaceVariant = NomadBlueDark, // Azul oscuro para etiquetas/subtítulos
+    outline = Color(0xFFCBD5E1),
+    surfaceContainer = NomadBlueDark
+
 )
 
 @Composable
 fun AppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    // 1. Cambiamos el nombre a 'useDarkTheme' para mayor claridad
+    useDarkTheme: Boolean = isSystemInDarkTheme(),
+    // Dynamic color desactivado por defecto para mantener tu paleta personalizada
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (useDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
+        // 2. Si 'useDarkTheme' es true, aplica la paleta oscura definida en tu proyecto
+        useDarkTheme -> DarkColorScheme
+
+        // 3. Por defecto, aplica la paleta clara
         else -> LightColorScheme
     }
 
+    // 4. Aplicamos el colorScheme al MaterialTheme global
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,

@@ -31,7 +31,7 @@ El repositorio utiliza un flujo sencillo adaptado a un equipo de dos desarrollad
 | `main` | Versión estable y libre de errores. Solo recibe cambios desde `test`. |
 | `test` | Rama de integración y validación. |
 | `guillem` | Desarrollo individual de Guillem. |
-| `uri` | Desarrollo individual de Uri. |
+| `oriol` | Desarrollo individual de oriol. |
 
 ---
 
@@ -43,9 +43,9 @@ Contiene únicamente código estable y debe compilar siempre sin errores. Están
 
 **`test` — Integración 🧪**
 
-Rama intermedia donde se combinan los avances de `guillem` y `uri`. Aquí se realizan las pruebas de integración antes de fusionar con `main`. Es obligatorio que el proyecto compile correctamente en esta rama antes de cualquier merge a producción.
+Rama intermedia donde se combinan los avances de `guillem` y `oriol`. Aquí se realizan las pruebas de integración antes de fusionar con `main`. Es obligatorio que el proyecto compile correctamente en esta rama antes de cualquier merge a producción.
 
-**`guillem` / `uri` — Desarrollo Individual 👨‍💻**
+**`guillem` / `oriol` — Desarrollo Individual 👨‍💻**
 
 Ramas de trabajo personal para implementar nuevas features y corregir bugs. Se mergean a `test` una vez que el trabajo está listo y probado localmente.
 
@@ -62,7 +62,7 @@ git clone https://github.com/Oriol-Alvarez/Nomad.git
 cd Nomad
 
 # Sitúate en tu rama personal
-git checkout guillem   # o uri
+git checkout guillem   # o oriol
 git pull               # Asegúrate de tener los últimos cambios
 ```
 
@@ -83,7 +83,7 @@ git add .
 git commit -m "feat(itinerary): add drag-and-drop for travel stops"
 
 # Subir cambios a tu rama remota
-git push origin guillem   # o uri
+git push origin guillem   # o oriol
 ```
 
 ---
@@ -94,7 +94,7 @@ Antes de abrir un Pull Request a `test`, sincroniza tu rama con los últimos cam
 
 ```bash
 # Asegúrate de estar en tu rama personal
-git checkout guillem   # o uri
+git checkout guillem   # o oriol
 
 # Descarga los cambios remotos de test sin fusionarlos
 git fetch origin
@@ -103,7 +103,7 @@ git fetch origin
 git merge origin/test
 
 # Resuelve conflictos si los hay, luego sube los cambios
-git push origin guillem   # o uri
+git push origin guillem   # o oriol
 ```
 
 ---
@@ -113,7 +113,7 @@ git push origin guillem   # o uri
 Una vez que tu funcionalidad está terminada y probada localmente:
 
 1. Ve al repositorio en GitHub.
-2. Abre un **Pull Request** desde tu rama (`guillem` o `uri`) hacia `test`.
+2. Abre un **Pull Request** desde tu rama (`guillem` o `oriol`) hacia `test`.
 3. Rellena la descripción del PR con:
     - **¿Qué cambia?** Descripción breve de los cambios realizados.
     - **¿Por qué?** Motivación o issue relacionado (ej. `Closes #12`).
@@ -266,9 +266,9 @@ refactor(itinerary): extract ItineraryCard into reusable component
 
 ## 👥 Equipo
 
-| Nombre | Rama | Rol |
-|---|---|---|
-| **Oriol Alvarez Arisa** | `uri` | Co-fundador & Desarrollador Android |
+| Nombre | Rama      | Rol |
+|---|-----------|---|
+| **Oriol Alvarez Arisa** | `oriol`   | Co-fundador & Desarrollador Android |
 | **Guillem Talayero Carrasco** | `guillem` | Co-fundador & Desarrollador Android |
 
 ---
