@@ -71,19 +71,19 @@ fun DetalleViajeScreen(navController: NavHostController) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                // ⬇️ Aplicamos solo el padding inferior para evitar que el BottomNav tape el último item
+                // Aplicamos solo el padding inferior para evitar que el BottomNav tape el último item
                 .padding(bottom = innerPadding.calculateBottomPadding())
                 .background(MaterialTheme.colorScheme.background),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 80.dp) // Espacio extra para el FAB
         ) {
 
-            // ⬇️ La cabecera como primer elemento (ocupa todo el ancho)
+            // La cabecera como primer elemento (ocupa todo el ancho)
             item {
                 CustomHeader(title = "Mis Viajes")
             }
 
-            // ⬇️ Las tarjetas de viaje
+            // Las tarjetas de viaje
             items(tripsData) { trip ->
                 // Mantenemos el margen de 25dp SOLO a los lados de las tarjetas
                 Box(modifier = Modifier.padding(horizontal = 25.dp)) {
