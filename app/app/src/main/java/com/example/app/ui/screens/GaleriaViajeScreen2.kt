@@ -44,8 +44,8 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
 
     val allImages = remember {
         mutableStateListOf(
-            R.drawable.roma, R.drawable.noruega, R.drawable.londres,
-            R.drawable.roma, R.drawable.noruega, R.drawable.londres,
+            R.drawable.roma, R.drawable.roma, R.drawable.roma,
+            R.drawable.roma, R.drawable.roma, R.drawable.roma,
             R.drawable.roma
         )
     }

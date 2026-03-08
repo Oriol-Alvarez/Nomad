@@ -56,9 +56,9 @@ data class GalleryAlbum(
 fun GaleriaViajeScreen(navController: NavHostController) {
     // Simulamos viajes con diferentes cantidades de fotos
     val albums = listOf(
-        GalleryAlbum("La antigua Roma", listOf(R.drawable.roma, R.drawable.noruega, R.drawable.londres, R.drawable.roma, R.drawable.noruega, R.drawable.londres, R.drawable.roma)),
+        GalleryAlbum("La antigua Roma", listOf(R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma)),
         GalleryAlbum("Frío en Noruega", emptyList()),
-        GalleryAlbum("Negocios en Londres", listOf(R.drawable.noruega, R.drawable.noruega, R.drawable.londres, R.drawable.noruega)),
+        GalleryAlbum("Negocios en Londres", listOf(R.drawable.londres, R.drawable.londres, R.drawable.londres, R.drawable.londres)),
     )
 
     Scaffold(
