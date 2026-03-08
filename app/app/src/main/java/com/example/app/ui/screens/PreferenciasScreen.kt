@@ -63,7 +63,7 @@ fun PreferenciasScreen(navController: NavHostController) {
                 .verticalScroll(rememberScrollState())
         ) {
             // 1. Cabecera (Hero) - Ahora fluye con la columna, no se solapa
-            HeroPreferencias()
+            CustomHeader("Preferencias", "Personaliza la app", false)
 
             // 2. Contenido de las tarjetas
             Column(

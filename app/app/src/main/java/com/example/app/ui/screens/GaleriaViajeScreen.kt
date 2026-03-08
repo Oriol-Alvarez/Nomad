@@ -72,32 +72,8 @@ fun GaleriaViajeScreen(navController: NavHostController) {
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // CABECERA AZUL
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(24.dp)
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Column {
-                            Spacer(modifier = Modifier.height(30.dp))
-                            Text(
-                                text = "Galería",
-                                color = Color.White,
-                                fontSize = 42.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
+
+            CustomHeader("Galería", "Explora tus recuerdos")
 
             // SECCIÓN: Barra de búsqueda estilo "Píldora + Botón"
             Row(
@@ -250,8 +226,8 @@ fun AlbumSection(
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                        //.clickable { onAddImageClick() }
-                        ,
+                    //.clickable { onAddImageClick() }
+                    ,
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {

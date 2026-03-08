@@ -21,6 +21,7 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = Color(0xFF2C2C2E),
     // Textos y elementos sobre fondo
     onPrimary = Color.White,
+    primaryContainer = Color.DarkGray,
     inversePrimary = Color.Black,
     onBackground = Color.White,
     onSurface = Color.White,
@@ -36,6 +37,7 @@ private val LightColorScheme = lightColorScheme(
     surface = LightSurf,
     surfaceVariant = NomadBlueDark,
     tertiary = Color(0xFFF5F5F7),
+    primaryContainer = NomadBlue,
 
     // Textos y elementos sobre fondo
     onPrimary = Color.Black,

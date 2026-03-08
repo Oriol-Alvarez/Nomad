@@ -74,10 +74,11 @@ fun FormularioViaje(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            HeroTerminosyCondiciones(
-                navController,
+            CustomHeader(
+
                 if (etapaActual == 0) "Nuevo Viaje" else "Itinerario",
-                if (etapaActual == 0) "Paso 1: Detalles" else "Paso 2: Actividades"
+                if (etapaActual == 0) "Paso 1: Detalles" else "Paso 2: Actividades",
+                true
             )
 
             AnimatedContent(

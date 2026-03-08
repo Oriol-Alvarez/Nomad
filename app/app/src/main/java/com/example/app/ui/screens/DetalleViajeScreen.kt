@@ -39,7 +39,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.app.R
@@ -48,7 +47,6 @@ import com.example.app.ui.theme.AppTheme
 
 @Composable
 fun DetalleViajeScreen(navController: NavHostController) {
-    // Usamos una lista de Maps o pares para evitar el uso de una clase personalizada
     val tripsData = listOf(
         Triple("La antigua Roma", "Abr 14 - Abr 21", "€1,560" to R.drawable.roma),
         Triple("Frío en Noruega", "Sep 19 - Sep 28", "€690" to R.drawable.noruega),
@@ -69,38 +67,26 @@ fun DetalleViajeScreen(navController: NavHostController) {
             }
         }
     ) { innerPadding ->
-        Column(
+
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
+                // ⬇️ Aplicamos solo el padding inferior para evitar que el BottomNav tape el último item
+                .padding(bottom = innerPadding.calculateBottomPadding())
+                .background(MaterialTheme.colorScheme.background),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(bottom = 80.dp) // Espacio extra para el FAB
         ) {
-            // Cabecera idéntica
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)// Color azul para que coincida con el FAB
-                    .padding(24.dp)
-            ) {
-                Text(
-                    text = "Mis Viajes",
-                    color = Color.White,
-                    fontSize = 42.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.BottomStart)
-                )
+
+            // ⬇️ La cabecera como primer elemento (ocupa todo el ancho)
+            item {
+                CustomHeader(title = "Mis Viajes")
             }
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 25.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(top = 32.dp, bottom = 80.dp)
-            ) {
-                items(tripsData) { trip ->
-                    // Llamamos al módulo pasando los parámetros uno a uno
+            // ⬇️ Las tarjetas de viaje
+            items(tripsData) { trip ->
+                // Mantenemos el margen de 25dp SOLO a los lados de las tarjetas
+                Box(modifier = Modifier.padding(horizontal = 25.dp)) {
                     TripCardModule(
                         title = trip.first,
                         date = trip.second,
@@ -113,7 +99,6 @@ fun DetalleViajeScreen(navController: NavHostController) {
         }
     }
 }
-
 
 @Composable
 fun TripCardModule(
@@ -167,7 +152,6 @@ fun TripCardModule(
                         )
                     }
 
-                    // Badge de precio
                     Surface(
                         color = Color(0xFFE8F5E9),
                         shape = RoundedCornerShape(8.dp)
@@ -184,8 +168,6 @@ fun TripCardModule(
         }
     }
 }
-
-
 
 @Preview(showBackground = true)
 @Composable
