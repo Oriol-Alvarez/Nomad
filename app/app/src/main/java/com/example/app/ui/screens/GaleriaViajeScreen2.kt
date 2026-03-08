@@ -6,23 +6,26 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan // ⬇️ Import necesario para la magia del span
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape // ⬇️ Nuevo import para el círculo
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,63 +42,87 @@ import com.example.app.ui.theme.AppTheme
 fun GaleriaViajeScreen2(navController: NavHostController) {
     val albumTitle = "La antigua Roma"
 
-    val allImages = listOf(
-        R.drawable.roma, R.drawable.noruega, R.drawable.londres,
-        R.drawable.roma, R.drawable.noruega, R.drawable.londres,
-        R.drawable.roma
-    )
+    val allImages = remember {
+        mutableStateListOf(
+            R.drawable.roma, R.drawable.noruega, R.drawable.londres,
+            R.drawable.roma, R.drawable.noruega, R.drawable.londres,
+            R.drawable.roma
+        )
+    }
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
 
-        // Ya no necesitamos la Column externa, el LazyVerticalGrid ocupa todo
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 100.dp),
             modifier = Modifier
                 .fillMaxSize()
-                // ⬇️ Aplicamos el padding inferior del Scaffold aquí
                 .padding(bottom = innerPadding.calculateBottomPadding())
                 .background(MaterialTheme.colorScheme.background),
-            // ⬇️ Quitamos los márgenes superior y laterales para que la cabecera toque los bordes
             contentPadding = PaddingValues(bottom = 80.dp),
-            // Mantenemos el espaciado vertical entre filas
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            // Reducimos el espaciado horizontal general porque le daremos padding a las fotos
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
 
             // 1. LA CABECERA
-            // ⬇️ span = { GridItemSpan(maxLineSpan) } hace que ocupe toda la fila
             item(span = { GridItemSpan(maxLineSpan) }) {
-                // Envolvemos en un Box con padding inferior para separarlo de la primera fila de fotos
                 Box(modifier = Modifier.padding(bottom = 16.dp)) {
                     CustomHeader(
-                        title = albumTitle, showBackButton = true, backgroundImageRes = R.drawable.roma
+                        title = albumTitle,
+                        showBackButton = true,
+                        backgroundImageRes = R.drawable.roma
                     )
                 }
             }
 
             // 2. LAS FOTOS
-            items(allImages) { imageRes ->
-                Image(
-                    painter = painterResource(id = imageRes),
-                    contentDescription = "Foto del álbum",
+            itemsIndexed(allImages) { index, imageRes ->
+                Box(
                     modifier = Modifier
-                        // ⬇️ Le damos el margen lateral a las fotos individualmente
                         .padding(horizontal = 4.dp)
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable { /* Ver en grande */ },
-                    contentScale = ContentScale.Crop
-                )
+                ) {
+                    // La foto
+                    Image(
+                        painter = painterResource(id = imageRes),
+                        contentDescription = "Foto del álbum",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clickable { /* Ver en grande */ },
+                        contentScale = ContentScale.Crop
+                    )
+
+                    // ⬇️ NUEVO BOTÓN DE ELIMINAR (Más pequeño y circular)
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(4.dp) // Margen desde la esquina
+                            .size(22.dp) // Tamaño total del círculo más pequeño
+                            .background(
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f), // Un poco más opaco para que destaque
+                                shape = CircleShape // Círculo perfecto
+                            )
+                            .clip(CircleShape) // Para que el efecto visual del click (ripple) sea redondo
+                            .clickable { allImages.removeAt(index) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Eliminar foto",
+                            modifier = Modifier.size(14.dp), // Tamaño de la X reducido
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
             }
 
             // 3. EL BOTÓN DE AÑADIR
             item {
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 4.dp) // Mismo margen que las fotos
+                        .padding(horizontal = 4.dp)
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
