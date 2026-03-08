@@ -18,10 +18,14 @@ import com.example.app.ui.screens.FormularioViaje
 
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    isDarkMode: Boolean,           // 1. Declaramos el parámetro aquí
+    onDarkModeChange: (Boolean) -> Unit // 2. Necesitamos la función para cambiarlo
+) {
     NavHost(
         navController = navController,
-        startDestination = Routes.SPLASH
+        startDestination = Routes.SPLASH // 3. Quitamos la declaración errónea de aquí
     ) {
         composable(Routes.SPLASH) { SplashScreen(navController) }
         composable(Routes.HOME) { HomeScreen(navController) }
@@ -29,19 +33,24 @@ fun NavGraph(navController: NavHostController) {
         composable(Routes.DETALLE_VIAJE2) { DetalleViajeScreen2(navController) }
         composable(Routes.GALERIA_VIAJE) { GaleriaViajeScreen(navController) }
         composable(Routes.GALERIA_VIAJE_2) { GaleriaViajeScreen2(navController) }
-        composable(Routes.PREFERENCIAS) { PreferenciasScreen(navController) }
-        composable(Routes.SOBRE_NOSOTROS) { SobreNosotrosScreen(navController) }
-        composable(Routes.TERMINOS_CONDICIONES) { TerminosCondicionesScreen(navController) }
-        composable(
-            route = Routes.FORMVIAJE, // Esto es "form-viaje?ciudad={ciudad}"
-            arguments = listOf(navArgument("ciudad") { defaultValue = "" })
-        ) { backStackEntry ->
-            // ESTA LÍNEA ES LA CLAVE: Extrae el valor real
-            val ciudadReal = backStackEntry.arguments?.getString("ciudad") ?: ""
 
-            // Pasa 'ciudadReal', NO la ruta
-            FormularioViaje(navController = navController, ciudadDestino = ciudadReal)
+        composable(Routes.PREFERENCIAS) {
+            PreferenciasScreen(
+                navController = navController,
+                isDarkMode = isDarkMode,      // Pasamos el valor actual
+                onDarkModeChange = onDarkModeChange // Pasamos la acción de cambio
+            )
         }
 
+        composable(Routes.SOBRE_NOSOTROS) { SobreNosotrosScreen(navController) }
+        composable(Routes.TERMINOS_CONDICIONES) { TerminosCondicionesScreen(navController) }
+
+        composable(
+            route = Routes.FORMVIAJE,
+            arguments = listOf(navArgument("ciudad") { defaultValue = "" })
+        ) { backStackEntry ->
+            val ciudadReal = backStackEntry.arguments?.getString("ciudad") ?: ""
+            FormularioViaje(navController = navController, ciudadDestino = ciudadReal)
+        }
     }
 }

@@ -52,21 +52,26 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun AppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
+    // 1. Cambiamos el nombre a 'useDarkTheme' para mayor claridad
+    useDarkTheme: Boolean = isSystemInDarkTheme(),
+    // Dynamic color desactivado por defecto para mantener tu paleta personalizada
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            if (useDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
+        // 2. Si 'useDarkTheme' es true, aplica la paleta oscura definida en tu proyecto
+        useDarkTheme -> DarkColorScheme
+
+        // 3. Por defecto, aplica la paleta clara
         else -> LightColorScheme
     }
 
+    // 4. Aplicamos el colorScheme al MaterialTheme global
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,

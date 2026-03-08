@@ -189,7 +189,7 @@ fun OfertaTipCard(
 ) {
     Card(
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiary), // Gris oscuro según tu diseño
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // Gris oscuro según tu diseño
         modifier = Modifier
             .fillMaxWidth()
             .height(90.dp)
@@ -227,7 +227,7 @@ fun RecomendadoCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiary // Fondo surface para todo el bloque
+            containerColor = MaterialTheme.colorScheme.surface // Fondo surface para todo el bloque
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
@@ -271,7 +271,7 @@ fun DestacadoCard(
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiary // Gris claro para el contenedor
+            containerColor = MaterialTheme.colorScheme.surface // Gris claro para el contenedor
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp) // Sin sombra para un look flat
     ) {
@@ -304,32 +304,6 @@ fun DestacadoCard(
     }
 }
 
-
-@Composable
-fun HeroHome() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant
-    ) {
-        Column(
-            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 40.dp, bottom = 30.dp)
-        ) {
-            Text(
-                text = "Hola, Oriol",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Busca tu próxima aventura",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.9f)
-            )
-
-        }
-    }
-}
 
 @Composable
 fun TermsAndConditionsDialog(navController: NavHostController) {

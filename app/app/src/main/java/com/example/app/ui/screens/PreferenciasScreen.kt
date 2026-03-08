@@ -1,22 +1,15 @@
 package com.example.app.ui.screens
 
-import android.R.attr.onClick
 import android.content.res.Configuration
-import android.os.Build
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,8 +19,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,19 +28,19 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.ui.theme.AppTheme
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.rotate
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.zIndex
-import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.app.Routes
 
 @Composable
-fun PreferenciasScreen(navController: NavHostController) {
+fun PreferenciasScreen(
+    navController: NavHostController,
+    isDarkMode: Boolean,
+    onDarkModeChange: (Boolean) -> Unit
+) {
     // Scaffold es el "esqueleto" oficial para pantallas con barras de navegación
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
@@ -100,8 +91,9 @@ fun PreferenciasScreen(navController: NavHostController) {
                         image = R.drawable.circle_half_stroke_solid_full,
                         name = "Modo oscuro",
                         role = "Escoger un tema",
-                        value = "off",
-                        type = "slider"
+                        value = if (isDarkMode) "on" else "off",
+                        type = "slider",
+                        onCheckedChange = onDarkModeChange // Pasamos la función hacia abajo
                     )
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
                     CajasPreferencias(
@@ -175,35 +167,6 @@ fun PreferenciasScreen(navController: NavHostController) {
     }
 }
 
-@Composable
-fun HeroPreferencias() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surfaceVariant
-    ) {
-        Column(
-            modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 40.dp, bottom = 30.dp)
-        ) {
-            Text(
-                text = "Preferencias",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Personaliza la aplicación a tu gusto.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.9f)
-            )
-
-        }
-    }
-}
-
-
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CajasPreferencias(
@@ -214,7 +177,8 @@ fun CajasPreferencias(
     options: List<String> = emptyList(),
     type: String,
     navController: NavHostController = rememberNavController(),
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    onCheckedChange: (Boolean) -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -271,11 +235,8 @@ fun CajasPreferencias(
             var isChecked by remember { mutableStateOf(value == "on") }
 
             Switch(
-                checked = isChecked,
-                onCheckedChange = { nuevoEstado ->
-                    isChecked = nuevoEstado
-                    // El cambio en 'isChecked' dispara automáticamente la animación de deslizamiento
-                },
+                checked = value == "on", // El valor ahora viene del "value" que pasamos arriba
+                onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
                     checkedTrackColor = MaterialTheme.colorScheme.primary, // Verde tipo iOS/Android estándar
@@ -373,7 +334,9 @@ fun CajasPreferencias(
 fun PreferenciasPreviewDark() {
     AppTheme {
         PreferenciasScreen(
-            navController = rememberNavController()
+            navController = rememberNavController(),
+            isDarkMode = true,
+            onDarkModeChange = {}
         )
     }
 }
@@ -387,7 +350,9 @@ fun PreferenciasPreviewDark() {
 fun PreferenciasPreviewLight() {
     AppTheme {
         PreferenciasScreen(
-            navController = rememberNavController()
+            navController = rememberNavController(),
+            isDarkMode = false,
+            onDarkModeChange = {}
         )
     }
 }
