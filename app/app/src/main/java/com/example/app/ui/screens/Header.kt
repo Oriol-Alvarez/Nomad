@@ -1,6 +1,5 @@
 package com.example.app.ui.screens
 
-// ⬇️ Este import es clave para la magia
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,7 +27,6 @@ fun CustomHeader(
     subtitle: String? = null,
     showBackButton: Boolean = false // Ya no necesitamos el parámetro onBackClick
 ) {
-    // ⬇️ Obtenemos el controlador del botón "Atrás" del sistema
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
     Surface(

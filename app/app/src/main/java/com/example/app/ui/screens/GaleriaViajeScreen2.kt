@@ -71,42 +71,6 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // NUEVA CABECERA: Botón en la esquina superior y título grande
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp) // Mantenemos la misma altura que la otra pantalla
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                // Flecha de retroceso anclada a la esquina superior izquierda
-                IconButton(
-                    onClick = { navController.popBackStack() },
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(top = 16.dp, start = 8.dp) // Ajusta el padding para pegarla más o menos al borde
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver",
-                        tint = Color.White,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-
-                // Título principal centrado un poco más abajo
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 24.dp, top = 72.dp)
-                ) {
-                    Text(
-                        text = albumTitle,
-                        color = Color.White,
-                        fontSize = 36.sp, // Un poco más pequeño que "Galería" por si el nombre es largo
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
 
             // CUADRÍCULA DE FOTOS
             LazyVerticalGrid(
@@ -117,6 +81,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+
                 items(allImages) { imageRes ->
                     Image(
                         painter = painterResource(id = imageRes),

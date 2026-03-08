@@ -72,7 +72,7 @@ fun TerminosCondicionesScreen(navController: NavHostController) {
         ) {
 
             // Hero
-            HeroTerminosyCondiciones(navController,"Términos y condiciones","Ultima actualización 05 de marzo de 2026")
+            CustomHeader("Términos y condiciones","Ultima actualización 05 de marzo de 2026", true)
 
             Column(
                 modifier = Modifier

@@ -59,7 +59,7 @@ fun HomeScreen(navController: NavHostController) {
                 .verticalScroll(rememberScrollState())
         ) {
             // Hero principal
-            HeroHome()
+            CustomHeader("Hola, Oriol", "Busca tu próxima aventura")
 
             Column(
                 modifier = Modifier
