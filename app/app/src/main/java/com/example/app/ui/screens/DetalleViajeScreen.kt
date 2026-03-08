@@ -4,7 +4,6 @@ import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -39,7 +38,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.app.R
@@ -56,6 +54,7 @@ fun DetalleViajeScreen(navController: NavHostController) {
     )
 
     Scaffold(
+        topBar = { CustomHeader(title = "Mis Viajes") },
         bottomBar = { BottomNavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
@@ -75,22 +74,6 @@ fun DetalleViajeScreen(navController: NavHostController) {
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // Cabecera idéntica
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant)// Color azul para que coincida con el FAB
-                    .padding(24.dp)
-            ) {
-                Text(
-                    text = "Mis Viajes",
-                    color = Color.White,
-                    fontSize = 42.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.BottomStart)
-                )
-            }
 
             LazyColumn(
                 modifier = Modifier
