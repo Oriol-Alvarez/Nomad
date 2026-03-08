@@ -193,7 +193,8 @@ fun OfertaTipCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(90.dp)
-            .clickable { onClick() }
+            .clickable { onClick() },
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
@@ -227,7 +228,8 @@ fun RecomendadoCard(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiary // Fondo surface para todo el bloque
-        )
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column {
             // Imagen: ocupa la parte superior
@@ -271,7 +273,7 @@ fun DestacadoCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.tertiary // Gris claro para el contenedor
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp) // Sin sombra para un look flat
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp) // Sin sombra para un look flat
     ) {
         Column {
             // Imagen
@@ -350,6 +352,7 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
     if (!hasAccepted) {
         AlertDialog(
             onDismissRequest = { },
+            containerColor = MaterialTheme.colorScheme.background,
             title = {
                 Text(text = "Privacidad y términos", fontWeight = FontWeight.Bold)
             },
@@ -391,7 +394,12 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
                     onClick = {
                         sharedPreferences.edit().putBoolean("terms_accepted", true).apply()
                         hasAccepted = true
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        contentColor = MaterialTheme.colorScheme.inversePrimary // Color del texto adaptado al fondo
+                    )
+
                 ) {
                     Text("Aceptar y continuar")
                 }
