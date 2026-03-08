@@ -47,14 +47,19 @@ import com.example.app.ui.theme.AppTheme
 
 @Composable
 fun DetalleViajeScreen(navController: NavHostController) {
+    // Datos de ejemplo para poblar la lista
     val tripsData = listOf(
         Triple("La antigua Roma", "Abr 14 - Abr 21", "€1,560" to R.drawable.roma),
         Triple("Frío en Noruega", "Sep 19 - Sep 28", "€690" to R.drawable.noruega),
         Triple("Negocios en Londres", "May 12 - May 15", "€650" to R.drawable.londres)
     )
 
+    // Contenedor principal de la pantalla que organiza las barras, el botón flotante y el contenido
     Scaffold(
+        // Menú de navegación inferior (Bottom Navigation)
         bottomBar = { BottomNavigationBar(navController) },
+
+        // Botón circular azul en la esquina inferior derecha (FAB) para añadir un nuevo viaje
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate("form-viaje?ciudad=") },
@@ -68,24 +73,23 @@ fun DetalleViajeScreen(navController: NavHostController) {
         }
     ) { innerPadding ->
 
+        // Lista desplazable verticalmente (Scroll) que contiene el contenido principal
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                // Aplicamos solo el padding inferior para evitar que el BottomNav tape el último item
                 .padding(bottom = innerPadding.calculateBottomPadding())
                 .background(MaterialTheme.colorScheme.background),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(bottom = 80.dp) // Espacio extra para el FAB
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
 
-            // La cabecera como primer elemento (ocupa todo el ancho)
+            // Título superior de la pantalla ("Mis Viajes")
             item {
                 CustomHeader(title = "Mis Viajes")
             }
 
-            // Las tarjetas de viaje
+            // Lista iterativa que genera las tarjetas para cada viaje
             items(tripsData) { trip ->
-                // Mantenemos el margen de 25dp SOLO a los lados de las tarjetas
                 Box(modifier = Modifier.padding(horizontal = 25.dp)) {
                     TripCardModule(
                         title = trip.first,
@@ -108,6 +112,7 @@ fun TripCardModule(
     imageRes: Int,
     onClick: () -> Unit,
 ) {
+    // Tarjeta individual con bordes redondeados y sombra
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -115,7 +120,9 @@ fun TripCardModule(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = { onClick() }
     ) {
+        // Estructura vertical dentro de la tarjeta
         Column {
+            // Imagen de cabecera del destino (ocupa la parte superior de la tarjeta)
             Image(
                 painter = painterResource(id = imageRes),
                 contentDescription = null,
@@ -125,18 +132,24 @@ fun TripCardModule(
                 contentScale = ContentScale.Crop
             )
 
+            // Contenedor de la información del viaje debajo de la imagen
             Column(modifier = Modifier.padding(18.dp)) {
+
+                // Nombre del destino en texto negrita grande
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
 
+                // Fila horizontal para alinear la fecha a la izquierda y el precio a la derecha
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
+                    // Contenedor del icono de calendario y el texto de la fecha
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.Default.CalendarMonth,
@@ -152,6 +165,7 @@ fun TripCardModule(
                         )
                     }
 
+                    // Etiqueta destacada (fondo verde claro) para mostrar el precio
                     Surface(
                         color = Color(0xFFE8F5E9),
                         shape = RoundedCornerShape(8.dp)

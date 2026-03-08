@@ -38,14 +38,20 @@ import com.example.app.ui.theme.AppTheme
 @Composable
 fun TerminosCondicionesScreen(navController: NavHostController) {
     val context = LocalContext.current
-    // Accedemos a las preferencias compartidas
+
+    // Acceso a SharedPreferences para persistir la aceptación de términos localmente
     val sharedPreferences = remember {
         context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
     }
+
+    // Estado que determina si el usuario ya aceptó previamente los términos
     var accepted by remember {
         mutableStateOf(sharedPreferences.getBoolean("terms_accepted", false))
     }
+
+    // Estado volátil para el control del Checkbox de validación
     var checkboxChecked by remember { mutableStateOf(false) }
+
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
@@ -55,10 +61,10 @@ fun TerminosCondicionesScreen(navController: NavHostController) {
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()) // Habilita el desplazamiento si el texto legal es extenso
         ) {
 
-            // Hero
+            // Componente de cabecera reutilizable con título y fecha de actualización
             CustomHeader("Términos y condiciones", "Ultima actualización 05 de marzo de 2026", true)
 
             Column(
@@ -69,6 +75,7 @@ fun TerminosCondicionesScreen(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // Tarjeta contenedora del cuerpo legal del contrato
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
@@ -114,11 +121,10 @@ Guillem Talayero Carrasco
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-
-
+                // Bloque condicional: Si no se han aceptado los términos, se muestra el formulario de validación
                 if (!accepted) {
 
-                    // Checkbox
+                    // Fila de interacción para el consentimiento del usuario
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -132,7 +138,7 @@ Guillem Talayero Carrasco
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Botones
+                    // Acciones de navegación y confirmación
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -146,10 +152,11 @@ Guillem Talayero Carrasco
 
                         Button(
                             onClick = {
+                                // Persistencia del cambio en el almacenamiento local
                                 sharedPreferences.edit().putBoolean("terms_accepted", true).apply()
                                 accepted = true
                             },
-                            enabled = checkboxChecked
+                            enabled = checkboxChecked // El botón solo es accionable si el checkbox está marcado
                         ) {
                             Text("Aceptar")
                         }
@@ -157,7 +164,7 @@ Guillem Talayero Carrasco
 
                 } else {
 
-                    // Mensaje cuando ya aceptó
+                    // Estado visual que se muestra una vez que el usuario ya ha aceptado los términos
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),

@@ -29,14 +29,15 @@ import com.example.app.R
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
 
+    // Observador del estado de la pila de navegación para identificar la ruta activa
     val currentRoute =
         navController.currentBackStackEntryAsState().value?.destination?.route ?: "home"
 
-
+    // Contenedor de la barra con el color de superficie definido en el tema
     Surface(
-
-        modifier = Modifier.background(color=MaterialTheme.colorScheme.surface )
+        modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)
     ) {
+        // Disposición horizontal de los destinos de navegación
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -45,24 +46,28 @@ fun BottomNavigationBar(navController: NavHostController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
 
+            // Ítem: Pantalla principal
             BottomItem(
                 icon = painterResource(id = R.drawable.house_solid_full),
                 label = "Home",
                 selected = currentRoute == "home"
             ) { navController.navigate("home") }
 
+            // Ítem: Listado y detalles de itinerarios
             BottomItem(
                 icon = painterResource(id = R.drawable.plane_solid_full),
                 label = "Viajes",
                 selected = currentRoute == "detalle_viaje"
             ) { navController.navigate("detalle_viaje") }
 
+            // Ítem: Álbumes de fotos y recuerdos
             BottomItem(
                 icon = painterResource(id = R.drawable.gallery_solid_full),
                 label = "Galería",
                 selected = currentRoute == "galeria_viaje"
             ) { navController.navigate("galeria_viaje") }
 
+            // Ítem: Configuración y perfil de usuario
             BottomItem(
                 icon = painterResource(id = R.drawable.settings_solid_full),
                 label = "Ajustes",
@@ -79,6 +84,7 @@ fun BottomItem(
     selected: Boolean,
     onClick: () -> Unit
 ) {
+    // Celda individual con estados visuales (color primario para activo, variante para inactivo)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -87,6 +93,7 @@ fun BottomItem(
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
 
+        // Representación gráfica del destino
         Icon(
             painter = icon,
             contentDescription = label,
@@ -97,6 +104,7 @@ fun BottomItem(
             modifier = Modifier.size(24.dp)
         )
 
+        // Etiqueta descriptiva inferior
         Text(
             text = label,
             fontSize = 11.sp,
