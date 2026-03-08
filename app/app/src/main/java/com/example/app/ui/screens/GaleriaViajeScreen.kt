@@ -46,7 +46,7 @@ import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
 
-// Modelo de datos para la galería
+// Estructura de datos que representa un álbum fotográfico vinculado a un destino
 data class GalleryAlbum(
     val title: String,
     val images: List<Int>
@@ -54,7 +54,7 @@ data class GalleryAlbum(
 
 @Composable
 fun GaleriaViajeScreen(navController: NavHostController) {
-    // Simulamos viajes con diferentes cantidades de fotos
+    // Conjunto de datos de prueba para renderizar diferentes estados de los álbumes
     val albums = listOf(
         GalleryAlbum("La antigua Roma", listOf(R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma)),
         GalleryAlbum("Frío en Noruega", emptyList()),
@@ -65,30 +65,30 @@ fun GaleriaViajeScreen(navController: NavHostController) {
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
 
-        // El LazyColumn ahora es la raíz de la pantalla y envuelve todo
+        // Contenedor principal desplazable que estructura el layout de la pantalla
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(bottom = 80.dp) // Padding inferior para que no quede tapado por la barra
+            contentPadding = PaddingValues(bottom = 80.dp)
         ) {
 
-            // 1. LA CABECERA COMO ITEM DEL LAZYCOLUMN
+            // Sección 1: Componente de cabecera principal de la galería
             item {
                 CustomHeader("Galería", "Explora tus recuerdos")
             }
 
-            // 2. LA BARRA DE BÚSQUEDA COMO ITEM DEL LAZYCOLUMN
+            // Sección 2: Fila de controles que contiene la barra de búsqueda interactiva
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp)
-                        .padding(top = 32.dp, bottom = 28.dp), // Añadimos bottom aquí en lugar del contentPadding superior que tenías antes
+                        .padding(top = 32.dp, bottom = 28.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Barra de texto (Píldora)
+                    // Contenedor visual del campo de texto redondeado (Píldora de búsqueda)
                     Surface(
                         modifier = Modifier
                             .weight(1f)
@@ -113,7 +113,7 @@ fun GaleriaViajeScreen(navController: NavHostController) {
 
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    // Botón circular de la lupa
+                    // Botón de acción flotante auxiliar para ejecutar la búsqueda
                     Surface(
                         modifier = Modifier.size(48.dp),
                         shape = CircleShape,
@@ -123,7 +123,7 @@ fun GaleriaViajeScreen(navController: NavHostController) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .clickable { /* Aquí irá la lógica de búsqueda */ },
+                                .clickable {  },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -136,7 +136,7 @@ fun GaleriaViajeScreen(navController: NavHostController) {
                 }
             }
 
-            // 3. CONTENIDO DE ÁLBUMES
+            // Sección 3: Iteración sobre la colección de álbumes para renderizar sus componentes
             items(albums) { album ->
                 AlbumSection(
                     album = album,
@@ -163,7 +163,7 @@ fun AlbumSection(
             .fillMaxWidth()
             .padding(bottom = 24.dp)
     ) {
-        // Título del viaje
+        // Encabezado textual de la sección del álbum
         Text(
             text = album.title,
             style = MaterialTheme.typography.titleMedium,
@@ -174,7 +174,7 @@ fun AlbumSection(
                 .padding(bottom = 12.dp)
         )
 
-        // Fila de máximo 3 imágenes
+        // Cuadrícula horizontal fluida restringida a un máximo de 3 elementos visuales
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -184,7 +184,7 @@ fun AlbumSection(
             val displayImages = album.images.take(3)
             val extraCount = album.images.size - 3
 
-            // Dibujamos las fotos existentes
+            // Renderizado de las miniaturas fotográficas del álbum
             displayImages.forEachIndexed { index, imageRes ->
                 Box(
                     modifier = Modifier
@@ -199,7 +199,7 @@ fun AlbumSection(
                         contentScale = ContentScale.Crop
                     )
 
-                    // Capa oscura con el "+X" interactivo
+                    // Capa superpuesta (Overlay) que indica exceso de imágenes y actúa como botón de expansión
                     if (index == 2 && extraCount > 0) {
                         Box(
                             modifier = Modifier
@@ -219,7 +219,7 @@ fun AlbumSection(
                 }
             }
 
-            // Si el álbum tiene menos de 3 fotos, mostramos el botón de añadir en el siguiente hueco
+            // Contenedor interactivo para la adición de imágenes, visible si la cuadrícula no está llena
             if (displayImages.size < 3) {
                 Box(
                     modifier = Modifier
@@ -227,7 +227,7 @@ fun AlbumSection(
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                        .clickable { onAddImageClick() }, // <-- Activado el click
+                        .clickable { onAddImageClick() },
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -240,7 +240,7 @@ fun AlbumSection(
                     }
                 }
 
-                // Y si AÚN quedan huecos, metemos Spacers invisibles
+                // Generación de espaciadores flexibles para conservar la alineación y proporción de la Row
                 val espaciosRestantes = 3 - displayImages.size - 1
                 if (espaciosRestantes > 0) {
                     repeat(espaciosRestantes) {

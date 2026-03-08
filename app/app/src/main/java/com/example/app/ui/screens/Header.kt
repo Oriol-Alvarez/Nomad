@@ -1,9 +1,9 @@
 package com.example.app.ui.screens
 
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.Image // ⬇️ Nuevo import
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box // ⬇️ Nuevo import
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,8 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale // ⬇️ Nuevo import
-import androidx.compose.ui.res.painterResource // ⬇️ Nuevo import
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -33,11 +33,12 @@ fun CustomHeader(
     title: String,
     subtitle: String? = null,
     showBackButton: Boolean = false,
-    backgroundImageRes: Int? = null //
+    backgroundImageRes: Int? = null
 ) {
+    // Gestor para la navegación hacia atrás del sistema
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    // Degradado original por si no hay imagen
+    // Definición del degradado por defecto cuando no se proporciona una imagen de fondo
     val defaultGradientBrush = Brush.linearGradient(
         colors = listOf(
             MaterialTheme.colorScheme.surfaceVariant,
@@ -49,20 +50,19 @@ fun CustomHeader(
         modifier = Modifier.fillMaxWidth(),
         color = Color.Transparent
     ) {
-        // Usamos un Box para poder apilar la imagen de fondo y el contenido
+        // Contenedor principal para superponer capas de fondo y contenido textual
         Box(modifier = Modifier.fillMaxWidth()) {
 
-            // 1. Capa de fondo (Imagen + Degradado oscuro O Degradado base)
+            // Capa 1: Lógica de fondo (Imagen con máscara de legibilidad o degradado sólido)
             if (backgroundImageRes != null) {
-                // Imagen de fondo
+                // Renderizado de la imagen de recurso con recorte adaptativo
                 Image(
                     painter = painterResource(id = backgroundImageRes),
-                    contentDescription = "Imagen de fondo de la cabecera",
-                    // Usamos matchParentSize para que ocupe exactamente lo que mide la cabecera
+                    contentDescription = null,
                     modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.Crop
                 )
-                // Degradado oscuro para que el texto se lea bien
+                // Superposición de degradado vertical oscuro para garantizar el contraste del texto blanco
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -76,7 +76,7 @@ fun CustomHeader(
                         )
                 )
             } else {
-                // Si no hay imagen, aplicamos el fondo original al Box base
+                // Aplicación del degradado de marca si no existe imagen de fondo
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -84,7 +84,7 @@ fun CustomHeader(
                 )
             }
 
-            // 2. Capa de contenido (Textos y Botones)
+            // Capa 2: Estructura de contenido (Botón de retroceso, título y subtítulo)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,7 +96,7 @@ fun CustomHeader(
                     )
             ) {
 
-                // Fila superior con botón back opcional
+                // Área de control superior: Botón de navegación opcional
                 if (showBackButton) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -108,7 +108,7 @@ fun CustomHeader(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
+                                contentDescription = "Regresar",
                                 tint = Color.White,
                             )
                         }
@@ -117,7 +117,7 @@ fun CustomHeader(
                     Spacer(modifier = Modifier.height(48.dp))
                 }
 
-                // Título (arriba)
+                // Título principal con énfasis tipográfico
                 Text(
                     text = title,
                     style = MaterialTheme.typography.headlineMedium,
@@ -127,7 +127,7 @@ fun CustomHeader(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // Subtítulo (abajo)
+                // Subtítulo secundario con opacidad reducida para jerarquía visual
                 Text(
                     text = subtitle ?: "",
                     style = MaterialTheme.typography.bodyMedium,

@@ -50,17 +50,17 @@ fun FormularioViaje(
     previewStep: Int? = null,
     ciudadDestino: String = ""
 ) {
-    // 1. Estados de la "Página 1" (Datos Generales)
+    // Variables de estado para el primer paso (Información general del viaje)
     var title by rememberSaveable { mutableStateOf("") }
     var country by rememberSaveable { mutableStateOf(if (ciudadDestino == "{ciudad}") "" else ciudadDestino) }
     var description by rememberSaveable { mutableStateOf("") }
     var fechaIda by rememberSaveable { mutableStateOf("") }
     var fechaVuelta by rememberSaveable { mutableStateOf("") }
 
-    // 2. Estados de la "Página 2" (Itinerarios)
+    // Variable de estado para el segundo paso (Lista de actividades programadas)
     var listaItinerarios by rememberSaveable { mutableStateOf(listOf<Map<String, String>>()) }
 
-    // 3. Control de Navegación y Diálogo
+    // Controladores de navegación interna del formulario y visibilidad de ventanas emergentes
     var etapaActual by rememberSaveable { mutableIntStateOf(previewStep ?: 0) }
     var mostrarDialogo by rememberSaveable { mutableStateOf(false) }
 
@@ -74,13 +74,14 @@ fun FormularioViaje(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
+            // Cabecera dinámica que adapta su título y subtítulo según el paso actual
             CustomHeader(
-
                 if (etapaActual == 0) "Nuevo Viaje" else "Itinerario",
                 if (etapaActual == 0) "Paso 1: Detalles" else "Paso 2: Actividades",
                 true
             )
 
+            // Contenedor que gestiona las transiciones de entrada y salida entre los pasos del formulario
             AnimatedContent(
                 targetState = etapaActual,
                 transitionSpec = { fadeIn().togetherWith(fadeOut()) },
@@ -91,7 +92,7 @@ fun FormularioViaje(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     if (targetEtapa == 0) {
-                        // --- VISTA 1: DETALLES ---
+                        // VISTA 1: Formulario de configuración inicial del viaje
                         Text("Detalles del destino", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
 
                         OutlinedTextField(
@@ -111,6 +112,7 @@ fun FormularioViaje(
                             shape = RoundedCornerShape(12.dp)
                         )
 
+                        // Agrupación horizontal para los selectores de fecha de inicio y fin
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -137,6 +139,7 @@ fun FormularioViaje(
                             shape = RoundedCornerShape(12.dp)
                         )
 
+                        // Botón de avance al segundo paso del formulario
                         Button(
                             onClick = { etapaActual = 1 },
                             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -151,7 +154,7 @@ fun FormularioViaje(
                         }
 
                     } else {
-                        // --- VISTA 2: ITINERARIO ---
+                        // VISTA 2: Constructor del itinerario y lista de actividades
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             IconButton(onClick = { etapaActual = 0 }) {
                                 Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -159,6 +162,7 @@ fun FormularioViaje(
                             Text("Actividades para $title", style = MaterialTheme.typography.titleMedium)
                         }
 
+                        // Estado vacío o iteración sobre las actividades añadidas
                         if (listaItinerarios.isEmpty()) {
                             Text(
                                 "No hay actividades aún. Haz clic en el botón '+'",
@@ -168,6 +172,7 @@ fun FormularioViaje(
                             )
                         } else {
                             listaItinerarios.forEach { act ->
+                                // Representación visual de cada actividad en formato de lista
                                 Row(
                                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -208,6 +213,7 @@ fun FormularioViaje(
                             }
                         }
 
+                        // Controles inferiores para añadir nuevas paradas o finalizar el viaje
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Button(
                                 onClick = { mostrarDialogo = true },
@@ -228,6 +234,7 @@ fun FormularioViaje(
         }
     }
 
+    // Invocación de la ventana modal al solicitar añadir una nueva actividad
     if (mostrarDialogo) {
         DialogoNuevaActividad(
             onDismiss = { mostrarDialogo = false },
@@ -239,7 +246,6 @@ fun FormularioViaje(
     }
 }
 
-// --- COMPONENTE MODULAR DE FECHA ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectorFechaModular(
@@ -248,9 +254,11 @@ fun SelectorFechaModular(
     onFechaElegida: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Componente auxiliar que envuelve un DatePickerDialog nativo de Material 3
     var mostrar by remember { mutableStateOf(false) }
     val state = rememberDatePickerState()
 
+    // Campo de texto de solo lectura que actúa como disparador del modal
     Box(modifier = modifier.clickable { mostrar = true }) {
         OutlinedTextField(
             value = fechaSeleccionada,
@@ -273,7 +281,7 @@ fun SelectorFechaModular(
     if (mostrar) {
         DatePickerDialog(
             onDismissRequest = { mostrar = false },
-            colors = DatePickerDefaults.colors(containerColor = MaterialTheme.colorScheme.background, ),
+            colors = DatePickerDefaults.colors(containerColor = MaterialTheme.colorScheme.background),
             confirmButton = {
                 Button(
                     onClick = {
@@ -283,12 +291,11 @@ fun SelectorFechaModular(
                         onFechaElegida(formatted)
                         mostrar = false
                     },
-                    // Aquí configuramos el fondo azul (Primary) y el contenido blanco
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
                         contentColor = Color.White
                     ),
-                    shape = RoundedCornerShape(24.dp) // Opcional: para que combine con tus otros campos
+                    shape = RoundedCornerShape(24.dp)
                 ) {
                     Text("Aceptar", fontWeight = FontWeight.Bold)
                 }
@@ -313,7 +320,6 @@ fun SelectorFechaModular(
     }
 }
 
-// --- COMPONENTE MODULAR DE HORA ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectorHoraModular(
@@ -322,9 +328,11 @@ fun SelectorHoraModular(
     onHoraElegida: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Componente auxiliar para la selección de tiempo utilizando un TimePicker nativo
     var mostrar by remember { mutableStateOf(false) }
     val state = rememberTimePickerState()
 
+    // Campo de texto interactivo que despliega el selector horario
     Box(modifier = modifier.clickable { mostrar = true }) {
         OutlinedTextField(
             value = horaSeleccionada,
@@ -358,24 +366,18 @@ fun SelectorHoraModular(
                 ) { Text("Aceptar", color = Color.White) }
             },
             text = {
+                // Configuración visual del reloj para mantener la consistencia con el tema principal
                 TimePicker(
                     state = state,
                     colors = TimePickerDefaults.colors(
-// Fondo de los cuadros de hora y minuto (el rectángulo donde sale el número)
-                        timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.surfaceContainer, // Azul cuando se elige
-                        timeSelectorSelectedContentColor = Color.White,         // Texto blanco
-                        timeSelectorUnselectedContainerColor = Color(0xFFF5F5F5), // Gris muy claro si no está seleccionado
-                        timeSelectorUnselectedContentColor = Color.Black,       // Texto negro
-
-                        // La esfera del reloj (donde están los números del 1 al 12/24)
-                        clockDialColor = Color.White,             // Fondo blanco de la esfera
-                        clockDialSelectedContentColor = Color.White, // Número seleccionado en blanco
-                        clockDialUnselectedContentColor = Color.Black, // Números normales en negro
-
-                        // El selector (la aguja o círculo que se mueve)
-                        selectorColor = MaterialTheme.colorScheme.surfaceContainer, // Color azul de la aguja/círculo
-
-                        // El punto central del reloj
+                        timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                        timeSelectorSelectedContentColor = Color.White,
+                        timeSelectorUnselectedContainerColor = Color(0xFFF5F5F5),
+                        timeSelectorUnselectedContentColor = Color.Black,
+                        clockDialColor = Color.White,
+                        clockDialSelectedContentColor = Color.White,
+                        clockDialUnselectedContentColor = Color.Black,
+                        selectorColor = MaterialTheme.colorScheme.surfaceContainer,
                         periodSelectorSelectedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                         periodSelectorSelectedContentColor = Color.White
                     )
@@ -391,6 +393,7 @@ fun DialogoNuevaActividad(
     onDismiss: () -> Unit,
     onGuardar: (Map<String, String>) -> Unit
 ) {
+    // Variables de estado del formulario interno de creación de actividades
     var n by rememberSaveable { mutableStateOf("") }
     var d by rememberSaveable { mutableStateOf("") }
     var h by rememberSaveable { mutableStateOf("") }
@@ -398,6 +401,7 @@ fun DialogoNuevaActividad(
     var t by rememberSaveable { mutableStateOf("Vuelo") }
     var exp by rememberSaveable { mutableStateOf(false) }
 
+    // Cuadro de diálogo modal que contiene los campos de entrada para el itinerario
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.background,
@@ -411,6 +415,7 @@ fun DialogoNuevaActividad(
 
                 OutlinedTextField(value = p, onValueChange = { p = it }, label = { Text("Precio") }, modifier = Modifier.fillMaxWidth())
 
+                // Selector desplegable para categorizar el tipo de actividad (define el icono a mostrar)
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = t, onValueChange = {}, readOnly = true, label = { Text("Tipo") },
@@ -437,6 +442,7 @@ fun DialogoNuevaActividad(
     )
 }
 
+// Bloque de vistas previas (Previews) para el editor de diseño
 @Preview(
     name = "Dark Mode",
     showBackground = true,
@@ -516,10 +522,9 @@ fun PreviewFormularioPaso2Black() {
 @Composable
 fun PreviewDialogoLimpio() {
     AppTheme {
-        // Simplemente llamamos a la función real
         DialogoNuevaActividad(
-            onDismiss = { /* No hace nada en preview */ },
-            onGuardar = { /* No hace nada en preview */ }
+            onDismiss = {},
+            onGuardar = {}
         )
     }
 }

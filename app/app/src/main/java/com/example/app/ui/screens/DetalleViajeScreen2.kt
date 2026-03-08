@@ -43,6 +43,7 @@ import com.example.app.ui.theme.AppTheme
 
 @Composable
 fun DetalleViajeScreen2(navController: NavHostController) {
+    // Contenedor principal que maneja la barra de navegación inferior
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
@@ -52,11 +53,11 @@ fun DetalleViajeScreen2(navController: NavHostController) {
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // 1. CABECERA CON IMAGEN DE ROMA
 
+            // Sección superior: Componente de cabecera con la imagen de fondo del destino y título
             CustomHeader("La antigua Roma", "Abr 14 - Abr 21", true, R.drawable.roma)
 
-            // 2. BARRA DE ESTADÍSTICAS
+            // Fila de resumen: Muestra métricas clave del viaje separadas por divisores verticales
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -70,17 +71,19 @@ fun DetalleViajeScreen2(navController: NavHostController) {
                 StatItem(value = "14", label = "ACTIVITIES", modifier = Modifier.weight(1f))
             }
 
+            // Línea separadora sutil antes de comenzar el itinerario
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f), thickness = 1.dp)
 
-
-            // 4. LISTA DEL ITINERARIO (TIMELINE)
+            // Lista desplazable principal: Representa el itinerario estructurado como un timeline cronológico
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                // DÍA 1
+
+                // Etiqueta agrupador para los eventos del primer día
                 item { DayHeader("DAY 1 · ABR 14") }
 
+                // Tarjeta de evento individual en el timeline (ej: Vuelo)
                 item {
                     TimelineEvent(
                         time = "08:00",
@@ -94,6 +97,7 @@ fun DetalleViajeScreen2(navController: NavHostController) {
                     )
                 }
 
+                // Tarjeta de evento individual en el timeline (ej: Alojamiento)
                 item {
                     TimelineEvent(
                         time = "12:30",
@@ -107,9 +111,10 @@ fun DetalleViajeScreen2(navController: NavHostController) {
                     )
                 }
 
-                // DÍA 2
+                // Etiqueta agrupador para los eventos del segundo día
                 item { DayHeader("DAY 2 · ABR 15") }
 
+                // Tarjeta de evento individual (ej: Actividad turística)
                 item {
                     TimelineEvent(
                         time = "09:00",
@@ -123,6 +128,7 @@ fun DetalleViajeScreen2(navController: NavHostController) {
                     )
                 }
 
+                // Tarjeta de evento individual (ej: Restaurante)
                 item {
                     TimelineEvent(
                         time = "13:30",
@@ -142,6 +148,7 @@ fun DetalleViajeScreen2(navController: NavHostController) {
 
 @Composable
 private fun StatItem(value: String, label: String, modifier: Modifier = Modifier) {
+    // Componente auxiliar para pintar cada bloque numérico de la barra de estadísticas
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
@@ -153,6 +160,7 @@ private fun StatItem(value: String, label: String, modifier: Modifier = Modifier
 
 @Composable
 private fun DayHeader(text: String) {
+    // Píldora visual con fondo semitransparente para separar los días en la lista
     Surface(
         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
         shape = RoundedCornerShape(50),
@@ -180,13 +188,14 @@ private fun TimelineEvent(
     price: String,
     priceColor: Color
 ) {
+    // Estructura horizontal que conforma cada bloque del itinerario
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 12.dp),
         verticalAlignment = Alignment.Top
     ) {
-        // Hora
+        // Columna izquierda: Etiqueta de texto con la hora del evento
         Text(
             text = time,
             color = Color.Gray,
@@ -196,7 +205,7 @@ private fun TimelineEvent(
                 .padding(top = 8.dp)
         )
 
-        // Icono circular
+        // Centro: Círculo coloreado que contiene el icono representativo de la actividad
         Surface(
             shape = CircleShape,
             color = iconBg,
@@ -214,7 +223,7 @@ private fun TimelineEvent(
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Textos del evento
+        // Columna derecha: Bloque de textos apilados con el título, descripción secundaria y precio
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -238,7 +247,6 @@ private fun TimelineEvent(
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

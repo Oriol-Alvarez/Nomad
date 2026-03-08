@@ -26,6 +26,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -60,7 +61,7 @@ fun PreferenciasScreen(
     isDarkMode: Boolean,
     onDarkModeChange: (Boolean) -> Unit
 ) {
-    // Scaffold es el "esqueleto" oficial para pantallas con barras de navegación
+    // Estructura de layout que integra la barra de navegación inferior y el área de contenido
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
@@ -68,14 +69,13 @@ fun PreferenciasScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                // El innerPadding evita que la BottomBar tape el contenido
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // 1. Cabecera (Hero) - Ahora fluye con la columna, no se solapa
+            // Componente de cabecera con el título de la sección
             CustomHeader("Preferencias", "Personaliza la app", false)
 
-            // 2. Contenido de las tarjetas
+            // Contenedor modular para las distintas categorías de configuración
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -83,7 +83,7 @@ fun PreferenciasScreen(
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // SECCIÓN: IDIOMA
+                // Grupo de ajustes de localización y sistema monetario
                 GlassCard(title = "Idioma y región") {
                     CajasPreferencias(
                         image = R.drawable.earth_americas_solid_full,
@@ -104,7 +104,7 @@ fun PreferenciasScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // SECCIÓN: APARIENCIA
+                // Grupo de ajustes visuales y de accesibilidad
                 GlassCard(title = "Apariencia") {
                     CajasPreferencias(
                         image = R.drawable.circle_half_stroke_solid_full,
@@ -112,7 +112,7 @@ fun PreferenciasScreen(
                         role = "Escoger un tema",
                         value = if (isDarkMode) "on" else "off",
                         type = "slider",
-                        onCheckedChange = onDarkModeChange // Pasamos la función hacia abajo
+                        onCheckedChange = onDarkModeChange
                     )
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
                     CajasPreferencias(
@@ -124,7 +124,10 @@ fun PreferenciasScreen(
                         type = "select"
                     )
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // Grupo de gestión de alertas y comunicaciones
                 GlassCard(title = "Notificaciones") {
                     CajasPreferencias(
                         image = R.drawable.bell_solid_full,
@@ -137,7 +140,7 @@ fun PreferenciasScreen(
                     CajasPreferencias(
                         image = R.drawable.envelope_solid_full,
                         name = "Resumen Semanal",
-                        role = "Envio de email",
+                        role = "Envío de email",
                         value = "on",
                         type = "slider"
                     )
@@ -145,7 +148,7 @@ fun PreferenciasScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // SECCIÓN: INFO
+                // Grupo de enlaces legales e información corporativa
                 GlassCard(title = "Más información") {
                     CajasPreferencias(
                         image = R.drawable.circle_info_solid_full,
@@ -176,10 +179,8 @@ fun PreferenciasScreen(
                     color = Color.White.copy(alpha = 0.7f),
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
-
                 )
 
-                // Espacio extra al final para que no quede pegado al borde
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
@@ -199,49 +200,42 @@ fun CajasPreferencias(
     onClick: () -> Unit = {},
     onCheckedChange: (Boolean) -> Unit = {}
 ) {
+    // Fila que conforma cada ítem de ajuste individual
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .then(
-                if (type == "nav") Modifier.clickable { onClick() }
-                else Modifier
-            )
+            .then(if (type == "nav") Modifier.clickable { onClick() } else Modifier)
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
 
-        // Icono izquierda
+        // Bloque de icono identificativo de la preferencia
         Box(
             modifier = Modifier
                 .size(44.dp)
                 .clip(RoundedCornerShape(12.dp))
-                .background(
-                    MaterialTheme.colorScheme.background
-                )
+                .background(MaterialTheme.colorScheme.background)
                 .padding(2.dp),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(id = image),
-                contentDescription = "Logo",
+                contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
 
         Spacer(modifier = Modifier.width(14.dp))
 
-        // Textos
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
+        // Bloque de descripción textual
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = name,
                 color = MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleMedium
             )
-
             Text(
                 text = role,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -249,129 +243,96 @@ fun CajasPreferencias(
             )
         }
 
-        if (type == "slider") {
-            // Estado local para manejar la animación visual sin persistencia aún
-            var isChecked by remember { mutableStateOf(value == "on") }
-
-            Switch(
-                checked = value == "on", // El valor ahora viene del "value" que pasamos arriba
-                onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = MaterialTheme.colorScheme.primary, // Verde tipo iOS/Android estándar
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
+        // Renderizado condicional del componente de interacción según el tipo de dato
+        when (type) {
+            "slider" -> {
+                Switch(
+                    checked = value == "on",
+                    onCheckedChange = onCheckedChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = Color.White,
+                        uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
+                    )
                 )
-            )
-        }// ... dentro de tu if (type == "select")
-        else if (type == "select") {
-            var expanded by remember { mutableStateOf(false) }
+            }
+            "select" -> {
+                var expanded by remember { mutableStateOf(false) }
 
-            // El Box debe ser el contenedor inmediato
-            Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f))
-                        // IMPORTANTE: clickable aquí para activar el menú
-                        .clickable { expanded = true }
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .widthIn(min = 60.dp)
-                ) {
-                    Text(
-                        text = value,
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        // Opcional: rotar el icono cuando se expande
-                        modifier = Modifier.rotate(if (expanded) 180f else 0f)
-                    )
-                }
-
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    // Ajusta la posición si es necesario
-                    offset = DpOffset(x = (0).dp, y = (4).dp),
-                    modifier = Modifier.background(MaterialTheme.colorScheme.background)
-                ) {
-                    if (options.isEmpty()) {
-                        DropdownMenuItem(
-                            text = { Text("No hay opciones") },
-                            onClick = { expanded = false }
+                Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f))
+                            .clickable { expanded = true }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .widthIn(min = 60.dp)
+                    ) {
+                        Text(
+                            text = value,
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium
                         )
-                    } else {
-                        options.forEach { opcion ->
-                            DropdownMenuItem(
-                                text = { Text(text = opcion) },
-                                onClick = {
-                                    expanded = false
-                                    // Aquí deberías pasar 'opcion' a una función,
-                                    // pero como tu onClick no recibe parámetros:
-                                    onClick()
-                                }
-                            )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.rotate(if (expanded) 180f else 0f)
+                        )
+                    }
+
+                    // Menú desplegable para la selección entre múltiples opciones
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        offset = DpOffset(x = 0.dp, y = 4.dp),
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                    ) {
+                        if (options.isEmpty()) {
+                            DropdownMenuItem(text = { Text("No hay opciones") }, onClick = { expanded = false })
+                        } else {
+                            options.forEach { opcion ->
+                                DropdownMenuItem(
+                                    text = { Text(text = opcion) },
+                                    onClick = {
+                                        expanded = false
+                                        onClick()
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
-        }else{
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(12.dp)
-                    .widthIn(min = 60.dp)
-                    .clickable {                      // 🔹 aquí manejas el click
-                        onClick()  // ruta de tu AboutPage
-                    }
-            ) {
-
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "Abrir",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            else -> {
+                // Indicador visual para elementos de navegación simple
+                IconButton(onClick = onClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Acceder",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
-        // Parte derecha
-
     }
 }
 
-@Preview(
-    name = "Dark Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
+@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun PreferenciasPreviewDark() {
     AppTheme {
-        PreferenciasScreen(
-            navController = rememberNavController(),
-            isDarkMode = true,
-            onDarkModeChange = {}
-        )
+        PreferenciasScreen(navController = rememberNavController(), isDarkMode = true, onDarkModeChange = {})
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
+@Preview(name = "Light Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
 fun PreferenciasPreviewLight() {
     AppTheme {
-        PreferenciasScreen(
-            navController = rememberNavController(),
-            isDarkMode = false,
-            onDarkModeChange = {}
-        )
+        PreferenciasScreen(navController = rememberNavController(), isDarkMode = false, onDarkModeChange = {})
     }
 }

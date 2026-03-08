@@ -2,6 +2,7 @@ package com.example.app.ui.screens
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -56,7 +57,7 @@ import com.example.app.ui.theme.AppTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavHostController) {
-    //Comentar TermsAndConditionsDialog para desarrollo
+    // Validación de estado de aceptación de términos legales al iniciar la pantalla
     TermsAndConditionsDialog(navController = navController)
 
     Scaffold(
@@ -68,7 +69,7 @@ fun HomeScreen(navController: NavHostController) {
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Hero principal
+            // Sección Hero: Bienvenida al usuario y buscador
             CustomHeader("Hola, Oriol", "Busca tu próxima aventura")
 
             Column(
@@ -78,23 +79,25 @@ fun HomeScreen(navController: NavHostController) {
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Llamada a las secciones modulares
+                // Módulo de destinos recomendados con scroll horizontal
                 RecomendadosSection(navController)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // Módulo de destinos destacados con tarjetas de menor escala
                 DestacadosSection(navController)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                // Módulo de contenido editorial y promociones
                 OfertasTipsSection(navController)
 
-                // Footer
+                // Cierre de la pantalla (Footer decorativo)
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
                     text = "Explora el mundo con Nomad 🌍",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray, // Ajustado para visibilidad si el fondo es claro
+                    color = Color.Gray,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
                 )
@@ -176,17 +179,16 @@ fun OfertasTipsSection(navController: NavHostController) {
     )
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // Ejemplo de llamadas simples como pediste
         OfertaTipCard(
             image = R.drawable.roma,
             title = "Cómo ahorrar en tu viaje a Roma",
-            onClick = { /* Navegar a detalle */ }
+            onClick = { /* Implementar navegación a detalle de artículo */ }
         )
 
         OfertaTipCard(
             image = R.drawable.equipaje_mano,
             title = "Equipaje de mano: Guía definitiva",
-            onClick = { /* Navegar a detalle */ }
+            onClick = { /* Implementar navegación a detalle de artículo */ }
         )
     }
 }
@@ -197,9 +199,10 @@ fun OfertaTipCard(
     title: String,
     onClick: () -> Unit
 ) {
+    // Tarjeta apaisada optimizada para artículos y listas de consejos
     Card(
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), // Gris oscuro según tu diseño
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier
             .fillMaxWidth()
             .height(90.dp)
@@ -231,18 +234,16 @@ fun RecomendadoCard(
     name: String,
     onClick: () -> Unit
 ) {
+    // Componente de tarjeta de gran formato para destinos sugeridos
     Card(
         modifier = Modifier
             .width(260.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface // Fondo surface para todo el bloque
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column {
-            // Imagen: ocupa la parte superior
             Image(
                 painter = painterResource(id = image),
                 contentDescription = name,
@@ -252,17 +253,12 @@ fun RecomendadoCard(
                     .height(160.dp)
             )
 
-            // Contenedor para el texto con padding interno
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp) // Espaciado interno para el nombre
-            ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
                 Text(
                     text = name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface // onSurface para mejor contraste
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -275,18 +271,16 @@ fun DestacadoCard(
     name: String,
     onClick: () -> Unit
 ) {
+    // Componente de tarjeta de formato reducido para destinos secundarios
     Card(
         modifier = Modifier
-            .width(180.dp) // Mantenemos el tamaño más pequeño para jerarquía
+            .width(180.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface // Gris claro para el contenedor
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp) // Sin sombra para un look flat
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
-            // Imagen
             Image(
                 painter = painterResource(id = image),
                 contentDescription = name,
@@ -296,24 +290,18 @@ fun DestacadoCard(
                     .height(110.dp)
             )
 
-            // Texto con padding dentro de la tarjeta
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 10.dp, horizontal = 12.dp)
-            ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 12.dp)) {
                 Text(
                     text = name,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1 // Evita que el texto rompa el diseño si es muy largo
+                    maxLines = 1
                 )
             }
         }
     }
 }
-
 
 @Composable
 fun TermsAndConditionsDialog(navController: NavHostController) {
@@ -322,13 +310,12 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
         context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
     }
 
-    // Este es el estado que controla el diálogo
+    // Persistencia local del estado de aceptación de términos
     var hasAccepted by remember {
         mutableStateOf(sharedPreferences.getBoolean("terms_accepted", false))
     }
 
-    // 🔹 ESTO ES LO QUE TE FALTA:
-    // Cada vez que esta pantalla se cargue o "vuelva", re-lee el archivo
+    // Sincronización del estado al recuperar el foco de la pantalla
     LaunchedEffect(Unit) {
         hasAccepted = sharedPreferences.getBoolean("terms_accepted", false)
     }
@@ -341,7 +328,7 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
                 Text(text = "Privacidad y términos", fontWeight = FontWeight.Bold)
             },
             text = {
-                // Creamos un texto con una parte clicable
+                // Composición de texto enriquecido con enlace interactivo embebido
                 val annotatedText = buildAnnotatedString {
                     append("Para usar Nomad, debes aceptar nuestros ")
 
@@ -350,8 +337,7 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                         textDecoration = TextDecoration.Underline
-                    )
-                    ) {
+                    )) {
                         append("términos y condiciones")
                     }
                     pop()
@@ -367,7 +353,6 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
                     onClick = { offset ->
                         annotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
                             .firstOrNull()?.let {
-                                // Navega a tu ruta de términos
                                 navController.navigate(Routes.TERMINOS_CONDICIONES)
                             }
                     }
@@ -381,9 +366,8 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        contentColor = MaterialTheme.colorScheme.inversePrimary // Color del texto adaptado al fondo
+                        contentColor = MaterialTheme.colorScheme.inversePrimary
                     )
-
                 ) {
                     Text("Aceptar y continuar")
                 }
@@ -393,30 +377,18 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
     }
 }
 
-@Preview(
-    name = "Dark Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
+@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 fun HomePreviewDark() {
     AppTheme {
-        HomeScreen(
-            navController = rememberNavController()
-        )
+        HomeScreen(navController = rememberNavController())
     }
 }
 
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
+@Preview(name = "Light Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
 fun HomePreviewLight() {
     AppTheme {
-        HomeScreen(
-            navController = rememberNavController()
-        )
+        HomeScreen(navController = rememberNavController())
     }
 }

@@ -42,6 +42,7 @@ import com.example.app.ui.theme.AppTheme
 fun GaleriaViajeScreen2(navController: NavHostController) {
     val albumTitle = "La antigua Roma"
 
+    // Estado reactivo que gestiona la lista de imágenes para permitir la eliminación en tiempo real
     val allImages = remember {
         mutableStateListOf(
             R.drawable.roma, R.drawable.roma, R.drawable.roma,
@@ -54,6 +55,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
 
+        // Grid adaptativo que ajusta el número de columnas según el ancho del dispositivo
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 100.dp),
             modifier = Modifier
@@ -65,7 +67,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
 
-            // 1. LA CABECERA
+            // Cabecera: Se configura para ocupar el ancho total de la cuadrícula (span completo)
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Box(modifier = Modifier.padding(bottom = 16.dp)) {
                     CustomHeader(
@@ -76,7 +78,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                 }
             }
 
-            // 2. LAS FOTOS
+            // Renderizado de las celdas de imagen con funcionalidad de eliminación
             itemsIndexed(allImages) { index, imageRes ->
                 Box(
                     modifier = Modifier
@@ -84,41 +86,41 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp))
                 ) {
-                    // La foto
+                    // Visualización de la imagen con ajuste de recorte (Crop)
                     Image(
                         painter = painterResource(id = imageRes),
                         contentDescription = "Foto del álbum",
                         modifier = Modifier
                             .fillMaxSize()
-                            .clickable { /* Ver en grande */ },
+                            .clickable { /* Implementar visualización a pantalla completa */ },
                         contentScale = ContentScale.Crop
                     )
 
-                    // ⬇️ NUEVO BOTÓN DE ELIMINAR (Más pequeño y circular)
+                    // Control de eliminación: Botón circular posicionado en la esquina superior derecha
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopEnd)
-                            .padding(4.dp) // Margen desde la esquina
-                            .size(22.dp) // Tamaño total del círculo más pequeño
+                            .padding(4.dp)
+                            .size(22.dp)
                             .background(
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f), // Un poco más opaco para que destaque
-                                shape = CircleShape // Círculo perfecto
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                                shape = CircleShape
                             )
-                            .clip(CircleShape) // Para que el efecto visual del click (ripple) sea redondo
+                            .clip(CircleShape)
                             .clickable { allImages.removeAt(index) },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Eliminar foto",
-                            modifier = Modifier.size(14.dp), // Tamaño de la X reducido
+                            modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
             }
 
-            // 3. EL BOTÓN DE AÑADIR
+            // Celda de acción: Botón para importar o capturar nuevas imágenes
             item {
                 Box(
                     modifier = Modifier
@@ -126,7 +128,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                        .clickable { /* Acción para añadir foto */ },
+                        .clickable { /* Lógica de selección de archivos */ },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
