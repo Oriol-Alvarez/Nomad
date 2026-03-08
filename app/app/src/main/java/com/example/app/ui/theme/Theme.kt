@@ -21,10 +21,12 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = Color(0xFF2C2C2E),
     // Textos y elementos sobre fondo
     onPrimary = Color.White,
+    inversePrimary = Color.Black,
     onBackground = Color.White,
     onSurface = Color.White,
     onSurfaceVariant = Color(0xFFB0BEC5), // Gris azulado suave para etiquetas
-    outline = Color(0xFF3D3D3D)
+    outline = Color(0xFF3D3D3D),
+    surfaceContainer = Color(0xFF4FC3F7)
 
 )
 
@@ -37,10 +39,13 @@ private val LightColorScheme = lightColorScheme(
 
     // Textos y elementos sobre fondo
     onPrimary = Color.Black,
+    inversePrimary = Color.White,
     onBackground = Color(0xFF0F172A), // Negro azulado muy elegante
     onSurface = Color(0xFF0F172A),
     onSurfaceVariant = NomadBlueDark, // Azul oscuro para etiquetas/subtítulos
-    outline = Color(0xFFCBD5E1)
+    outline = Color(0xFFCBD5E1),
+    surfaceContainer = NomadBlueDark
+
 )
 
 @Composable
