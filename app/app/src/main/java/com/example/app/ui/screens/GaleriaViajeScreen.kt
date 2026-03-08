@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,7 +41,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.Routes
@@ -58,94 +56,97 @@ data class GalleryAlbum(
 fun GaleriaViajeScreen(navController: NavHostController) {
     // Simulamos viajes con diferentes cantidades de fotos
     val albums = listOf(
-        GalleryAlbum("La antigua Roma", listOf(R.drawable.roma, R.drawable.noruega, R.drawable.londres, R.drawable.roma, R.drawable.noruega, R.drawable.londres, R.drawable.roma)), // 7 fotos (Mostrará +4)
-        GalleryAlbum("Frío en Noruega", emptyList()), // 0 fotos (Mostrará el botón de añadir + 2 espacios vacíos)
-        GalleryAlbum("Negocios en Londres", listOf(R.drawable.noruega, R.drawable.noruega, R.drawable.londres, R.drawable.noruega)), // 4 fotos
+        GalleryAlbum("La antigua Roma", listOf(R.drawable.roma, R.drawable.noruega, R.drawable.londres, R.drawable.roma, R.drawable.noruega, R.drawable.londres, R.drawable.roma)),
+        GalleryAlbum("Frío en Noruega", emptyList()),
+        GalleryAlbum("Negocios en Londres", listOf(R.drawable.noruega, R.drawable.noruega, R.drawable.londres, R.drawable.noruega)),
     )
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
-        Column(
+
+        // El LazyColumn ahora es la raíz de la pantalla y envuelve todo
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(bottom = 80.dp) // Padding inferior para que no quede tapado por la barra
         ) {
 
-            CustomHeader("Galería", "Explora tus recuerdos")
+            // 1. LA CABECERA COMO ITEM DEL LAZYCOLUMN
+            item {
+                CustomHeader("Galería", "Explora tus recuerdos")
+            }
 
-            // SECCIÓN: Barra de búsqueda estilo "Píldora + Botón"
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 32.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Barra de texto (Píldora)
-                Surface(
+            // 2. LA BARRA DE BÚSQUEDA COMO ITEM DEL LAZYCOLUMN
+            item {
+                Row(
                     modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.outline,
-                    shadowElevation = 4.dp // Sombra imitando la imagen
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(top = 32.dp, bottom = 28.dp), // Añadimos bottom aquí en lugar del contentPadding superior que tenías antes
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
+                    // Barra de texto (Píldora)
+                    Surface(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 20.dp),
-                        contentAlignment = Alignment.CenterStart
+                            .weight(1f)
+                            .height(48.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.outline,
+                        shadowElevation = 4.dp
                     ) {
-                        Text(
-                            text = "Search...",
-                            color = Color.Gray,
-                            fontSize = 16.sp
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 20.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Text(
+                                text = "Search...",
+                                color = Color.Gray,
+                                fontSize = 16.sp
+                            )
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                // Botón circular de la lupa
-                Surface(
-                    modifier = Modifier.size(48.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.outline,
-                    shadowElevation = 4.dp // Sombra imitando la imagen
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clickable { /* Aquí irá la lógica de búsqueda */ },
-                        contentAlignment = Alignment.Center
+                    // Botón circular de la lupa
+                    Surface(
+                        modifier = Modifier.size(48.dp),
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.outline,
+                        shadowElevation = 4.dp
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Buscar",
-                            tint = Color.Gray
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable { /* Aquí irá la lógica de búsqueda */ },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Buscar",
+                                tint = Color.Gray
+                            )
+                        }
                     }
                 }
             }
 
-            // CONTENIDO SCROLLABLE DE ÁLBUMES
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(top = 28.dp, bottom = 80.dp)
-            ) {
-                items(albums) { album ->
-                    AlbumSection(
-                        album = album,
-                        onAddImageClick = {
-                            navController.navigate(Routes.GALERIA_VIAJE_2)
-                        },
-                        onMoreImagesClick = {
-                            navController.navigate(Routes.GALERIA_VIAJE_2)
-                        }
-                    )
-                }
+            // 3. CONTENIDO DE ÁLBUMES
+            items(albums) { album ->
+                AlbumSection(
+                    album = album,
+                    onAddImageClick = {
+                        navController.navigate(Routes.GALERIA_VIAJE_2)
+                    },
+                    onMoreImagesClick = {
+                        navController.navigate(Routes.GALERIA_VIAJE_2)
+                    }
+                )
             }
         }
     }
@@ -204,7 +205,7 @@ fun AlbumSection(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .background(Color.Black.copy(alpha = 0.5f))
-                                .clickable { onMoreImagesClick() }, // <-- Clic para ver más fotos
+                                .clickable { onMoreImagesClick() },
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
@@ -226,8 +227,7 @@ fun AlbumSection(
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                    //.clickable { onAddImageClick() }
-                    ,
+                        .clickable { onAddImageClick() }, // <-- Activado el click
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {

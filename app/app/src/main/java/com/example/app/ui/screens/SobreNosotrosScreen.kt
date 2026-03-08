@@ -66,7 +66,7 @@ fun SobreNosotrosScreen(navController: NavHostController) {
 
             // 👥 TEAM
             GlassCard(title = "Equipo de desarrollo") {
-                DeveloperRowModern(R.drawable.guillem, "Oriol Alvarez Arisa", "Full Stack developer · UI/UX")
+                DeveloperRowModern(R.drawable.oriol, "Oriol Alvarez Arisa", "Full Stack developer · UI/UX")
                 Spacer(modifier = Modifier.height(12.dp))
                 DeveloperRowModern(R.drawable.guillem, "Guillem Talayero Carrasco", "Full Stack developer · Data Model")
             }
