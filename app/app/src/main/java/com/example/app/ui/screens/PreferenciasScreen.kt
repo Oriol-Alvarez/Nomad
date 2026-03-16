@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,14 +55,24 @@ import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 
 @Composable
 fun PreferenciasScreen(
     navController: NavHostController,
     isDarkMode: Boolean,
-    onDarkModeChange: (Boolean) -> Unit
+    onDarkModeChange: (Boolean) -> Unit,
+    recordatorioViajes: Boolean,
+    onRecordatorioChange: (Boolean) -> Unit,
+    resumenSemanal: Boolean,
+    onResumenChange: (Boolean) -> Unit,
+    selectedCurrency: String,
+    onCurrencyChange: (String) -> Unit,
+    selectedLanguage: String,
+    onLanguageChange: (String) -> Unit
 ) {
-    // Estructura de layout que integra la barra de navegación inferior y el área de contenido
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
@@ -72,10 +83,12 @@ fun PreferenciasScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Componente de cabecera con el título de la sección
-            CustomHeader("Preferencias", "Personaliza la app", false)
+            CustomHeader(
+                stringResource(R.string.preferencias_titulo),
+                stringResource(R.string.preferencias_subtitulo),
+                false
+            )
 
-            // Contenedor modular para las distintas categorías de configuración
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -83,33 +96,37 @@ fun PreferenciasScreen(
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Grupo de ajustes de localización y sistema monetario
-                GlassCard(title = "Idioma y región") {
+                // --- IDIOMA Y REGIÓN ---
+                GlassCard(title = stringResource(R.string.preferencias_idioma_region)) {
                     CajasPreferencias(
                         image = R.drawable.earth_americas_solid_full,
-                        name = "Idioma",
-                        role = "Idioma de la interfaz",
-                        value = "Es Español",
-                        type = "select"
+                        name = stringResource(R.string.preferencias_idioma_titulo),
+                        role = stringResource(R.string.preferencias_idioma_role),
+                        options = listOf("Es Español", "Ca Català", "En English"),
+                        value = selectedLanguage,
+                        type = "select",
+                        onCurrencySelect = { onLanguageChange(it) }
                     )
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
                     CajasPreferencias(
                         image = R.drawable.coins_solid_full,
-                        name = "Moneda",
-                        role = "Escoger moneda",
-                        value = "EUR(€)",
-                        type = "select"
+                        name = stringResource(R.string.preferencias_titulo_moneda),
+                        role = stringResource(R.string.preferencias_subtitulo_moneda),
+                        value = selectedCurrency,
+                        options = listOf("EUR(€)", "USD($)", "GBP(£)", "MXN($)"),
+                        type = "select",
+                        onCurrencySelect = { onCurrencyChange(it) }
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Grupo de ajustes visuales y de accesibilidad
-                GlassCard(title = "Apariencia") {
+                // --- APARIENCIA ---
+                GlassCard(title = stringResource(R.string.preferencias_titulo_seccion_apariencia)) {
                     CajasPreferencias(
                         image = R.drawable.circle_half_stroke_solid_full,
-                        name = "Modo oscuro",
-                        role = "Escoger un tema",
+                        name = stringResource(R.string.preferencias_titulo_modo_oscuro),
+                        role = stringResource(R.string.preferencias_role_modo_oscuro),
                         value = if (isDarkMode) "on" else "off",
                         type = "slider",
                         onCheckedChange = onDarkModeChange
@@ -117,8 +134,8 @@ fun PreferenciasScreen(
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
                     CajasPreferencias(
                         image = R.drawable.text_width_solid_full,
-                        name = "Tamaño del texto",
-                        role = "Accesibilidad",
+                        name = stringResource(R.string.preferencias_titulo_tamaño_letra),
+                        role = stringResource(R.string.preferencias_role_tamaño_letra),
                         value = "Normal",
                         options = listOf("Pequeño", "Normal", "Grande", "Extra Grande"),
                         type = "select"
@@ -127,33 +144,35 @@ fun PreferenciasScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Grupo de gestión de alertas y comunicaciones
-                GlassCard(title = "Notificaciones") {
+                // --- NOTIFICACIONES ---
+                GlassCard(title = stringResource(R.string.preferencias_titulo_seccion_notificaciones)) {
                     CajasPreferencias(
                         image = R.drawable.bell_solid_full,
-                        name = "Recordatorio de viajes",
-                        role = "Aviso 24h antes del vuelo",
-                        value = "on",
-                        type = "slider"
+                        name = stringResource(R.string.preferencias_notif_viajes),
+                        role = stringResource(R.string.preferencias_notif_viajes_role),
+                        value = if (recordatorioViajes) "on" else "off",
+                        type = "slider",
+                        onCheckedChange = onRecordatorioChange
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     CajasPreferencias(
                         image = R.drawable.envelope_solid_full,
-                        name = "Resumen Semanal",
-                        role = "Envío de email",
-                        value = "on",
-                        type = "slider"
+                        name = stringResource(R.string.preferencias_notif_resumen),
+                        role = stringResource(R.string.preferencias_notif_resumen_role),
+                        value = if (resumenSemanal) "on" else "off",
+                        type = "slider",
+                        onCheckedChange = onResumenChange
                     )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Grupo de enlaces legales e información corporativa
-                GlassCard(title = "Más información") {
+                // --- MÁS INFORMACIÓN ---
+                GlassCard(title = stringResource(R.string.preferencias_seccion_mas_info)) {
                     CajasPreferencias(
                         image = R.drawable.circle_info_solid_full,
-                        name = "Info de la app",
-                        role = "Un poco sobre nosotros",
+                        name = stringResource(R.string.preferencias_info_app),
+                        role = stringResource(R.string.preferencias_info_app_role),
                         value = "on",
                         type = "nav",
                         navController = navController,
@@ -162,8 +181,8 @@ fun PreferenciasScreen(
                     Spacer(modifier = Modifier.height(6.dp))
                     CajasPreferencias(
                         image = R.drawable.clipboard_list_solid_full,
-                        name = "Términos y condiciones",
-                        role = "Info legal",
+                        name = stringResource(R.string.preferencias_terminos),
+                        role = stringResource(R.string.preferencias_terminos_role),
                         value = "on",
                         type = "nav",
                         navController = navController,
@@ -174,7 +193,7 @@ fun PreferenciasScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Programado con mucho ☕",
+                    text = stringResource(R.string.preferencias_footer),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White.copy(alpha = 0.7f),
                     modifier = Modifier.fillMaxWidth(),
@@ -198,7 +217,8 @@ fun CajasPreferencias(
     type: String,
     navController: NavHostController = rememberNavController(),
     onClick: () -> Unit = {},
-    onCheckedChange: (Boolean) -> Unit = {}
+    onCheckedChange: (Boolean) -> Unit = {},
+    onCurrencySelect: (String) -> Unit = {}
 ) {
     // Fila que conforma cada ítem de ajuste individual
     Row(
@@ -299,7 +319,7 @@ fun CajasPreferencias(
                                     text = { Text(text = opcion) },
                                     onClick = {
                                         expanded = false
-                                        onClick()
+                                        onCurrencySelect(opcion)
                                     }
                                 )
                             }
@@ -321,18 +341,54 @@ fun CajasPreferencias(
     }
 }
 
-@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
+
+
+@Preview(
+    name = "Dark Mode",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
 @Composable
 fun PreferenciasPreviewDark() {
-    AppTheme {
-        PreferenciasScreen(navController = rememberNavController(), isDarkMode = true, onDarkModeChange = {})
+    AppTheme(useDarkTheme = true) {
+        PreferenciasScreen(
+            navController = rememberNavController(),
+            isDarkMode = true,
+            onDarkModeChange = {},
+            recordatorioViajes = true,
+            onRecordatorioChange = {},
+            resumenSemanal = true,
+            onResumenChange = {},
+            // Parámetros faltantes añadidos:
+            selectedCurrency = "EUR(€)",
+            onCurrencyChange = {},
+            selectedLanguage = "Es Español",
+            onLanguageChange = {}
+        )
     }
 }
 
-@Preview(name = "Light Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(
+    name = "Light Mode",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO
+)
 @Composable
 fun PreferenciasPreviewLight() {
-    AppTheme {
-        PreferenciasScreen(navController = rememberNavController(), isDarkMode = false, onDarkModeChange = {})
+    AppTheme(useDarkTheme = false) {
+        PreferenciasScreen(
+            navController = rememberNavController(),
+            isDarkMode = false,
+            onDarkModeChange = {},
+            recordatorioViajes = false,
+            onRecordatorioChange = {},
+            resumenSemanal = false,
+            onResumenChange = {},
+            // Parámetros faltantes añadidos:
+            selectedCurrency = "USD($)",
+            onCurrencyChange = {},
+            selectedLanguage = "Es Español",
+            onLanguageChange = {}
+        )
     }
 }

@@ -42,7 +42,7 @@ import com.example.app.R
 import com.example.app.ui.theme.AppTheme
 
 @Composable
-fun DetalleViajeScreen2(navController: NavHostController) {
+fun DetalleViajeScreen2(navController: NavHostController,selectedCurrency: String) {
     // Contenedor principal que maneja la barra de navegación inferior
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
@@ -66,7 +66,7 @@ fun DetalleViajeScreen2(navController: NavHostController) {
             ) {
                 StatItem(value = "8", label = "NIGHTS", modifier = Modifier.weight(1f))
                 HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
-                StatItem(value = "€1,560", label = "BUDGET", modifier = Modifier.weight(1f))
+                StatItem(value = CurrencyConverter.convert(1560.0, selectedCurrency), label = "BUDGET", modifier = Modifier.weight(1f))
                 HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
                 StatItem(value = "14", label = "ACTIVITIES", modifier = Modifier.weight(1f))
             }
@@ -252,7 +252,7 @@ private fun TimelineEvent(
 @Composable
 fun DetalleViajeScreen2Preview() {
     AppTheme {
-        DetalleViajeScreen2(navController = rememberNavController())
+        DetalleViajeScreen2(navController = rememberNavController(), selectedCurrency = "EUR(€)")
     }
 }
 
@@ -260,6 +260,6 @@ fun DetalleViajeScreen2Preview() {
 @Composable
 fun DetalleViajeScreen2PreviewNight() {
     AppTheme {
-        DetalleViajeScreen2(navController = rememberNavController())
+        DetalleViajeScreen2(navController = rememberNavController(),selectedCurrency = "EUR(€)")
     }
 }

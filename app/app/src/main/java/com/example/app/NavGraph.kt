@@ -20,29 +20,62 @@ import com.example.app.ui.screens.FormularioViaje
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    isDarkMode: Boolean,           // 1. Declaramos el parámetro aquí
-    onDarkModeChange: (Boolean) -> Unit // 2. Necesitamos la función para cambiarlo
+    isDarkMode: Boolean,
+    onDarkModeChange: (Boolean) -> Unit,
+    recordatorioViajes: Boolean,
+    onRecordatorioChange: (Boolean) -> Unit,
+    resumenSemanal: Boolean,
+    onResumenChange: (Boolean) -> Unit,
+    selectedCurrency: String,          // Recibido de MainActivity
+    onCurrencyChange: (String) -> Unit, // Recibido de MainActivity
+    selectedLanguage: String,
+    onLanguageChange: (String) -> Unit
 ) {
     NavHost(
         navController = navController,
-        startDestination = Routes.SPLASH // 3. Quitamos la declaración errónea de aquí
+        startDestination = Routes.SPLASH
     ) {
         composable(Routes.SPLASH) { SplashScreen(navController) }
+
         composable(Routes.HOME) { HomeScreen(navController) }
-        composable(Routes.DETALLE_VIAJE) { DetalleViajeScreen(navController) }
-        composable(Routes.DETALLE_VIAJE2) { DetalleViajeScreen2(navController) }
+
+        composable(Routes.DETALLE_VIAJE) {
+            DetalleViajeScreen(
+                navController = navController,
+                selectedCurrency = selectedCurrency
+            )
+        }
+
+        composable(Routes.DETALLE_VIAJE2) {
+            DetalleViajeScreen2(
+                navController = navController,
+                selectedCurrency = selectedCurrency
+            )
+        }
+
         composable(Routes.GALERIA_VIAJE) { GaleriaViajeScreen(navController) }
+
         composable(Routes.GALERIA_VIAJE_2) { GaleriaViajeScreen2(navController) }
 
         composable(Routes.PREFERENCIAS) {
             PreferenciasScreen(
                 navController = navController,
-                isDarkMode = isDarkMode,      // Pasamos el valor actual
-                onDarkModeChange = onDarkModeChange // Pasamos la acción de cambio
+                isDarkMode = isDarkMode,
+                onDarkModeChange = onDarkModeChange,
+                recordatorioViajes = recordatorioViajes,
+                onRecordatorioChange = onRecordatorioChange,
+                resumenSemanal = resumenSemanal,
+                onResumenChange = onResumenChange,
+                // --- NO OLVIDES ESTO ---
+                selectedCurrency = selectedCurrency,
+                onCurrencyChange = onCurrencyChange,
+                selectedLanguage = selectedLanguage,
+                onLanguageChange = onLanguageChange
             )
         }
 
         composable(Routes.SOBRE_NOSOTROS) { SobreNosotrosScreen(navController) }
+
         composable(Routes.TERMINOS_CONDICIONES) { TerminosCondicionesScreen(navController) }
 
         composable(
