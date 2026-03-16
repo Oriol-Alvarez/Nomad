@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Flight
@@ -32,16 +33,21 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.app.ui.theme.AppTheme
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.animation.ExperimentalAnimationApi::class)
 @Composable
@@ -52,8 +58,10 @@ fun FormularioViaje(
 ) {
     // Variables de estado para el primer paso (Información general del viaje)
     var title by rememberSaveable { mutableStateOf("") }
-    var country by rememberSaveable { mutableStateOf(if (ciudadDestino == "{ciudad}") "" else ciudadDestino) }
     var description by rememberSaveable { mutableStateOf("") }
+    var country by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(if (ciudadDestino == "{ciudad}" || ciudadDestino.isEmpty()) "" else ciudadDestino))
+    }
     var fechaIda by rememberSaveable { mutableStateOf("") }
     var fechaVuelta by rememberSaveable { mutableStateOf("") }
 
@@ -63,7 +71,22 @@ fun FormularioViaje(
     // Controladores de navegación interna del formulario y visibilidad de ventanas emergentes
     var etapaActual by rememberSaveable { mutableIntStateOf(previewStep ?: 0) }
     var mostrarDialogo by rememberSaveable { mutableStateOf(false) }
-
+    var sugerencias by rememberSaveable() { mutableStateOf(listOf<String>()) }
+    var expandido by rememberSaveable() { mutableStateOf(false) }
+    val CoroutineScope = rememberCoroutineScope()
+    var job: Job? by remember { mutableStateOf(null) }
+    LaunchedEffect(ciudadDestino) {
+        if (ciudadDestino.isNotEmpty() && ciudadDestino != "{ciudad}") {
+            val sugerenciasIniciales = buscarCiudadesOSM(ciudadDestino)
+            if (sugerenciasIniciales.isNotEmpty()) {
+                // Ponemos la primera sugerencia encontrada (ej: "Barcelona, España")
+                country = TextFieldValue(
+                    text = sugerenciasIniciales[0],
+                    selection = TextRange(sugerenciasIniciales[0].length)
+                )
+            }
+        }
+    }
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
@@ -103,14 +126,83 @@ fun FormularioViaje(
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        OutlinedTextField(
-                            value = country,
-                            onValueChange = { country = it },
-                            label = { Text("País / Ciudad") },
-                            leadingIcon = { Icon(Icons.Default.Place, null) },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
-                        )
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = country,
+                                onValueChange = { newValue ->
+                                    country = newValue // Mantiene la composición de caracteres especiales
+
+                                    val queryText = newValue.text
+                                    expandido = queryText.length > 2
+
+                                    job?.cancel()
+                                    job = CoroutineScope.launch {
+                                        delay(500)
+                                        if (queryText.length > 2) {
+                                            val list = buscarCiudadesOSM(queryText)
+                                            // Solo mostramos si el usuario no ha borrado mientras buscábamos
+                                            if (country.text.length > 2) {
+                                                sugerencias = list
+                                                expandido = sugerencias.isNotEmpty()
+                                            }
+                                        } else {
+                                            expandido = false
+                                        }
+                                    }
+                                },
+                                label = { Text("País / Ciudad") },
+                                leadingIcon = { Icon(Icons.Default.Place, null) },
+                                trailingIcon = {
+                                    if (country.text.isNotEmpty()) {
+                                        IconButton(
+                                            onClick = {
+                                                country = TextFieldValue("")
+                                                expandido = false
+                                            },
+                                            modifier = Modifier.size(24.dp) // Ajustamos el tamaño del botón
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Clear, // Usamos el icono nativo de limpiar
+                                                contentDescription = "Limpiar",
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(20.dp) // Tamaño del icono interno
+                                            )
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                singleLine = true
+                            )
+
+                            // El menú con PopupProperties(focusable = false) NO bloquea el teclado
+                            DropdownMenu(
+                                expanded = expandido && sugerencias.isNotEmpty(),
+                                onDismissRequest = { expandido = false },
+                                properties = PopupProperties(
+                                    focusable = false,
+                                    dismissOnBackPress = true,
+                                    dismissOnClickOutside = true
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth(0.9f)
+                                    .background(MaterialTheme.colorScheme.surface)
+                            ) {
+                                sugerencias.forEach { ciudad ->
+                                    DropdownMenuItem(
+                                        text = { Text(ciudad) },
+                                        onClick = {
+                                            country = TextFieldValue(
+                                                text = ciudad,
+                                                selection = TextRange(ciudad.length)
+                                            )
+                                            expandido = false
+                                            sugerencias = emptyList()
+                                        }
+                                    )
+                                }
+                            }
+                        }
 
                         // Agrupación horizontal para los selectores de fecha de inicio y fin
                         Row(
@@ -246,146 +338,7 @@ fun FormularioViaje(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SelectorFechaModular(
-    label: String,
-    fechaSeleccionada: String,
-    onFechaElegida: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // Componente auxiliar que envuelve un DatePickerDialog nativo de Material 3
-    var mostrar by remember { mutableStateOf(false) }
-    val state = rememberDatePickerState()
 
-    // Campo de texto de solo lectura que actúa como disparador del modal
-    Box(modifier = modifier.clickable { mostrar = true }) {
-        OutlinedTextField(
-            value = fechaSeleccionada,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            leadingIcon = { Icon(Icons.Default.DateRange, null) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = false,
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledBorderColor = MaterialTheme.colorScheme.outline,
-                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        )
-    }
-
-    if (mostrar) {
-        DatePickerDialog(
-            onDismissRequest = { mostrar = false },
-            colors = DatePickerDefaults.colors(containerColor = MaterialTheme.colorScheme.background),
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val formatted = state.selectedDateMillis?.let {
-                            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it))
-                        } ?: ""
-                        onFechaElegida(formatted)
-                        mostrar = false
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    Text("Aceptar", fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { mostrar = false }) { Text("Cancelar", color = Color.Gray) }
-            }
-        ) {
-            DatePicker(
-                state = state,
-                colors = DatePickerDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    headlineContentColor = Color.Black,
-                    dayContentColor = Color.Black,
-                    selectedDayContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    selectedDayContentColor = Color.White,
-                    todayContentColor = MaterialTheme.colorScheme.surfaceContainer,
-                    todayDateBorderColor = MaterialTheme.colorScheme.surfaceContainer
-                )
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun SelectorHoraModular(
-    label: String,
-    horaSeleccionada: String,
-    onHoraElegida: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    // Componente auxiliar para la selección de tiempo utilizando un TimePicker nativo
-    var mostrar by remember { mutableStateOf(false) }
-    val state = rememberTimePickerState()
-
-    // Campo de texto interactivo que despliega el selector horario
-    Box(modifier = modifier.clickable { mostrar = true }) {
-        OutlinedTextField(
-            value = horaSeleccionada,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(label) },
-            leadingIcon = { Icon(Icons.Default.AccessTime, null) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = false,
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledBorderColor = MaterialTheme.colorScheme.outline,
-                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        )
-    }
-
-    if (mostrar) {
-        AlertDialog(
-            onDismissRequest = { mostrar = false },
-            containerColor = Color.White,
-            confirmButton = {
-                Button(
-                    onClick = {
-                        onHoraElegida(String.format("%02d:%02d", state.hour, state.minute))
-                        mostrar = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-                ) { Text("Aceptar", color = Color.White) }
-            },
-            text = {
-                // Configuración visual del reloj para mantener la consistencia con el tema principal
-                TimePicker(
-                    state = state,
-                    colors = TimePickerDefaults.colors(
-                        timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        timeSelectorSelectedContentColor = Color.White,
-                        timeSelectorUnselectedContainerColor = Color(0xFFF5F5F5),
-                        timeSelectorUnselectedContentColor = Color.Black,
-                        clockDialColor = Color.White,
-                        clockDialSelectedContentColor = Color.White,
-                        clockDialUnselectedContentColor = Color.Black,
-                        selectorColor = MaterialTheme.colorScheme.surfaceContainer,
-                        periodSelectorSelectedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        periodSelectorSelectedContentColor = Color.White
-                    )
-                )
-            }
-        )
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

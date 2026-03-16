@@ -46,12 +46,16 @@ import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
 
 @Composable
-fun DetalleViajeScreen(navController: NavHostController) {
+fun DetalleViajeScreen(
+    navController: NavHostController,
+    selectedCurrency: String
+) {
     // Datos de ejemplo para poblar la lista
+
     val tripsData = listOf(
-        Triple("La antigua Roma", "Abr 14 - Abr 21", "€1,560" to R.drawable.roma),
-        Triple("Frío en Noruega", "Sep 19 - Sep 28", "€690" to R.drawable.noruega),
-        Triple("Negocios en Londres", "May 12 - May 15", "€650" to R.drawable.londres)
+        Triple("La antigua Roma", "Abr 14 - Abr 21", 1560.0 to R.drawable.roma),
+        Triple("Frío en Noruega", "Sep 19 - Sep 28", 690.0 to R.drawable.noruega),
+        Triple("Negocios en Londres", "May 12 - May 15", 650.0 to R.drawable.londres)
     )
 
     // Contenedor principal de la pantalla que organiza las barras, el botón flotante y el contenido
@@ -96,6 +100,7 @@ fun DetalleViajeScreen(navController: NavHostController) {
                         date = trip.second,
                         price = trip.third.first,
                         imageRes = trip.third.second,
+                        selectedCurrency = selectedCurrency,
                         onClick = { navController.navigate(Routes.DETALLE_VIAJE2) }
                     )
                 }
@@ -108,8 +113,9 @@ fun DetalleViajeScreen(navController: NavHostController) {
 fun TripCardModule(
     title: String,
     date: String,
-    price: String,
+    price: Double,
     imageRes: Int,
+    selectedCurrency: String,
     onClick: () -> Unit,
 ) {
     // Tarjeta individual con bordes redondeados y sombra
@@ -170,8 +176,9 @@ fun TripCardModule(
                         color = Color(0xFFE8F5E9),
                         shape = RoundedCornerShape(8.dp)
                     ) {
+
                         Text(
-                            text = price,
+                            text = CurrencyConverter.convert(price, selectedCurrency),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             color = Color(0xFF2E7D32),
                             fontWeight = FontWeight.Bold
@@ -187,7 +194,7 @@ fun TripCardModule(
 @Composable
 fun DetalleViajePreview() {
     AppTheme {
-        DetalleViajeScreen(navController = rememberNavController())
+        DetalleViajeScreen(navController = rememberNavController(), selectedCurrency = "EUR(€)")
     }
 }
 
@@ -195,6 +202,6 @@ fun DetalleViajePreview() {
 @Composable
 fun DetalleViajePreview2() {
     AppTheme {
-        DetalleViajeScreen(navController = rememberNavController())
+        DetalleViajeScreen(navController = rememberNavController(), selectedCurrency = "EUR(€)")
     }
 }
