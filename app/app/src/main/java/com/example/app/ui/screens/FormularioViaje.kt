@@ -39,8 +39,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Museum
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.test.isFocused
 import coil.compose.AsyncImage
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -87,11 +91,44 @@ fun FormularioViaje(
     var listaItinerarios by rememberSaveable { mutableStateOf(listOf<Map<String, String>>()) }
     var etapaActual by rememberSaveable { mutableIntStateOf(previewStep ?: 0) }
     var mostrarDialogo by rememberSaveable { mutableStateOf(false) }
+    var isFocused by remember { mutableStateOf(false) }
 
     val launcherPrincipal = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? -> selectedImageUri = uri }
+    LaunchedEffect(ciudadDestino) {
+        val textoLimpio = ciudadDestino.replace("{ciudad}", "").trim()
 
+        if (textoLimpio.length > 2) {
+            scope.launch {
+                try {
+                    // Llamamos a tu función de búsqueda OSM
+                    val resultados = buscarCiudadesOSM(textoLimpio)
+
+                    if (resultados.isNotEmpty()) {
+                        val primeraOpcion = resultados[0]
+
+                        // Actualizamos el estado con la primera sugerencia oficial
+                        country = TextFieldValue(
+                            text = primeraOpcion,
+                            selection = TextRange(primeraOpcion.length)
+                        )
+
+                        // Al ser un valor de OSM, debería pasar tu Validator
+                        if (Validator.isValidLocation(primeraOpcion)) {
+                            errorCountry = null
+                        }
+
+                        // Cerramos el menú ya que hemos auto-seleccionado
+                        expandido = false
+                        sugerencias = emptyList()
+                    }
+                } catch (e: Exception) {
+                    // Manejo de error silencioso o log
+                }
+            }
+        }
+    }
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
@@ -158,13 +195,75 @@ fun FormularioViaje(
                                 },
                                 label = { Text("País / Ciudad") },
                                 isError = errorCountry != null,
-                                supportingText = { errorCountry?.let { Text(it) } },
-                                leadingIcon = { Icon(Icons.Default.Place, null) },
-                                modifier = Modifier.fillMaxWidth(),
+                                supportingText = {
+                                    if (errorCountry != null) {
+                                        Text(
+                                            text = errorCountry!!,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Place,
+                                        contentDescription = null,
+                                        tint = if (errorCountry != null) MaterialTheme.colorScheme.error
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                // --- BOTÓN X PARA BORRAR TODO ---
+                                trailingIcon = {
+                                    if (country.text.isNotEmpty()) {
+                                        IconButton(
+                                            onClick = {
+                                                country = TextFieldValue("")
+                                                expandido = false
+                                                sugerencias = emptyList()
+                                                errorCountry = null
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Clear,
+                                                contentDescription = "Limpiar campo",
+                                                tint = if (errorCountry != null) MaterialTheme.colorScheme.error
+                                                else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        // --- LÓGICA AL SALIR DEL FOCO ---
+                                        if (isFocused && !focusState.isFocused) {
+                                            val currentText = country.text
+                                            if (currentText.length > 2 && !Validator.isValidLocation(currentText)) {
+                                                scope.launch {
+                                                    val resultados = buscarCiudadesOSM(currentText)
+                                                    if (resultados.isNotEmpty()) {
+                                                        val mejorCoincidencia = resultados[0]
+                                                        country = TextFieldValue(
+                                                            text = mejorCoincidencia,
+                                                            selection = TextRange(mejorCoincidencia.length)
+                                                        )
+                                                        errorCountry = null
+                                                        expandido = false
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        isFocused = focusState.isFocused
+                                    },
                                 shape = RoundedCornerShape(12.dp),
-                                singleLine = true
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    errorBorderColor = MaterialTheme.colorScheme.error,
+                                    errorLabelColor = MaterialTheme.colorScheme.error,
+                                    errorSupportingTextColor = MaterialTheme.colorScheme.error
+                                )
                             )
 
+                            // Menú de sugerencias
                             DropdownMenu(
                                 expanded = expandido && sugerencias.isNotEmpty(),
                                 onDismissRequest = { expandido = false },
@@ -291,9 +390,9 @@ fun FormularioViaje(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
-                            Text("AÑADIR ITINERARIO", fontWeight = FontWeight.Bold)
+                            Text("AÑADIR ITINERARIO", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.inversePrimary)
                             Spacer(Modifier.width(8.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = MaterialTheme.colorScheme.inversePrimary)
                         }
 
                     } else {
@@ -344,9 +443,9 @@ fun FormularioViaje(
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                             ) {
-                                Icon(Icons.Default.CheckCircle, null)
+                                Icon(Icons.Default.CheckCircle, null,tint = MaterialTheme.colorScheme.inversePrimary)
                                 Spacer(Modifier.width(4.dp))
-                                Text("Finalizar")
+                                Text("Finalizar",color = MaterialTheme.colorScheme.inversePrimary)
                             }
                         }
                     }
@@ -385,6 +484,7 @@ fun DialogoNuevaActividad(onDismiss: () -> Unit, onGuardar: (Map<String, String>
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.background,
         title = { Text("Nueva Parada", fontWeight = FontWeight.Bold) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -439,7 +539,7 @@ fun DialogoNuevaActividad(onDismiss: () -> Unit, onGuardar: (Map<String, String>
                         shape = RoundedCornerShape(12.dp)
                     )
                     DropdownMenu(expanded = exp, onDismissRequest = { exp = false }) {
-                        listOf("Vuelo", "Restaurante", "Hotel", "Museo", "Ocio").forEach { opcion ->
+                        listOf("Vuelo", "Restaurante", "Hotel", "Museo", "Ocio","Otros").forEach { opcion ->
                             DropdownMenuItem(text = { Text(opcion) }, onClick = { t = opcion; exp = false })
                         }
                     }
@@ -479,31 +579,102 @@ fun CampoSeleccionImagen(uriSeleccionada: Uri?, label: String, onBorrar: () -> U
         leadingIcon = { Icon(if (uriSeleccionada != null) Icons.Default.CheckCircle else Icons.Default.Image, null) },
         trailingIcon = { if (uriSeleccionada != null) IconButton(onBorrar) { Icon(Icons.Default.Clear, null) } },
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        colors = OutlinedTextFieldDefaults.colors(
+            // Colores cuando está deshabilitado (nuestro caso)
+            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+            disabledBorderColor = MaterialTheme.colorScheme.outline,
+            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+
+        ),
         shape = RoundedCornerShape(12.dp)
     )
 }
 
 @Composable
 fun ItemItinerario(act: Map<String, String>) {
+    // 1. Definimos la lógica de colores e iconos según el tipo
+    val (icono, colorFondo, colorIcono) = when (act["tipo"]) {
+        "Vuelo" -> Triple(
+            Icons.Default.Flight,
+            Color(0xFFE3F2FD), // Azul claro
+            Color(0xFF1976D2)  // Azul oscuro
+        )
+        "Hotel" -> Triple(
+            Icons.Default.Hotel,
+            Color(0xFFF3E5F5), // Púrpura claro
+            Color(0xFF7B1FA2)  // Púrpura oscuro
+        )
+        "Restaurante" -> Triple(
+            Icons.Default.Restaurant,
+            Color(0xFFFFF3E0), // Naranja claro
+            Color(0xFFE65100)  // Naranja oscuro
+        )
+        "Museo" -> Triple(
+            Icons.Default.Museum,
+            Color(0xFFE8F5E9), // Verde claro
+            Color(0xFF2E7D32)  // Verde oscuro
+        )
+        "Otros" -> Triple(
+            Icons.Default.Accessibility,
+            Color(0xFFF5F5F5), // Gris claro
+            Color(0xFF616161)  // Gris oscuro
+        )
+        else -> Triple(
+            Icons.Default.ConfirmationNumber,
+            Color(0xFFFFEBEE), // Rojo/Rosa claro
+            Color(0xFFC62828)  // Rojo oscuro
+        )
+    }
+
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Surface(modifier = Modifier.size(50.dp), shape = CircleShape, color = Color(0xFFE3F2FD)) {
-            if (!act["foto"].isNullOrEmpty()) {
-                AsyncImage(model = act["foto"], contentDescription = null, contentScale = ContentScale.Crop)
-            } else {
-                Icon(Icons.Default.Place, null, tint = Color(0xFF1976D2), modifier = Modifier.padding(12.dp))
-            }
+        // --- CÍRCULO CON COLOR DINÁMICO ---
+        Surface(
+            modifier = Modifier.size(50.dp),
+            shape = CircleShape,
+            color = colorFondo // Aplicamos el fondo dinámico aquí
+        ) {
+            Icon(
+                imageVector = icono,
+                contentDescription = act["tipo"],
+                tint = colorIcono, // Aplicamos el color de icono dinámico
+                modifier = Modifier.padding(12.dp)
+            )
         }
-        Column(modifier = Modifier.padding(start = 16.dp).weight(1f)) {
-            Text(act["nombre"] ?: "", fontWeight = FontWeight.Bold)
-            Text("${act["tipo"]} • ${act["hora"]}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+
+        // --- TEXTOS CENTRALES ---
+        Column(
+            modifier = Modifier
+                .padding(start = 16.dp)
+                .weight(1f)
+        ) {
+            Text(
+                text = act["nombre"] ?: "Sin nombre",
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "${act["tipo"]} • ${act["hora"]}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
-        Text("€${act["precio"]}", fontWeight = FontWeight.Bold, color = Color(0xFFE65100))
+
+        // --- PRECIO ---
+        Text(
+            text = "€${act["precio"]}",
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.ExtraBold,
+            color = Color(0xFFE65100)
+        )
     }
 }
-
 // Bloque de vistas previas (Previews) para el editor de diseño
 @Preview(
     name = "Dark Mode",
