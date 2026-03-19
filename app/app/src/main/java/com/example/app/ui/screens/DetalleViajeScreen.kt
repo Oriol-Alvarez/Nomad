@@ -1,20 +1,8 @@
 package com.example.app.ui.screens
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -22,14 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,65 +22,64 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage // Asegúrate de tener la librería Coil
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
+import com.example.app.ui.viewmodels.TripListViewModel
 
 @Composable
 fun DetalleViajeScreen(
     navController: NavHostController,
-    selectedCurrency: String
+    selectedCurrency: String,
+    viewModel: TripListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // Datos de ejemplo para poblar la lista
+    val tripsFromDB = viewModel.trips
 
-    val tripsData = listOf(
-        Triple("La antigua Roma", "Abr 14 - Abr 21", 1560.0 to R.drawable.roma),
-        Triple("Frío en Noruega", "Sep 19 - Sep 28", 690.0 to R.drawable.noruega),
-        Triple("Negocios en Londres", "May 12 - May 15", 650.0 to R.drawable.londres)
-    )
-
-    // Contenedor principal de la pantalla que organiza las barras, el botón flotante y el contenido
     Scaffold(
-        // Menú de navegación inferior (Bottom Navigation)
         bottomBar = { BottomNavigationBar(navController) },
-
-        // Botón circular azul en la esquina inferior derecha (FAB) para añadir un nuevo viaje
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate("form-viaje?ciudad=") },
                 containerColor = Color(0xFF0288D1),
                 contentColor = Color.White,
-                shape = CircleShape,
-                modifier = Modifier.padding(bottom = 16.dp, end = 8.dp)
+                shape = CircleShape
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Añadir")
             }
         }
     ) { innerPadding ->
-
-        // Lista desplazable verticalmente (Scroll) que contiene el contenido principal
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding())
+                .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
-
-            // Título superior de la pantalla ("Mis Viajes")
             item {
                 CustomHeader(title = "Mis Viajes")
             }
 
-            // Lista iterativa que genera las tarjetas para cada viaje
-            items(tripsData) { trip ->
+            if (tripsFromDB.isEmpty()) {
+                item {
+                    Text(
+                        "No tienes viajes planeados.",
+                        modifier = Modifier.fillMaxWidth().padding(top = 50.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        color = Color.Gray
+                    )
+                }
+            }
+
+            items(tripsFromDB) { trip ->
                 Box(modifier = Modifier.padding(horizontal = 25.dp)) {
                     TripCardModule(
-                        title = trip.first,
-                        date = trip.second,
-                        price = trip.third.first,
-                        imageRes = trip.third.second,
+                        title = trip.title,
+                        date = trip.country,
+                        price = trip.budget,
+                        // CAMBIO: Ahora pasamos imageUri (el String que guardamos en el form)
+                        imageUri = trip.imageUri,
                         selectedCurrency = selectedCurrency,
                         onClick = { navController.navigate(Routes.DETALLE_VIAJE2) }
                     )
@@ -114,11 +94,10 @@ fun TripCardModule(
     title: String,
     date: String,
     price: Double,
-    imageRes: Int,
+    imageUri: String, // Recibe el String de la URI
     selectedCurrency: String,
     onClick: () -> Unit,
 ) {
-    // Tarjeta individual con bordes redondeados y sombra
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -126,36 +105,36 @@ fun TripCardModule(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = { onClick() }
     ) {
-        // Estructura vertical dentro de la tarjeta
         Column {
-            // Imagen de cabecera del destino (ocupa la parte superior de la tarjeta)
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = null,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                contentScale = ContentScale.Crop
-            )
+            // Lógica de Imagen: Si hay URI usamos Coil, si no, imagen por defecto
+            if (imageUri.isNotEmpty()) {
+                AsyncImage(
+                    model = imageUri,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth().height(140.dp),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                androidx.compose.foundation.Image(
+                    painter = painterResource(id = R.drawable.viaje_predefinido),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth().height(140.dp),
+                    contentScale = ContentScale.Crop
+                )
+            }
 
-            // Contenedor de la información del viaje debajo de la imagen
             Column(modifier = Modifier.padding(18.dp)) {
-
-                // Nombre del destino en texto negrita grande
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
 
-                // Fila horizontal para alinear la fecha a la izquierda y el precio a la derecha
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-
-                    // Contenedor del icono de calendario y el texto de la fecha
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             Icons.Default.CalendarMonth,
@@ -171,13 +150,12 @@ fun TripCardModule(
                         )
                     }
 
-                    // Etiqueta destacada (fondo verde claro) para mostrar el precio
                     Surface(
                         color = Color(0xFFE8F5E9),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-
                         Text(
+                            // Asegúrate de que CurrencyConverter exista en tu proyecto
                             text = CurrencyConverter.convert(price, selectedCurrency),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             color = Color(0xFF2E7D32),
@@ -187,21 +165,5 @@ fun TripCardModule(
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DetalleViajePreview() {
-    AppTheme {
-        DetalleViajeScreen(navController = rememberNavController(), selectedCurrency = "EUR(€)")
-    }
-}
-
-@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
-@Composable
-fun DetalleViajePreview2() {
-    AppTheme {
-        DetalleViajeScreen(navController = rememberNavController(), selectedCurrency = "EUR(€)")
     }
 }

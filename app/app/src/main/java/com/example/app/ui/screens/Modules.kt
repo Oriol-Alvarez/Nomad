@@ -1,5 +1,5 @@
 package com.example.app.ui.screens
-
+import androidx.compose.material3.SelectableDates
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,6 +43,10 @@ import java.text.DecimalFormatSymbols
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.Calendar
+
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,28 +54,47 @@ fun SelectorFechaModular(
     label: String,
     fechaSeleccionada: String,
     onFechaElegida: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isError: Boolean = false
 ) {
-    // Componente auxiliar que envuelve un DatePickerDialog nativo de Material 3
     var mostrar by remember { mutableStateOf(false) }
-    val state = rememberDatePickerState()
 
-    // Campo de texto de solo lectura que actúa como disparador del modal
+    // Calculamos el inicio del día de hoy para bloquear fechas pasadas
+    val todayMillis = remember {
+        Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+    }
+
+    // Configuración correcta de SelectableDates para evitar error de tipos
+    val state = rememberDatePickerState(
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                // Permite seleccionar solo desde hoy en adelante
+                return utcTimeMillis >= todayMillis
+            }
+        }
+    )
+
     Box(modifier = modifier.clickable { mostrar = true }) {
         OutlinedTextField(
             value = fechaSeleccionada,
             onValueChange = {},
             readOnly = true,
             label = { Text(label) },
+            isError = isError,
             leadingIcon = { Icon(Icons.Default.DateRange, null) },
             modifier = Modifier.fillMaxWidth(),
             enabled = false,
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledBorderColor = MaterialTheme.colorScheme.outline,
-                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                disabledBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                disabledLabelColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledLeadingIconColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
             )
         )
     }
@@ -79,41 +102,20 @@ fun SelectorFechaModular(
     if (mostrar) {
         DatePickerDialog(
             onDismissRequest = { mostrar = false },
-            colors = DatePickerDefaults.colors(containerColor = MaterialTheme.colorScheme.background),
             confirmButton = {
-                Button(
-                    onClick = {
-                        val formatted = state.selectedDateMillis?.let {
-                            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it))
-                        } ?: ""
-                        onFechaElegida(formatted)
-                        mostrar = false
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        contentColor = Color.White
-                    ),
-                    shape = RoundedCornerShape(24.dp)
-                ) {
-                    Text("Aceptar", fontWeight = FontWeight.Bold)
-                }
+                TextButton(onClick = {
+                    val formatted = state.selectedDateMillis?.let {
+                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it))
+                    } ?: ""
+                    onFechaElegida(formatted)
+                    mostrar = false
+                }) { Text("Aceptar") }
             },
             dismissButton = {
-                TextButton(onClick = { mostrar = false }) { Text("Cancelar", color = Color.Gray) }
+                TextButton(onClick = { mostrar = false }) { Text("Cancelar") }
             }
         ) {
-            DatePicker(
-                state = state,
-                colors = DatePickerDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    headlineContentColor = MaterialTheme.colorScheme.onPrimary,
-                    dayContentColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedDayContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    selectedDayContentColor = MaterialTheme.colorScheme.inversePrimary,
-                    todayContentColor = MaterialTheme.colorScheme.surfaceContainer,
-                    todayDateBorderColor = MaterialTheme.colorScheme.surfaceContainer
-                )
-            )
+            DatePicker(state = state)
         }
     }
 }
@@ -239,3 +241,4 @@ object CurrencyConverter {
         return "$formattedNumber $symbol"
     }
 }
+
