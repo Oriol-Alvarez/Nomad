@@ -11,6 +11,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerColors
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -95,6 +96,7 @@ fun SelectorFechaModular(
                 disabledBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
                 disabledLabelColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 disabledLeadingIconColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+
             )
         )
     }
@@ -113,9 +115,23 @@ fun SelectorFechaModular(
             },
             dismissButton = {
                 TextButton(onClick = { mostrar = false }) { Text("Cancelar") }
-            }
+            },
+            colors = DatePickerDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.background
+            ),
         ) {
-            DatePicker(state = state)
+            DatePicker(
+                state = state,
+                colors = DatePickerDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    headlineContentColor = MaterialTheme.colorScheme.onPrimary,
+                    dayContentColor = MaterialTheme.colorScheme.onPrimary,
+                    selectedDayContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    selectedDayContentColor = MaterialTheme.colorScheme.inversePrimary,
+                    todayContentColor = MaterialTheme.colorScheme.surfaceContainer,
+                    todayDateBorderColor = MaterialTheme.colorScheme.surfaceContainer
+                )
+            )
         }
     }
 }

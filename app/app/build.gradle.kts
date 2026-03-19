@@ -60,6 +60,7 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation(libs.foundation)
     implementation(libs.androidx.compose.ui.test)
+    implementation(libs.androidx.compose.foundation.layout)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

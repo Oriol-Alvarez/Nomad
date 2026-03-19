@@ -18,6 +18,7 @@ runtimeSaveable = "1.10.4"
 uiGraphics = "1.10.4"
 androidxFoundation = "1.10.5"
 uiTest = "1.10.5"
+foundationLayout = "1.10.5"
 
 
 [libraries]
@@ -46,6 +47,7 @@ androidx-compose-runtime-saveable = { group = "androidx.compose.runtime", name =
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
 foundation = { group = "androidx.compose.foundation", name = "foundation", version.ref = "androidxFoundation" }
 androidx-compose-ui-test = { group = "androidx.compose.ui", name = "ui-test", version.ref = "uiTest" }
+androidx-compose-foundation-layout = { group = "androidx.compose.foundation", name = "foundation-layout", version.ref = "foundationLayout" }
 
 
 [plugins]
