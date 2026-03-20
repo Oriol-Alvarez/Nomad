@@ -7,6 +7,8 @@ data class Trip(
     var title: String,
     var country: String,
     var description: String,
+    var dataInici: String,
+    var dataFinal: String,
     var imageUri: String,
     var isFeatured: Boolean,
     var budget: Double,

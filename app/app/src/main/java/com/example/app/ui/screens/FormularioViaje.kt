@@ -454,6 +454,8 @@ fun FormularioViaje(
                                     viewModel.saveTrip(
                                         title = title,
                                         destination = country.text,
+                                        dataInici= fechaIda,
+                                        dataFinal = fechaVuelta,
                                         desc = description,
                                         budget = budget,
                                         imageUri = selectedImageUri?.toString() ?: "",
