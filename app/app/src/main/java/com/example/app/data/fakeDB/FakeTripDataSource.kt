@@ -32,7 +32,9 @@ object FakeTripDataSource {
                 description = "Visita a la torre Eiffel",
                 imageUri = parisUri,
                 isFeatured = true,
-                budget = 500.0
+                budget = 500.0,
+                dataInici = "2023-08-01",
+                dataFinal = "2023-08-05"
             )
         )
     }
