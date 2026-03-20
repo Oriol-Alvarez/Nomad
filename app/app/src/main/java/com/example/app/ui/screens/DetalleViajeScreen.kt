@@ -22,11 +22,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage // Asegúrate de tener la librería Coil
+import coil.compose.AsyncImage
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.viewmodels.TripListViewModel
+// Asegúrate de importar tu CurrencyConverter donde lo tengas
+// import com.example.app.utils.CurrencyConverter
 
 @Composable
 fun DetalleViajeScreen(
@@ -78,10 +80,10 @@ fun DetalleViajeScreen(
                         title = trip.title,
                         date = trip.country,
                         price = trip.budget,
-                        // CAMBIO: Ahora pasamos imageUri (el String que guardamos en el form)
                         imageUri = trip.imageUri,
                         selectedCurrency = selectedCurrency,
-                        onClick = { navController.navigate(Routes.DETALLE_VIAJE2) }
+                        // Navegamos enviando el ID (que es un String)
+                        onClick = { navController.navigate("${Routes.DETALLE_VIAJE2}/${trip.id}") }
                     )
                 }
             }
@@ -94,7 +96,7 @@ fun TripCardModule(
     title: String,
     date: String,
     price: Double,
-    imageUri: String, // Recibe el String de la URI
+    imageUri: String,
     selectedCurrency: String,
     onClick: () -> Unit,
 ) {
@@ -106,7 +108,6 @@ fun TripCardModule(
         onClick = { onClick() }
     ) {
         Column {
-            // Lógica de Imagen: Si hay URI usamos Coil, si no, imagen por defecto
             if (imageUri.isNotEmpty()) {
                 AsyncImage(
                     model = imageUri,
@@ -155,7 +156,6 @@ fun TripCardModule(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            // Asegúrate de que CurrencyConverter exista en tu proyecto
                             text = CurrencyConverter.convert(price, selectedCurrency),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             color = Color(0xFF2E7D32),
