@@ -22,6 +22,8 @@ class TripListViewModel(
     fun saveTrip(
         title: String,
         destination: String,
+        dataInici: String,
+        dataFinal: String,
         desc: String,
         budget: Double,
         imageUri: String,
@@ -47,7 +49,9 @@ class TripListViewModel(
             description = desc,
             imageUri = imageUri,
             isFeatured = false,
-            budget = budget
+            budget = budget,
+            dataInici = dataInici,
+            dataFinal = dataFinal
         ).apply {
             // Añadimos los items creados a la lista del viaje
             this.activities.addAll(itineraryItems)
