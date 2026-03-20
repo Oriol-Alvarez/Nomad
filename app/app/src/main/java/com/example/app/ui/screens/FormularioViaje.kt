@@ -38,9 +38,16 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Museum
+import androidx.compose.material.icons.rounded.Clear
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.test.isFocused
 import coil.compose.AsyncImage
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -87,11 +94,46 @@ fun FormularioViaje(
     var listaItinerarios by rememberSaveable { mutableStateOf(listOf<Map<String, String>>()) }
     var etapaActual by rememberSaveable { mutableIntStateOf(previewStep ?: 0) }
     var mostrarDialogo by rememberSaveable { mutableStateOf(false) }
+    var isFocused by remember { mutableStateOf(false) }
+
+    var indiceEdicion by remember { mutableIntStateOf(-1) }
 
     val launcherPrincipal = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? -> selectedImageUri = uri }
+    LaunchedEffect(ciudadDestino) {
+        val textoLimpio = ciudadDestino.replace("{ciudad}", "").trim()
 
+        if (textoLimpio.length > 2) {
+            scope.launch {
+                try {
+                    // Llamamos a tu función de búsqueda OSM
+                    val resultados = buscarCiudadesOSM(textoLimpio)
+
+                    if (resultados.isNotEmpty()) {
+                        val primeraOpcion = resultados[0]
+
+                        // Actualizamos el estado con la primera sugerencia oficial
+                        country = TextFieldValue(
+                            text = primeraOpcion,
+                            selection = TextRange(primeraOpcion.length)
+                        )
+
+                        // Al ser un valor de OSM, debería pasar tu Validator
+                        if (Validator.isValidLocation(primeraOpcion)) {
+                            errorCountry = null
+                        }
+
+                        // Cerramos el menú ya que hemos auto-seleccionado
+                        expandido = false
+                        sugerencias = emptyList()
+                    }
+                } catch (e: Exception) {
+                    // Manejo de error silencioso o log
+                }
+            }
+        }
+    }
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
@@ -158,13 +200,75 @@ fun FormularioViaje(
                                 },
                                 label = { Text("País / Ciudad") },
                                 isError = errorCountry != null,
-                                supportingText = { errorCountry?.let { Text(it) } },
-                                leadingIcon = { Icon(Icons.Default.Place, null) },
-                                modifier = Modifier.fillMaxWidth(),
+                                supportingText = {
+                                    if (errorCountry != null) {
+                                        Text(
+                                            text = errorCountry!!,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Place,
+                                        contentDescription = null,
+                                        tint = if (errorCountry != null) MaterialTheme.colorScheme.error
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                // --- BOTÓN X PARA BORRAR TODO ---
+                                trailingIcon = {
+                                    if (country.text.isNotEmpty()) {
+                                        IconButton(
+                                            onClick = {
+                                                country = TextFieldValue("")
+                                                expandido = false
+                                                sugerencias = emptyList()
+                                                errorCountry = null
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Clear,
+                                                contentDescription = "Limpiar campo",
+                                                tint = if (errorCountry != null) MaterialTheme.colorScheme.error
+                                                else MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        // --- LÓGICA AL SALIR DEL FOCO ---
+                                        if (isFocused && !focusState.isFocused) {
+                                            val currentText = country.text
+                                            if (currentText.length > 2 && !Validator.isValidLocation(currentText)) {
+                                                scope.launch {
+                                                    val resultados = buscarCiudadesOSM(currentText)
+                                                    if (resultados.isNotEmpty()) {
+                                                        val mejorCoincidencia = resultados[0]
+                                                        country = TextFieldValue(
+                                                            text = mejorCoincidencia,
+                                                            selection = TextRange(mejorCoincidencia.length)
+                                                        )
+                                                        errorCountry = null
+                                                        expandido = false
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        isFocused = focusState.isFocused
+                                    },
                                 shape = RoundedCornerShape(12.dp),
-                                singleLine = true
+                                singleLine = true,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    errorBorderColor = MaterialTheme.colorScheme.error,
+                                    errorLabelColor = MaterialTheme.colorScheme.error,
+                                    errorSupportingTextColor = MaterialTheme.colorScheme.error
+                                )
                             )
 
+                            // Menú de sugerencias
                             DropdownMenu(
                                 expanded = expandido && sugerencias.isNotEmpty(),
                                 onDismissRequest = { expandido = false },
@@ -291,9 +395,9 @@ fun FormularioViaje(
                                 containerColor = MaterialTheme.colorScheme.surfaceContainer
                             )
                         ) {
-                            Text("AÑADIR ITINERARIO", fontWeight = FontWeight.Bold)
+                            Text("AÑADIR ITINERARIO", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.inversePrimary)
                             Spacer(Modifier.width(8.dp))
-                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null)
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = MaterialTheme.colorScheme.inversePrimary)
                         }
 
                     } else {
@@ -309,12 +413,28 @@ fun FormularioViaje(
 
                         if (listaItinerarios.isEmpty()) {
                             Text(
-                                "No hay paradas todavía.",
-                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                text = "No hay itinerario todavía.",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
                                 color = Color.Gray
                             )
                         } else {
-                            listaItinerarios.forEach { act -> ItemItinerario(act) }
+                            listaItinerarios.forEachIndexed { index, act ->
+                                ItemItinerario(
+                                    act = act,
+                                    onEdit = {
+                                        indiceEdicion = index
+                                        mostrarDialogo = true
+                                    },
+                                    onDelete = {
+                                        // Filtramos la lista para quitar el elemento actual
+                                        listaItinerarios = listaItinerarios.toMutableList().apply {
+                                            removeAt(index)
+                                        }
+                                    }
+                                )
+                            }
                         }
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -344,9 +464,9 @@ fun FormularioViaje(
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                             ) {
-                                Icon(Icons.Default.CheckCircle, null)
+                                Icon(Icons.Default.CheckCircle, null,tint = MaterialTheme.colorScheme.inversePrimary)
                                 Spacer(Modifier.width(4.dp))
-                                Text("Finalizar")
+                                Text("Finalizar",color = MaterialTheme.colorScheme.inversePrimary)
                             }
                         }
                     }
@@ -357,10 +477,23 @@ fun FormularioViaje(
 
     if (mostrarDialogo) {
         DialogoNuevaActividad(
-            onDismiss = { mostrarDialogo = false },
-            onGuardar = { nuevaAct ->
-                listaItinerarios = listaItinerarios + nuevaAct
+            actividadAEditar = if (indiceEdicion != -1) listaItinerarios[indiceEdicion] else null,
+            onDismiss = {
                 mostrarDialogo = false
+                indiceEdicion = -1
+            },
+            onGuardar = { nuevaAct ->
+                val listaMutable = listaItinerarios.toMutableList()
+                if (indiceEdicion != -1) {
+                    // Sobrescribimos la actividad editada
+                    listaMutable[indiceEdicion] = nuevaAct
+                } else {
+                    // Añadimos una nueva
+                    listaMutable.add(nuevaAct)
+                }
+                listaItinerarios = listaMutable
+                mostrarDialogo = false
+                indiceEdicion = -1
             }
         )
     }
@@ -371,55 +504,53 @@ fun FormularioViaje(
 // ----------------------------------------------------------------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DialogoNuevaActividad(onDismiss: () -> Unit, onGuardar: (Map<String, String>) -> Unit) {
-    var n by remember { mutableStateOf("") }
-    var d by remember { mutableStateOf("") }
-    var h by remember { mutableStateOf("") }
-    var p by remember { mutableStateOf("") }
-    var t by remember { mutableStateOf("Vuelo") }
+fun DialogoNuevaActividad(
+    actividadAEditar: Map<String, String>? = null,
+    onDismiss: () -> Unit,
+    onGuardar: (Map<String, String>) -> Unit
+) {
+    var n by remember { mutableStateOf(actividadAEditar?.get("nombre") ?: "") }
+    var d by remember { mutableStateOf(actividadAEditar?.get("dia") ?: "") }
+    var h by remember { mutableStateOf(actividadAEditar?.get("hora") ?: "") }
+    var p by remember { mutableStateOf(actividadAEditar?.get("precio") ?: "") }
+    var t by remember { mutableStateOf(actividadAEditar?.get("tipo") ?: "Vuelo") }
+    var desc by remember { mutableStateOf(actividadAEditar?.get("descripcion") ?: "") }
+
     var exp by remember { mutableStateOf(false) }
     var errorN by remember { mutableStateOf(false) }
-    var fotoActUri by remember { mutableStateOf<Uri?>(null) }
-
-    val launcherAct = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { fotoActUri = it }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nueva Parada", fontWeight = FontWeight.Bold) },
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.fillMaxWidth(0.95f),
+        title = { Text(if (actividadAEditar == null) "Nueva Parada" else "Editar Parada") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Ponemos Scroll dentro del diálogo por si el teclado ocupa mucho espacio
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 OutlinedTextField(
                     value = n,
                     onValueChange = { n = it; errorN = false },
-                    label = { Text("Nombre *") },
+                    label = { Text("Nombre de la actividad *") },
                     isError = errorN,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
 
-
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp) // Espacio vertical entre los dos
-                ) {
-
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        SelectorFechaModular(
-                            label = "Día",
-                            fechaSeleccionada = d,
-                            onFechaElegida = { d = it }
-                        )
-                    }
+                SelectorFechaModular(
+                    label = "Día",
+                    fechaSeleccionada = d,
+                    onFechaElegida = { d = it }
+                )
 
 
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        SelectorHoraModular(
-                            label = "Hora",
-                            horaSeleccionada = h,
-                            onHoraElegida = { h = it }
-                        )
-                    }
-                }
+                SelectorHoraModular(
+                    label = "Hora",
+                    horaSeleccionada = h,
+                    onHoraElegida = { h = it }
+                )
 
                 OutlinedTextField(
                     value = p,
@@ -430,16 +561,32 @@ fun DialogoNuevaActividad(onDismiss: () -> Unit, onGuardar: (Map<String, String>
                     shape = RoundedCornerShape(12.dp)
                 )
 
+                // NUEVO: CAMPO DESCRIPCIÓN
+                OutlinedTextField(
+                    value = desc,
+                    onValueChange = { desc = it },
+                    label = { Text("Notas / Descripción") },
+                    modifier = Modifier.fillMaxWidth().height(90.dp),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
-                        value = t, onValueChange = {}, readOnly = true, enabled = false,
+                        value = t,
+                        onValueChange = {},
+                        readOnly = true,
+                        enabled = false,
                         label = { Text("Tipo") },
                         trailingIcon = { IconButton(onClick = { exp = true }) { Icon(Icons.Default.KeyboardArrowDown, null) } },
                         modifier = Modifier.fillMaxWidth().clickable { exp = true },
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
                     DropdownMenu(expanded = exp, onDismissRequest = { exp = false }) {
-                        listOf("Vuelo", "Restaurante", "Hotel", "Museo", "Ocio").forEach { opcion ->
+                        listOf("Vuelo", "Restaurante", "Hotel", "Museo", "Ocio", "Otros").forEach { opcion ->
                             DropdownMenuItem(text = { Text(opcion) }, onClick = { t = opcion; exp = false })
                         }
                     }
@@ -451,20 +598,20 @@ fun DialogoNuevaActividad(onDismiss: () -> Unit, onGuardar: (Map<String, String>
                 if (Validator.isNotEmpty(n)) {
                     onGuardar(
                         mapOf(
-                            "nombre" to n, "dia" to d, "hora" to h,
+                            "nombre" to n,
+                            "dia" to d,
+                            "hora" to h,
                             "precio" to if (p.isEmpty()) "0" else p,
-                            "tipo" to t, "foto" to (fotoActUri?.toString() ?: "")
+                            "tipo" to t,
+                            "descripcion" to desc
                         )
                     )
-                } else {
-                    errorN = true
-                }
+                } else { errorN = true }
             }) { Text("Guardar") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
     )
 }
-
 // ----------------------------------------------------------------------------
 // COMPONENTES AUXILIARES
 // ----------------------------------------------------------------------------
@@ -479,31 +626,138 @@ fun CampoSeleccionImagen(uriSeleccionada: Uri?, label: String, onBorrar: () -> U
         leadingIcon = { Icon(if (uriSeleccionada != null) Icons.Default.CheckCircle else Icons.Default.Image, null) },
         trailingIcon = { if (uriSeleccionada != null) IconButton(onBorrar) { Icon(Icons.Default.Clear, null) } },
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        colors = OutlinedTextFieldDefaults.colors(
+            // Colores cuando está deshabilitado (nuestro caso)
+            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+            disabledBorderColor = MaterialTheme.colorScheme.outline,
+            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+
+        ),
         shape = RoundedCornerShape(12.dp)
     )
 }
 
 @Composable
-fun ItemItinerario(act: Map<String, String>) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+fun ItemItinerario(
+    act: Map<String, String>,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val (icono, colorFondo, colorIcono) = when (act["tipo"]) {
+        "Vuelo" -> Triple(Icons.Default.Flight, Color(0xFFE3F2FD), Color(0xFF1976D2))
+        "Hotel" -> Triple(Icons.Default.Hotel, Color(0xFFF3E5F5), Color(0xFF7B1FA2))
+        "Restaurante" -> Triple(Icons.Default.Restaurant, Color(0xFFFFF3E0), Color(0xFFE65100))
+        "Museo" -> Triple(Icons.Default.Museum, Color(0xFFE8F5E9), Color(0xFF2E7D32))
+        "Otros" -> Triple(Icons.Default.Accessibility, Color(0xFFF5F5F5), Color(0xFF616161))
+        else -> Triple(Icons.Default.ConfirmationNumber, Color(0xFFFFEBEE), Color(0xFFC62828))
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 12.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            // Usamos un color sólido para que la elevación se vea limpia como en tu foto
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = 2.dp,
+        )
     ) {
-        Surface(modifier = Modifier.size(50.dp), shape = CircleShape, color = Color(0xFFE3F2FD)) {
-            if (!act["foto"].isNullOrEmpty()) {
-                AsyncImage(model = act["foto"], contentDescription = null, contentScale = ContentScale.Crop)
-            } else {
-                Icon(Icons.Default.Place, null, tint = Color(0xFF1976D2), modifier = Modifier.padding(12.dp))
+        Box(
+            modifier = Modifier
+                .clickable { onEdit() }
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) {
+                // --- 1. ICONO ---
+                Surface(
+                    modifier = Modifier.size(44.dp),
+                    shape = CircleShape,
+                    color = colorFondo
+                ) {
+                    Icon(
+                        imageVector = icono,
+                        contentDescription = null,
+                        tint = colorIcono,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // --- 2. TEXTOS ---
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = act["nombre"] ?: "",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "${act["dia"]} • ${act["hora"]} (${act["tipo"]})",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Descripción
+                        Text(
+                            text = act["descripcion"] ?: "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Precio
+                        Text(
+                            text = "€${act["precio"]}",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFFE65100)
+                        )
+                    }
+                }
+
+                // Espacio para la X
+                Spacer(modifier = Modifier.width(20.dp))
+            }
+
+            // --- 3. BOTÓN X ---
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(x = 8.dp, y = (-8).dp)
+                    .size(30.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Clear,
+                    contentDescription = "Borrar",
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
             }
         }
-        Column(modifier = Modifier.padding(start = 16.dp).weight(1f)) {
-            Text(act["nombre"] ?: "", fontWeight = FontWeight.Bold)
-            Text("${act["tipo"]} • ${act["hora"]}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-        }
-        Text("€${act["precio"]}", fontWeight = FontWeight.Bold, color = Color(0xFFE65100))
     }
 }
-
 // Bloque de vistas previas (Previews) para el editor de diseño
 @Preview(
     name = "Dark Mode",
@@ -588,5 +842,98 @@ fun PreviewDialogoLimpio() {
             onDismiss = {},
             onGuardar = {}
         )
+    }
+}
+
+// ----------------------------------------------------------------------------
+// PREVIEWS DE LOS ITEMS (COPIAR Y PEGAR)
+// ----------------------------------------------------------------------------
+
+@Preview(
+    name = "Item Completo - Modo Claro",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_NO
+)
+@Composable
+fun PreviewItemCompletoLight() {
+    AppTheme {
+        Box(modifier = Modifier.padding(16.dp)) {
+            ItemItinerario(
+                act = mapOf(
+                    "nombre" to "Cena Romántica",
+                    "dia" to "22 Mar",
+                    "hora" to "21:30",
+                    "precio" to "65.50",
+                    "tipo" to "Restaurante",
+                    "descripcion" to "Reserva a nombre de Juan. Mesa cerca de la ventana con vistas al río."
+                ),
+                onEdit = { /* No hace nada en el preview */ },
+                onDelete = { /* No hace nada en el preview */ }
+            )
+        }
+    }
+}
+
+@Preview(
+    name = "Item Simple - Modo Noche",
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES
+)
+@Composable
+fun PreviewItemSimpleDark() {
+    AppTheme {
+
+            ItemItinerario(
+                act = mapOf(
+                    "nombre" to "Vuelo de Ida",
+                    "dia" to "20 Mar",
+                    "hora" to "08:00",
+                    "precio" to "145.00",
+                    "tipo" to "Vuelo",
+                    "descripcion" to "" // Probamos cómo queda sin descripción
+                ),
+                onEdit = { },
+                onDelete = { }
+            )
+
+    }
+}
+
+@Preview(
+    name = "Lista de Ejemplo",
+    showBackground = true
+)
+@Composable
+fun PreviewListaItems() {
+    AppTheme {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ItemItinerario(
+                act = mapOf(
+                    "nombre" to "Hotel Palace",
+                    "dia" to "20 Mar",
+                    "hora" to "14:00",
+                    "precio" to "200.00",
+                    "tipo" to "Hotel",
+                    "descripcion" to "Check-in temprano solicitado."
+                ),
+                onEdit = {},
+                onDelete = {}
+            )
+            ItemItinerario(
+                act = mapOf(
+                    "nombre" to "Museo del Prado",
+                    "dia" to "21 Mar",
+                    "hora" to "10:30",
+                    "precio" to "15.00",
+                    "tipo" to "Museo",
+                    "descripcion" to "Entradas digitales en el correo."
+                ),
+                onEdit = {},
+                onDelete = {}
+            )
+        }
     }
 }
