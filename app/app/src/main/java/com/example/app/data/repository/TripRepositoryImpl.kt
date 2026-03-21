@@ -22,4 +22,8 @@ class TripRepositoryImpl : TripRepository {
     override fun deleteTrip(id: String) {
         dataSource.deleteTrip(id)
     }
+
+    override fun updateTrip(trip: Trip) {
+        dataSource.updateTrip(trip)
+    }
 }

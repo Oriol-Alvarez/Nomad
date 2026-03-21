@@ -15,16 +15,13 @@ import com.example.app.R
 
 
 class TripListViewModel(
-    // Inyectamos AMBOS repositorios
     private val tripRepository: TripRepository = TripRepositoryImpl(),
     private val itineraryRepository: ItineraryItemRepository = ItineraryItemRepositoryImpl()
 ) : ViewModel() {
 
-    // 1. ESTADO DE LA UI
     var trips by mutableStateOf(tripRepository.getTrips())
         private set
 
-    // 2. OPERACIÓN: Guardar un nuevo viaje y sus actividades
     fun saveTrip(
         title: String,
         destination: String,
@@ -33,7 +30,7 @@ class TripListViewModel(
         desc: String,
         budget: Double,
         imageUri: String,
-        activitiesFromForm: List<ItineraryItem> // <-- AHORA RECIBE LA LISTA OFICIAL
+        activitiesFromForm: List<ItineraryItem>
     ) {
         val newTripId = UUID.randomUUID().toString()
         val imagenFinal = imageUri.ifBlank {
@@ -52,7 +49,6 @@ class TripListViewModel(
         )
         tripRepository.insertTrip(newTrip)
 
-        // Simplemente le asignamos el Trip ID a cada actividad y la guardamos
         activitiesFromForm.forEach { item ->
             val finalItem = item.copy(tripId = newTripId)
             itineraryRepository.insertItineraryItem(finalItem)
@@ -61,12 +57,9 @@ class TripListViewModel(
         refreshTrips()
     }
 
-    // 3. OPERACIÓN: Borrar un viaje
     fun deleteTrip(id: String) {
-        // Buena práctica: Si borras el viaje, borra también sus actividades
         itineraryRepository.deleteItineraryItemsByTripId(id)
         tripRepository.deleteTrip(id)
-
         refreshTrips()
     }
 
@@ -78,7 +71,30 @@ class TripListViewModel(
         return itineraryRepository.getItineraryItemsForTrip(tripId)
     }
 
-    // 4. AUXILIAR: Refrescar la lista de viajes
+    fun deleteActivity(activity: ItineraryItem) {
+        itineraryRepository.deleteItineraryItem(activity)
+        updateTripBudget(activity.tripId)
+        refreshTrips()
+    }
+
+    fun addActivityToTrip(tripId: String, item: ItineraryItem) {
+        itineraryRepository.insertItineraryItem(item.copy(tripId = tripId))
+        updateTripBudget(tripId)
+        refreshTrips()
+    }
+
+    private fun updateTripBudget(tripId: String) {
+        val trip = tripRepository.getTripById(tripId) ?: return
+        val activities = itineraryRepository.getItineraryItemsForTrip(tripId)
+        val newBudget = activities.sumOf { it.precio.toDoubleOrNull() ?: 0.0 }
+        trip.budget = newBudget
+    }
+
+    fun updateTrip(trip: Trip) {
+        tripRepository.updateTrip(trip)
+        refreshTrips()
+    }
+
     fun refreshTrips() {
         trips = tripRepository.getTrips()
     }

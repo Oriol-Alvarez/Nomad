@@ -4,6 +4,7 @@ import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,14 +26,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage // <-- Importación necesaria para cargar la URI
+import coil.compose.AsyncImage
 
 @Composable
 fun CustomHeader(
-    title: String,
+    title: String? = null,
     subtitle: String? = null,
     showBackButton: Boolean = false,
-    backgroundImageRes: String? = null // Ahora recibe un String (la URI)
+    backgroundImageRes: String? = null,
+    content: (@Composable ColumnScope.() -> Unit)? = null // Nuevo slot opcional
 ) {
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
@@ -49,19 +51,14 @@ fun CustomHeader(
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
 
-            // Capa 1: Lógica de fondo
-            // Comprobamos que el String no sea nulo ni esté vacío
+            // Capa 1: Fondo
             if (!backgroundImageRes.isNullOrEmpty()) {
-
-                // Usamos AsyncImage en lugar de Image + painterResource
                 AsyncImage(
                     model = backgroundImageRes,
                     contentDescription = "Fondo de cabecera",
                     modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.Crop
                 )
-
-                // Superposición de degradado oscuro
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -82,7 +79,7 @@ fun CustomHeader(
                 )
             }
 
-            // Capa 2: Estructura de contenido
+            // Capa 2: Contenido
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,20 +111,24 @@ fun CustomHeader(
                     Spacer(modifier = Modifier.height(48.dp))
                 }
 
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
+                if (content != null) {
+                    content()
+                } else {
+                    Text(
+                        text = title ?: "",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
 
-                Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
-                Text(
-                    text = subtitle ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
+                    Text(
+                        text = subtitle ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.8f)
+                    )
+                }
             }
         }
     }

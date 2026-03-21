@@ -19,6 +19,13 @@ object FakeTripDataSource {
         trips.removeAll { it.id == id }
     }
 
+    fun updateTrip(trip: Trip) {
+        val index = trips.indexOfFirst { it.id == trip.id }
+        if (index != -1) {
+            trips[index] = trip
+        }
+    }
+
     // Dataset inicial para que la app no aparezca vacía (Fake Dataset)
     init {
         // Convertimos el recurso R.drawable.paris a una URI de texto para que sea compatible
