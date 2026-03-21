@@ -7,12 +7,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.LocalActivity
+import androidx.compose.material.icons.filled.Museum
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,11 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.app.domain.ItineraryItem
 import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.viewmodels.TripListViewModel
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
@@ -143,22 +145,16 @@ fun DetalleViajeScreen2(
                         )
                     }
                 } else {
-                    // 2. ORDENAMOS Y AGRUPAMOS
                     val sdfSort = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
                     val sortedActivities = activities.sortedBy { 
                         try { sdfSort.parse("${it.dia} ${it.hora}")?.time ?: 0L } catch(e: Exception) { 0L }
                     }
 
-                    // Agrupamos por la fecha formateada para el header
                     val groupedActivities = sortedActivities.groupBy { it.dia }
 
-                    // Iteramos sobre cada grupo de días
                     groupedActivities.forEach { (diaOriginal, activitiesForDay) ->
-
-                        // Pintamos la cabecera del día
                         item { DayHeader(formatDateHeader(diaOriginal)) }
 
-                        // Pintamos todas las actividades de ese día concreto
                         items(activitiesForDay) { activity ->
                             val iconData = getIconForType(activity.tipo)
                             val precioDouble = activity.precio.toDoubleOrNull() ?: 0.0
@@ -182,14 +178,14 @@ fun DetalleViajeScreen2(
 }
 
 private fun getIconForType(type: String): Triple<ImageVector, Color, Color> {
-    return when (type.lowercase()) {
-        "transporte", "vuelo" -> Triple(Icons.Default.Flight, Color(0xFFE3F2FD), Color(0xFF1976D2))
-        "alojamiento", "hotel" -> Triple(Icons.Default.Hotel, Color(0xFFE8F5E9), Color(0xFF388E3C))
-        "comida", "restaurante" -> Triple(Icons.Default.Fastfood, Color(0xFFFFF3E0), Color(0xFFF57C00))
-        "actividad", "ocio" -> Triple(Icons.Default.LocalActivity, Color(0xFFF3E5F5), Color(0xFF7B1FA2))
-        "bus", "tren" -> Triple(Icons.Default.DirectionsBus, Color(0xFFEFEBE9), Color(0xFF5D4037))
-        else -> Triple(Icons.Default.AccountBalance, Color(0xFFF5F5F5), Color(0xFF616161))
-    }
+    return when (type) {
+            "Vuelo" -> Triple(Icons.Default.Flight, Color(0xFFE3F2FD), Color(0xFF1976D2))
+            "Hotel" -> Triple(Icons.Default.Hotel, Color(0xFFF3E5F5), Color(0xFF7B1FA2))
+            "Restaurante" -> Triple(Icons.Default.Restaurant, Color(0xFFFFF3E0), Color(0xFFE65100))
+            "Museo" -> Triple(Icons.Default.Museum, Color(0xFFE8F5E9), Color(0xFF2E7D32))
+            "Otros" -> Triple(Icons.Default.Accessibility, Color(0xFFF5F5F5), Color(0xFF616161))
+            else -> Triple(Icons.Default.ConfirmationNumber, Color(0xFFFFEBEE), Color(0xFFC62828))
+        }
 }
 
 @Composable
