@@ -740,7 +740,8 @@ fun DialogoNuevaActividad(
                     )
                     DropdownMenu(
                         expanded = exp,
-                        onDismissRequest = { exp = false }
+                        onDismissRequest = { exp = false },
+                        containerColor = MaterialTheme.colorScheme.surface
                     ) {
                         listOf(
                             "Vuelo",
