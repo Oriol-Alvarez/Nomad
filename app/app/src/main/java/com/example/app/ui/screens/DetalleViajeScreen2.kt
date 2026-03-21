@@ -8,6 +8,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.DirectionsBus
+import androidx.compose.material.icons.filled.Fastfood
+import androidx.compose.material.icons.filled.Flight
+import androidx.compose.material.icons.filled.Hotel
+import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,25 +25,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.app.domain.ItineraryItem
 import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.viewmodels.TripListViewModel
 import java.text.SimpleDateFormat
-import java.util.Date // <-- IMPORTANTE AÑADIR ESTO
+import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-// 1. Funciones para formatear el 'schedule' (milisegundos) a texto legible
-fun formatDateHeader(scheduleMillis: Long): String {
-    if (scheduleMillis == 0L) return "DÍA DESCONOCIDO"
-    // Devuelve "14 ABR", por ejemplo. Lo ponemos en mayúsculas para la cabecera.
-    val sdf = SimpleDateFormat("dd MMM", Locale("es", "ES"))
-    return sdf.format(Date(scheduleMillis)).uppercase()
-}
-
-fun formatTime(scheduleMillis: Long): String {
-    if (scheduleMillis == 0L) return "00:00"
-    val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-    return sdf.format(Date(scheduleMillis))
+// 1. Funciones para formatear texto legible
+fun formatDateHeader(dateStr: String): String {
+    return try {
+        val inputSdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val outputSdf = SimpleDateFormat("dd MMM", Locale("es", "ES"))
+        val date = inputSdf.parse(dateStr)
+        date?.let { outputSdf.format(it).uppercase() } ?: dateStr
+    } catch (e: Exception) {
+        dateStr
+    }
 }
 
 // Función auxiliar indestructible para calcular las noches
@@ -46,9 +50,9 @@ fun calcularNoches(inicio: String?, fin: String?): String {
     if (inicio.isNullOrEmpty() || fin.isNullOrEmpty()) return "0"
 
     val formatosPosibles = listOf(
+        "dd/MM/yyyy", "d/M/yyyy",
         "yyyy-MM-dd", "yyyy-M-d",
         "yyyy/MM/dd", "yyyy/M/d",
-        "dd/MM/yyyy", "d/M/yyyy",
         "dd-MM-yyyy"
     )
 
@@ -81,7 +85,8 @@ fun DetalleViajeScreen2(
     tripId: String,
     viewModel: TripListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    val trip = viewModel.trips.find { it.id == tripId }
+    val trip = viewModel.getTripById(tripId)
+    val activities = viewModel.getActivitiesForTrip(tripId)
 
     val title = trip?.title ?: "Detalle del Viaje"
     val subtitle = trip?.country ?: "Sin destino"
@@ -117,7 +122,7 @@ fun DetalleViajeScreen2(
                 HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
                 StatItem(value = CurrencyConverter.convert(budget, selectedCurrency), label = "BUDGET", modifier = Modifier.weight(1f))
                 HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
-                StatItem(value = trip?.activities?.size?.toString() ?: "0", label = "ACTIVITIES", modifier = Modifier.weight(1f))
+                StatItem(value = activities.size.toString(), label = "ACTIVITIES", modifier = Modifier.weight(1f))
             }
 
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f), thickness = 1.dp)
@@ -126,8 +131,6 @@ fun DetalleViajeScreen2(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
-                val activities = trip?.activities ?: emptyList()
-
                 if (activities.isEmpty()) {
                     item {
                         Text(
@@ -142,36 +145,51 @@ fun DetalleViajeScreen2(
                     }
                 } else {
                     // 2. ORDENAMOS Y AGRUPAMOS
-                    // Primero ordenamos cronológicamente (de más antiguo a más nuevo)
-                    val sortedActivities = activities.sortedBy { it.schedule }
+                    val sdfSort = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                    val sortedActivities = activities.sortedBy { 
+                        try { sdfSort.parse("${it.dia} ${it.hora}")?.time ?: 0L } catch(e: Exception) { 0L }
+                    }
 
-                    // Luego agrupamos creando un "mapa" donde la clave es la fecha (ej: "15 ABR")
-                    // y el valor es la lista de actividades de ese día.
-                    val groupedActivities = sortedActivities.groupBy { formatDateHeader(it.schedule) }
+                    // Agrupamos por la fecha formateada para el header
+                    val groupedActivities = sortedActivities.groupBy { it.dia }
 
                     // Iteramos sobre cada grupo de días
-                    groupedActivities.forEach { (dateHeader, activitiesForDay) ->
+                    groupedActivities.forEach { (diaOriginal, activitiesForDay) ->
 
                         // Pintamos la cabecera del día
-                        item { DayHeader(dateHeader) }
+                        item { DayHeader(formatDateHeader(diaOriginal)) }
 
                         // Pintamos todas las actividades de ese día concreto
                         items(activitiesForDay) { activity ->
+                            val iconData = getIconForType(activity.tipo)
+                            val precioDouble = activity.precio.toDoubleOrNull() ?: 0.0
+                            
                             TimelineEvent(
-                                time = formatTime(activity.schedule), // Ponemos la hora real en lugar de "Prog."
-                                icon = Icons.Default.AccountBalance,
-                                iconBg = Color(0xFFF3E5F5),
-                                iconTint = Color(0xFF7B1FA2),
-                                title = activity.activityName,
-                                subtitle = activity.locationName,
-                                price = CurrencyConverter.convert(activity.cost, selectedCurrency),
-                                priceColor = if (activity.cost > 0) Color(0xFFE65100) else Color(0xFF2E7D32)
+                                time = activity.hora,
+                                icon = iconData.first,
+                                iconBg = iconData.second,
+                                iconTint = iconData.third,
+                                title = activity.nombre,
+                                subtitle = activity.descripcion,
+                                price = CurrencyConverter.convert(precioDouble, selectedCurrency),
+                                priceColor = if (precioDouble > 0) Color(0xFFE65100) else Color(0xFF2E7D32)
                             )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+private fun getIconForType(type: String): Triple<ImageVector, Color, Color> {
+    return when (type.lowercase()) {
+        "transporte", "vuelo" -> Triple(Icons.Default.Flight, Color(0xFFE3F2FD), Color(0xFF1976D2))
+        "alojamiento", "hotel" -> Triple(Icons.Default.Hotel, Color(0xFFE8F5E9), Color(0xFF388E3C))
+        "comida", "restaurante" -> Triple(Icons.Default.Fastfood, Color(0xFFFFF3E0), Color(0xFFF57C00))
+        "actividad", "ocio" -> Triple(Icons.Default.LocalActivity, Color(0xFFF3E5F5), Color(0xFF7B1FA2))
+        "bus", "tren" -> Triple(Icons.Default.DirectionsBus, Color(0xFFEFEBE9), Color(0xFF5D4037))
+        else -> Triple(Icons.Default.AccountBalance, Color(0xFFF5F5F5), Color(0xFF616161))
     }
 }
 

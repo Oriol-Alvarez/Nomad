@@ -1,4 +1,5 @@
 package com.example.app.ui.screens
+import androidx.compose.foundation.background
 import androidx.compose.material3.SelectableDates
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -29,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,27 +57,24 @@ fun SelectorFechaModular(
     label: String,
     fechaSeleccionada: String,
     onFechaElegida: (String) -> Unit,
+    fechaMinima: Long? = null, // Parámetro añadido
+    fechaMaxima: Long? = null, // Parámetro añadido
     modifier: Modifier = Modifier,
     isError: Boolean = false
 ) {
     var mostrar by remember { mutableStateOf(false) }
 
-    // Calculamos el inicio del día de hoy para bloquear fechas pasadas
-    val todayMillis = remember {
-        Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-    }
+    // --- EL TRUCO CLAVE ESTÁ AQUÍ ---
+    // Esto obliga al calendario a leer siempre el valor más reciente
+    val minActual by rememberUpdatedState(fechaMinima)
+    val maxActual by rememberUpdatedState(fechaMaxima)
 
-    // Configuración correcta de SelectableDates para evitar error de tipos
     val state = rememberDatePickerState(
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                // Permite seleccionar solo desde hoy en adelante
-                return utcTimeMillis >= todayMillis
+                val despuesDeMin = minActual == null || utcTimeMillis >= minActual!!
+                val antesDeMax = maxActual == null || utcTimeMillis <= maxActual!!
+                return despuesDeMin && antesDeMax
             }
         }
     )
@@ -88,7 +87,9 @@ fun SelectorFechaModular(
             label = { Text(label) },
             isError = isError,
             leadingIcon = { Icon(Icons.Default.DateRange, null) },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(color = MaterialTheme.colorScheme.background),
             enabled = false,
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
@@ -96,7 +97,6 @@ fun SelectorFechaModular(
                 disabledBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
                 disabledLabelColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                 disabledLeadingIconColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
-
             )
         )
     }
@@ -104,10 +104,13 @@ fun SelectorFechaModular(
     if (mostrar) {
         DatePickerDialog(
             onDismissRequest = { mostrar = false },
+            colors = DatePickerDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.background
+            ),
             confirmButton = {
                 TextButton(onClick = {
                     val formatted = state.selectedDateMillis?.let {
-                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it))
+                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(java.util.Date(it))
                     } ?: ""
                     onFechaElegida(formatted)
                     mostrar = false
@@ -115,21 +118,12 @@ fun SelectorFechaModular(
             },
             dismissButton = {
                 TextButton(onClick = { mostrar = false }) { Text("Cancelar") }
-            },
-            colors = DatePickerDefaults.colors(
-                containerColor = MaterialTheme.colorScheme.background
-            ),
+            }
         ) {
             DatePicker(
                 state = state,
                 colors = DatePickerDefaults.colors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    headlineContentColor = MaterialTheme.colorScheme.onPrimary,
-                    dayContentColor = MaterialTheme.colorScheme.onPrimary,
-                    selectedDayContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    selectedDayContentColor = MaterialTheme.colorScheme.inversePrimary,
-                    todayContentColor = MaterialTheme.colorScheme.surfaceContainer,
-                    todayDateBorderColor = MaterialTheme.colorScheme.surfaceContainer
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -142,7 +136,8 @@ fun SelectorHoraModular(
     label: String,
     horaSeleccionada: String,
     onHoraElegida: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isError: Boolean = false
 ) {
     // Componente auxiliar para la selección de tiempo utilizando un TimePicker nativo
     var mostrar by remember { mutableStateOf(false) }
@@ -158,12 +153,13 @@ fun SelectorHoraModular(
             leadingIcon = { Icon(Icons.Default.AccessTime, null) },
             modifier = Modifier.fillMaxWidth(),
             enabled = false,
+            isError = isError,
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledBorderColor = MaterialTheme.colorScheme.outline,
-                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                disabledBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                disabledLabelColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledLeadingIconColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
             )
         )
     }

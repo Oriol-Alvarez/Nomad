@@ -20,7 +20,6 @@ class TripRepositoryImpl : TripRepository {
     }
 
     override fun deleteTrip(id: String) {
-        // Para que esto funcione, añade el método delete en FakeTripDataSource
         dataSource.deleteTrip(id)
     }
 }

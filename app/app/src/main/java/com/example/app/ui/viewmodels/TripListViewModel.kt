@@ -4,21 +4,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.example.app.data.repository.ItineraryItemRepositoryImpl
 import com.example.app.data.repository.TripRepositoryImpl
 import com.example.app.domain.Trip
 import com.example.app.domain.TripRepository
-import com.example.app.domain.ItineraryItem // Asegúrate de tener este import
+import com.example.app.domain.ItineraryItemRepository
+import com.example.app.domain.ItineraryItem
 import java.util.UUID
 
 class TripListViewModel(
-    private val repository: TripRepository = TripRepositoryImpl()
+    // Inyectamos AMBOS repositorios
+    private val tripRepository: TripRepository = TripRepositoryImpl(),
+    private val itineraryRepository: ItineraryItemRepository = ItineraryItemRepositoryImpl()
 ) : ViewModel() {
 
-    // 1. ESTADO DE LA UI: Lista de viajes observable por Compose
-    var trips by mutableStateOf(repository.getTrips())
+    // 1. ESTADO DE LA UI
+    var trips by mutableStateOf(tripRepository.getTrips())
         private set
 
-    // 2. OPERACIÓN: Guardar un nuevo viaje
+    // 2. OPERACIÓN: Guardar un nuevo viaje y sus actividades
     fun saveTrip(
         title: String,
         destination: String,
@@ -27,23 +31,12 @@ class TripListViewModel(
         desc: String,
         budget: Double,
         imageUri: String,
-        activitiesFromForm: List<Map<String, String>> // Los datos del DialogoNuevaActividad
+        activitiesFromForm: List<ItineraryItem> // <-- AHORA RECIBE LA LISTA OFICIAL
     ) {
-        // Convertimos la lista de Maps a objetos ItineraryItem
-        val itineraryItems = activitiesFromForm.map { map ->
-            ItineraryItem(
-                itemId = UUID.randomUUID().toString(),
-                activityName = map["nombre"] ?: "",
-                // Convertimos el String de la hora/fecha a Long (o usa 0L por ahora si no tienes el conversor)
-                schedule = System.currentTimeMillis(),
-                locationName = destination,
-                cost = map["precio"]?.toDoubleOrNull() ?: 0.0,
-                isCompleted = false
-            )
-        }
+        val newTripId = UUID.randomUUID().toString()
 
         val newTrip = Trip(
-            id = UUID.randomUUID().toString(),
+            id = newTripId,
             title = title,
             country = destination,
             description = desc,
@@ -52,29 +45,37 @@ class TripListViewModel(
             budget = budget,
             dataInici = dataInici,
             dataFinal = dataFinal
-        ).apply {
-            // Añadimos los items creados a la lista del viaje
-            this.activities.addAll(itineraryItems)
+        )
+        tripRepository.insertTrip(newTrip)
+
+        // Simplemente le asignamos el Trip ID a cada actividad y la guardamos
+        activitiesFromForm.forEach { item ->
+            val finalItem = item.copy(tripId = newTripId)
+            itineraryRepository.insertItineraryItem(finalItem)
         }
 
-        repository.insertTrip(newTrip)
         refreshTrips()
     }
 
     // 3. OPERACIÓN: Borrar un viaje
     fun deleteTrip(id: String) {
-        repository.deleteTrip(id)
+        // Buena práctica: Si borras el viaje, borra también sus actividades
+        itineraryRepository.deleteItineraryItemsByTripId(id)
+        tripRepository.deleteTrip(id)
+
         refreshTrips()
     }
 
+    fun getTripById(id: String): Trip? {
+        return tripRepository.getTripById(id)
+    }
+
+    fun getActivitiesForTrip(tripId: String): List<ItineraryItem> {
+        return itineraryRepository.getItineraryItemsForTrip(tripId)
+    }
 
     // 4. AUXILIAR: Refrescar la lista de viajes
     fun refreshTrips() {
-        trips = repository.getTrips()
+        trips = tripRepository.getTrips()
     }
-
-    fun getTripById(id: String): Trip? {
-        return repository.getTripById(id)
-    }
-
 }

@@ -1,10 +1,12 @@
 package com.example.app.domain
 
 data class ItineraryItem(
-    val itemId: String,
-    var activityName: String,
-    var schedule: Long, // TimeInMillis
-    var locationName: String,
-    var cost: Double,
-    var isCompleted: Boolean = false
+    val id: String,
+    val tripId: String,
+    val nombre: String,
+    val dia: String,
+    val hora: String,
+    val precio: String,
+    val tipo: String,
+    val descripcion: String
 )
