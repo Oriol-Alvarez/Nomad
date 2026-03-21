@@ -42,7 +42,7 @@ import com.example.app.R
 import com.example.app.ui.theme.AppTheme
 
 @Composable
-fun DetalleViajeScreen2(navController: NavHostController,selectedCurrency: String) {
+fun DetalleViajeScreen2(navController: NavHostController, selectedCurrency: String) {
     // Contenedor principal que maneja la barra de navegación inferior
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
@@ -65,9 +65,23 @@ fun DetalleViajeScreen2(navController: NavHostController,selectedCurrency: Strin
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StatItem(value = "8", label = "NIGHTS", modifier = Modifier.weight(1f))
-                HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
-                StatItem(value = CurrencyConverter.convert(1560.0, selectedCurrency), label = "BUDGET", modifier = Modifier.weight(1f))
-                HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
+                HorizontalDivider(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .width(1.dp),
+                    color = Color.LightGray.copy(alpha = 0.5f)
+                )
+                StatItem(
+                    value = CurrencyConverter.convert(1560.0, selectedCurrency),
+                    label = "BUDGET",
+                    modifier = Modifier.weight(1f)
+                )
+                HorizontalDivider(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .width(1.dp),
+                    color = Color.LightGray.copy(alpha = 0.5f)
+                )
                 StatItem(value = "14", label = "ACTIVITIES", modifier = Modifier.weight(1f))
             }
 
@@ -153,8 +167,19 @@ private fun StatItem(value: String, label: String, modifier: Modifier = Modifier
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
-        Text(text = value, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onBackground)
-        Text(text = label, fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
+        Text(
+            text = value,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = label,
+            fontSize = 11.sp,
+            color = Color.Gray,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = 1.sp
+        )
     }
 }
 
@@ -260,6 +285,6 @@ fun DetalleViajeScreen2Preview() {
 @Composable
 fun DetalleViajeScreen2PreviewNight() {
     AppTheme {
-        DetalleViajeScreen2(navController = rememberNavController(),selectedCurrency = "EUR(€)")
+        DetalleViajeScreen2(navController = rememberNavController(), selectedCurrency = "EUR(€)")
     }
 }

@@ -72,7 +72,7 @@ fun SelectorFechaModular(
     val state = rememberDatePickerState(
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                val despuesDeMin = minActual == null || utcTimeMillis >= minActual!!
+                val despuesDeMin = minActual == null || utcTimeMillis > minActual!!
                 val antesDeMax = maxActual == null || utcTimeMillis <= maxActual!!
                 return despuesDeMin && antesDeMax
             }
