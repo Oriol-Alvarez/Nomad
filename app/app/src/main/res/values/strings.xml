@@ -1,3 +1,26 @@
 <resources>
     <string name="app_name">Nomad</string>
+    <string name="preferencias_titulo">Preferencias</string>
+    <string name="preferencias_subtitulo">Personaliza la app</string>
+    <string name="preferencias_idioma_region">Idioma y región</string>
+    <string name="preferencias_idioma_titulo">Idioma</string>
+    <string name="preferencias_idioma_role">Idioma de la interfaz</string>
+    <string name="preferencias_titulo_moneda">Moneda</string>
+    <string name="preferencias_subtitulo_moneda">Escoger moneda</string>
+    <string name="preferencias_titulo_seccion_apariencia">Apariencia</string>
+    <string name="preferencias_titulo_modo_oscuro">Modo oscuro</string>
+    <string name="preferencias_role_modo_oscuro">Escoger un tema</string>
+    <string name="preferencias_titulo_tamaño_letra">Tamaño del texto</string>
+    <string name="preferencias_role_tamaño_letra">Accesibilidad</string>
+    <string name="preferencias_titulo_seccion_notificaciones">Notificaciones</string>
+    <string name="preferencias_notif_viajes">Recordatorio de viajes</string>
+    <string name="preferencias_notif_viajes_role">Aviso 24h antes del vuelo</string>
+    <string name="preferencias_notif_resumen">Resumen Semanal</string>
+    <string name="preferencias_notif_resumen_role">Envío de email</string>
+    <string name="preferencias_seccion_mas_info">Más información</string>
+    <string name="preferencias_info_app">Info de la app</string>
+    <string name="preferencias_info_app_role">Un poco sobre nosotros</string>
+    <string name="preferencias_terminos">Términos y condiciones</string>
+    <string name="preferencias_terminos_role">Info legal</string>
+    <string name="preferencias_footer">Programado con mucho ☕</string>
 </resources>

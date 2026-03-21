@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
@@ -30,12 +31,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -54,12 +60,20 @@ data class GalleryAlbum(
 
 @Composable
 fun GaleriaViajeScreen(navController: NavHostController) {
+    // 1. Estado para guardar el texto de la búsqueda
+    var searchQuery by remember { mutableStateOf("") }
+
     // Conjunto de datos de prueba para renderizar diferentes estados de los álbumes
     val albums = listOf(
         GalleryAlbum("La antigua Roma", listOf(R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma)),
         GalleryAlbum("Frío en Noruega", emptyList()),
         GalleryAlbum("Negocios en Londres", listOf(R.drawable.londres, R.drawable.londres, R.drawable.londres, R.drawable.londres)),
     )
+
+    // 2. Filtramos la lista basándonos en el texto escrito (ignorando mayúsculas/minúsculas)
+    val filteredAlbums = albums.filter {
+        it.title.contains(searchQuery, ignoreCase = true)
+    }
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
@@ -103,17 +117,34 @@ fun GaleriaViajeScreen(navController: NavHostController) {
                                 .padding(horizontal = 20.dp),
                             contentAlignment = Alignment.CenterStart
                         ) {
-                            Text(
-                                text = "Search...",
-                                color = Color.Gray,
-                                fontSize = 16.sp
+                            // 3. Componente de texto interactivo
+                            BasicTextField(
+                                value = searchQuery,
+                                onValueChange = { newText -> searchQuery = newText },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                textStyle = TextStyle(
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 16.sp
+                                ),
+                                decorationBox = { innerTextField ->
+                                    // Mostramos el placeholder solo si está vacío
+                                    if (searchQuery.isEmpty()) {
+                                        Text(
+                                            text = "Buscar viaje...",
+                                            color = Color.Gray,
+                                            fontSize = 16.sp
+                                        )
+                                    }
+                                    innerTextField()
+                                }
                             )
                         }
                     }
 
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    // Botón de acción flotante auxiliar para ejecutar la búsqueda
+                    // Botón de acción flotante auxiliar para la búsqueda
                     Surface(
                         modifier = Modifier.size(48.dp),
                         shape = CircleShape,
@@ -123,7 +154,7 @@ fun GaleriaViajeScreen(navController: NavHostController) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .clickable {  },
+                                .clickable { /* Espacio para añadir acción extra si lo necesitas */ },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -136,8 +167,8 @@ fun GaleriaViajeScreen(navController: NavHostController) {
                 }
             }
 
-            // Sección 3: Iteración sobre la colección de álbumes para renderizar sus componentes
-            items(albums) { album ->
+            // Sección 3: Iteración sobre la colección de álbumes filtrada
+            items(filteredAlbums) { album ->
                 AlbumSection(
                     album = album,
                     onAddImageClick = {
@@ -251,7 +282,6 @@ fun AlbumSection(
         }
     }
 }
-
 
 @Preview(showBackground = true)
 @Composable

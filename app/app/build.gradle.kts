@@ -54,6 +54,13 @@ dependencies {
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.compose.runtime.saveable)
     implementation(libs.androidx.ui.graphics)
+    // En tu build.gradle (Module:app)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation(libs.foundation)
+    implementation(libs.androidx.compose.ui.test)
+    implementation(libs.androidx.compose.foundation.layout)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
