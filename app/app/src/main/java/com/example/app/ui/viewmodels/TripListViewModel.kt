@@ -70,6 +70,10 @@ class TripListViewModel(
         return tripRepository.getTripById(id)
     }
 
+    fun getActivitiesForTrip(tripId: String): List<ItineraryItem> {
+        return itineraryRepository.getItineraryItemsForTrip(tripId)
+    }
+
     // 4. AUXILIAR: Refrescar la lista de viajes
     fun refreshTrips() {
         trips = tripRepository.getTrips()

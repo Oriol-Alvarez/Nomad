@@ -22,11 +22,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage // Asegúrate de tener la librería Coil
+import coil.compose.AsyncImage
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.viewmodels.TripListViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 
 @Composable
 fun DetalleViajeScreen(
@@ -76,12 +79,12 @@ fun DetalleViajeScreen(
                 Box(modifier = Modifier.padding(horizontal = 25.dp)) {
                     TripCardModule(
                         title = trip.title,
-                        date = trip.country,
+                        date = "${formatShortDate(trip.dataInici)} - ${formatShortDate(trip.dataFinal)}",
                         price = trip.budget,
-                        // CAMBIO: Ahora pasamos imageUri (el String que guardamos en el form)
                         imageUri = trip.imageUri,
                         selectedCurrency = selectedCurrency,
-                        onClick = { navController.navigate(Routes.DETALLE_VIAJE2) }
+                        // Navegamos enviando el ID (que es un String)
+                        onClick = { navController.navigate("${Routes.DETALLE_VIAJE2}/${trip.id}") }
                     )
                 }
             }
@@ -89,12 +92,41 @@ fun DetalleViajeScreen(
     }
 }
 
+
+
+fun formatShortDate(dateString: String?): String {
+    if (dateString.isNullOrEmpty()) return ""
+
+    // Lista con los formatos más habituales. El código probará uno a uno hasta acertar.
+    val formatosPosibles = listOf("yyyy-MM-dd", "yyyy/MM/dd", "dd/MM/yyyy", "dd-MM-yyyy")
+
+    for (patron in formatosPosibles) {
+        try {
+            val input = SimpleDateFormat(patron, Locale.getDefault())
+            input.isLenient = false
+
+            val date = input.parse(dateString)
+
+            if (date != null) {
+                val output = SimpleDateFormat("dd MMM", Locale("es", "ES"))
+                return output.format(date).lowercase()
+            }
+        } catch (e: Exception) {
+            // Si el patrón no coincide, ignoramos el error y pasamos al siguiente
+            continue
+        }
+    }
+
+    // Si la fecha viniera con un texto rarísimo que no encaja en nada, devolvemos el original
+    return dateString
+}
+
 @Composable
 fun TripCardModule(
     title: String,
     date: String,
     price: Double,
-    imageUri: String, // Recibe el String de la URI
+    imageUri: String,
     selectedCurrency: String,
     onClick: () -> Unit,
 ) {
@@ -106,7 +138,6 @@ fun TripCardModule(
         onClick = { onClick() }
     ) {
         Column {
-            // Lógica de Imagen: Si hay URI usamos Coil, si no, imagen por defecto
             if (imageUri.isNotEmpty()) {
                 AsyncImage(
                     model = imageUri,
@@ -155,7 +186,6 @@ fun TripCardModule(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            // Asegúrate de que CurrencyConverter exista en tu proyecto
                             text = CurrencyConverter.convert(price, selectedCurrency),
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             color = Color(0xFF2E7D32),

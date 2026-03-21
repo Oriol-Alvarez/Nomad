@@ -73,7 +73,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                     CustomHeader(
                         title = albumTitle,
                         showBackButton = true,
-                        backgroundImageRes = R.drawable.roma
+
                     )
                 }
             }

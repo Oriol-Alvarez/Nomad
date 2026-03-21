@@ -2,6 +2,7 @@ package com.example.app
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
@@ -16,7 +17,6 @@ import com.example.app.ui.screens.SplashScreen
 import com.example.app.ui.screens.TerminosCondicionesScreen
 import com.example.app.ui.screens.FormularioViaje
 
-
 @Composable
 fun NavGraph(
     navController: NavHostController,
@@ -26,8 +26,8 @@ fun NavGraph(
     onRecordatorioChange: (Boolean) -> Unit,
     resumenSemanal: Boolean,
     onResumenChange: (Boolean) -> Unit,
-    selectedCurrency: String,          // Recibido de MainActivity
-    onCurrencyChange: (String) -> Unit, // Recibido de MainActivity
+    selectedCurrency: String,
+    onCurrencyChange: (String) -> Unit,
     selectedLanguage: String,
     onLanguageChange: (String) -> Unit
 ) {
@@ -46,10 +46,16 @@ fun NavGraph(
             )
         }
 
-        composable(Routes.DETALLE_VIAJE2) {
+        // Ruta actualizada para recibir el tripId como String
+        composable(
+            route = "${Routes.DETALLE_VIAJE2}/{tripId}",
+            arguments = listOf(navArgument("tripId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val tripId = backStackEntry.arguments?.getString("tripId") ?: ""
             DetalleViajeScreen2(
                 navController = navController,
-                selectedCurrency = selectedCurrency
+                selectedCurrency = selectedCurrency,
+                tripId = tripId
             )
         }
 
@@ -66,7 +72,6 @@ fun NavGraph(
                 onRecordatorioChange = onRecordatorioChange,
                 resumenSemanal = resumenSemanal,
                 onResumenChange = onResumenChange,
-                // --- NO OLVIDES ESTO ---
                 selectedCurrency = selectedCurrency,
                 onCurrencyChange = onCurrencyChange,
                 selectedLanguage = selectedLanguage,
