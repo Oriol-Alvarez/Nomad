@@ -269,4 +269,5 @@ fun DetalleViajeScreen2Preview() {
     AppTheme {
         DetalleViajeScreen2(navController = rememberNavController(), selectedCurrency = "EUR(€)", tripId = "1")
     }
+
 }
