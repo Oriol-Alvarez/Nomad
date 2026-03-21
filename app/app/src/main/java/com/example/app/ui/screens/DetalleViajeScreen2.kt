@@ -1,6 +1,5 @@
 package com.example.app.ui.screens
 
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,9 +20,59 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.app.R
 import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.viewmodels.TripListViewModel
+import java.text.SimpleDateFormat
+import java.util.Date // <-- IMPORTANTE AÑADIR ESTO
+import java.util.Locale
+import java.util.concurrent.TimeUnit
+
+// 1. Funciones para formatear el 'schedule' (milisegundos) a texto legible
+fun formatDateHeader(scheduleMillis: Long): String {
+    if (scheduleMillis == 0L) return "DÍA DESCONOCIDO"
+    // Devuelve "14 ABR", por ejemplo. Lo ponemos en mayúsculas para la cabecera.
+    val sdf = SimpleDateFormat("dd MMM", Locale("es", "ES"))
+    return sdf.format(Date(scheduleMillis)).uppercase()
+}
+
+fun formatTime(scheduleMillis: Long): String {
+    if (scheduleMillis == 0L) return "00:00"
+    val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+    return sdf.format(Date(scheduleMillis))
+}
+
+// Función auxiliar indestructible para calcular las noches
+fun calcularNoches(inicio: String?, fin: String?): String {
+    if (inicio.isNullOrEmpty() || fin.isNullOrEmpty()) return "0"
+
+    val formatosPosibles = listOf(
+        "yyyy-MM-dd", "yyyy-M-d",
+        "yyyy/MM/dd", "yyyy/M/d",
+        "dd/MM/yyyy", "d/M/yyyy",
+        "dd-MM-yyyy"
+    )
+
+    for (patron in formatosPosibles) {
+        try {
+            val sdf = SimpleDateFormat(patron, Locale.getDefault())
+            sdf.isLenient = false
+
+            val startDate = sdf.parse(inicio)
+            val endDate = sdf.parse(fin)
+
+            if (startDate != null && endDate != null) {
+                val diffInMillis = endDate.time - startDate.time
+                val noches = TimeUnit.DAYS.convert(diffInMillis, TimeUnit.MILLISECONDS)
+
+                if (noches > 0) return noches.toString()
+            }
+        } catch (e: Exception) {
+            continue
+        }
+    }
+
+    return "0"
+}
 
 @Composable
 fun DetalleViajeScreen2(
@@ -37,6 +86,9 @@ fun DetalleViajeScreen2(
     val title = trip?.title ?: "Detalle del Viaje"
     val subtitle = trip?.country ?: "Sin destino"
     val budget = trip?.budget ?: 0.0
+    val imageUri = trip?.imageUri ?: ""
+
+    val nochesReales = calcularNoches(trip?.dataInici, trip?.dataFinal)
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
@@ -47,12 +99,11 @@ fun DetalleViajeScreen2(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            // Nota: Cambia R.drawable.roma si tu CustomHeader soporta URIs dinámicas
             CustomHeader(
                 title = title,
                 subtitle = subtitle,
                 showBackButton = true,
-                backgroundImageRes = R.drawable.roma
+                backgroundImageRes = imageUri
             )
 
             Row(
@@ -61,7 +112,8 @@ fun DetalleViajeScreen2(
                     .padding(vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatItem(value = "8", label = "NIGHTS", modifier = Modifier.weight(1f))
+                StatItem(value = nochesReales, label = "NIGHTS", modifier = Modifier.weight(1f))
+
                 HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
                 StatItem(value = CurrencyConverter.convert(budget, selectedCurrency), label = "BUDGET", modifier = Modifier.weight(1f))
                 HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
@@ -89,19 +141,33 @@ fun DetalleViajeScreen2(
                         )
                     }
                 } else {
-                    item { DayHeader("TU ITINERARIO") }
+                    // 2. ORDENAMOS Y AGRUPAMOS
+                    // Primero ordenamos cronológicamente (de más antiguo a más nuevo)
+                    val sortedActivities = activities.sortedBy { it.schedule }
 
-                    items(activities) { activity ->
-                        TimelineEvent(
-                            time = "Prog.", // Placeholder para la hora
-                            icon = Icons.Default.AccountBalance,
-                            iconBg = Color(0xFFF3E5F5),
-                            iconTint = Color(0xFF7B1FA2),
-                            title = activity.activityName,
-                            subtitle = activity.locationName,
-                            price = CurrencyConverter.convert(activity.cost, selectedCurrency),
-                            priceColor = if (activity.cost > 0) Color(0xFFE65100) else Color(0xFF2E7D32)
-                        )
+                    // Luego agrupamos creando un "mapa" donde la clave es la fecha (ej: "15 ABR")
+                    // y el valor es la lista de actividades de ese día.
+                    val groupedActivities = sortedActivities.groupBy { formatDateHeader(it.schedule) }
+
+                    // Iteramos sobre cada grupo de días
+                    groupedActivities.forEach { (dateHeader, activitiesForDay) ->
+
+                        // Pintamos la cabecera del día
+                        item { DayHeader(dateHeader) }
+
+                        // Pintamos todas las actividades de ese día concreto
+                        items(activitiesForDay) { activity ->
+                            TimelineEvent(
+                                time = formatTime(activity.schedule), // Ponemos la hora real en lugar de "Prog."
+                                icon = Icons.Default.AccountBalance,
+                                iconBg = Color(0xFFF3E5F5),
+                                iconTint = Color(0xFF7B1FA2),
+                                title = activity.activityName,
+                                subtitle = activity.locationName,
+                                price = CurrencyConverter.convert(activity.cost, selectedCurrency),
+                                priceColor = if (activity.cost > 0) Color(0xFFE65100) else Color(0xFF2E7D32)
+                            )
+                        }
                     }
                 }
             }

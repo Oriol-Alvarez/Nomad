@@ -67,8 +67,14 @@ class TripListViewModel(
         refreshTrips()
     }
 
+
     // 4. AUXILIAR: Refrescar la lista de viajes
     fun refreshTrips() {
         trips = repository.getTrips()
     }
+
+    fun getTripById(id: String): Trip? {
+        return repository.getTripById(id)
+    }
+
 }

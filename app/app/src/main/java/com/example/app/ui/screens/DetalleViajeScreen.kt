@@ -27,8 +27,9 @@ import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.viewmodels.TripListViewModel
-// Asegúrate de importar tu CurrencyConverter donde lo tengas
-// import com.example.app.utils.CurrencyConverter
+import java.text.SimpleDateFormat
+import java.util.Locale
+
 
 @Composable
 fun DetalleViajeScreen(
@@ -78,7 +79,7 @@ fun DetalleViajeScreen(
                 Box(modifier = Modifier.padding(horizontal = 25.dp)) {
                     TripCardModule(
                         title = trip.title,
-                        date = trip.country,
+                        date = "${formatShortDate(trip.dataInici)} - ${formatShortDate(trip.dataFinal)}",
                         price = trip.budget,
                         imageUri = trip.imageUri,
                         selectedCurrency = selectedCurrency,
@@ -89,6 +90,35 @@ fun DetalleViajeScreen(
             }
         }
     }
+}
+
+
+
+fun formatShortDate(dateString: String?): String {
+    if (dateString.isNullOrEmpty()) return ""
+
+    // Lista con los formatos más habituales. El código probará uno a uno hasta acertar.
+    val formatosPosibles = listOf("yyyy-MM-dd", "yyyy/MM/dd", "dd/MM/yyyy", "dd-MM-yyyy")
+
+    for (patron in formatosPosibles) {
+        try {
+            val input = SimpleDateFormat(patron, Locale.getDefault())
+            input.isLenient = false
+
+            val date = input.parse(dateString)
+
+            if (date != null) {
+                val output = SimpleDateFormat("dd MMM", Locale("es", "ES"))
+                return output.format(date).lowercase()
+            }
+        } catch (e: Exception) {
+            // Si el patrón no coincide, ignoramos el error y pasamos al siguiente
+            continue
+        }
+    }
+
+    // Si la fecha viniera con un texto rarísimo que no encaja en nada, devolvemos el original
+    return dateString
 }
 
 @Composable
