@@ -72,8 +72,24 @@ fun SelectorFechaModular(
     val state = rememberDatePickerState(
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                val despuesDeMin = minActual == null || utcTimeMillis > minActual!!
-                val antesDeMax = maxActual == null || utcTimeMillis <= maxActual!!
+                // Función auxiliar para quitarle las horas al min/max y dejarlos a las 00:00 UTC
+                fun inicioDelDia(millis: Long): Long {
+                    val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
+                    cal.timeInMillis = millis
+                    cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                    cal.set(java.util.Calendar.MINUTE, 0)
+                    cal.set(java.util.Calendar.SECOND, 0)
+                    cal.set(java.util.Calendar.MILLISECOND, 0)
+                    return cal.timeInMillis
+                }
+
+                val minDia = minActual?.let { inicioDelDia(it) }
+                val maxDia = maxActual?.let { inicioDelDia(it) }
+
+                // Ahora comparamos días exactos (00:00 vs 00:00)
+                val despuesDeMin = minDia == null || utcTimeMillis >= minDia
+                val antesDeMax = maxDia == null || utcTimeMillis <= maxDia
+
                 return despuesDeMin && antesDeMax
             }
         }
