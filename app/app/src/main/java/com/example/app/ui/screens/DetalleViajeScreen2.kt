@@ -45,7 +45,6 @@ fun formatDateHeader(dateStr: String): String {
     }
 }
 
-// Función auxiliar indestructible para calcular las noches
 fun calcularNoches(inicio: String?, fin: String?): String {
     if (inicio.isNullOrEmpty() || fin.isNullOrEmpty()) return "0"
 
