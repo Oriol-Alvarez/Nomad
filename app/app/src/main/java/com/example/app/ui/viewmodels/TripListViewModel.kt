@@ -78,8 +78,17 @@ class TripListViewModel(
     }
 
     fun addActivityToTrip(tripId: String, item: ItineraryItem) {
-        itineraryRepository.insertItineraryItem(item.copy(tripId = tripId))
+        // Aseguramos que el item tenga el ID del viaje correcto
+        val activityConId = item.copy(tripId = tripId)
+        itineraryRepository.insertItineraryItem(activityConId)
         updateTripBudget(tripId)
+        refreshTrips()
+    }
+
+    fun updateActivity(item: ItineraryItem) {
+        // Al actualizar, el objeto ya trae su tripId desde la pantalla de detalle
+        itineraryRepository.updateItineraryItem(item)
+        updateTripBudget(item.tripId)
         refreshTrips()
     }
 
@@ -87,7 +96,10 @@ class TripListViewModel(
         val trip = tripRepository.getTripById(tripId) ?: return
         val activities = itineraryRepository.getItineraryItemsForTrip(tripId)
         val newBudget = activities.sumOf { it.precio.toDoubleOrNull() ?: 0.0 }
-        trip.budget = newBudget
+        
+        // Creamos una copia del viaje con el nuevo presupuesto para que la UI reaccione
+        val updatedTrip = trip.copy(budget = newBudget)
+        tripRepository.updateTrip(updatedTrip)
     }
 
     fun updateTrip(trip: Trip) {

@@ -40,8 +40,8 @@ object FakeTripDataSource {
                 imageUri = parisUri,
                 isFeatured = true,
                 budget = 500.0,
-                dataInici = "2023-08-01",
-                dataFinal = "2023-08-05"
+                dataInici = "2026-08-01",
+                dataFinal = "2026-08-05"
             )
         )
     }

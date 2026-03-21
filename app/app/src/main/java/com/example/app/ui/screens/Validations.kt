@@ -82,5 +82,36 @@ object Validator {
         }
     }
 
+    // 11. Validar que la actividad esté dentro del rango del viaje (Sprint-02)
+    fun isActivityInTripRange(activityDate: String, tripStartDate: String, tripEndDate: String): Boolean {
+        if (activityDate.isEmpty() || tripStartDate.isEmpty() || tripEndDate.isEmpty()) return false
+        return try {
+            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val dateAct = sdf.parse(activityDate)
+            val dateStart = sdf.parse(tripStartDate)
+            val dateEnd = sdf.parse(tripEndDate)
 
+            if (dateAct == null || dateStart == null || dateEnd == null) return false
+
+            // La fecha de la actividad debe ser >= inicio y <= fin
+            !dateAct.before(dateStart) && !dateAct.after(dateEnd)
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    // 12. Validar fecha de nacimiento (Debe ser anterior a hoy) (Sprint-02)
+    fun isBirthdateValid(birthdate: String): Boolean {
+        if (birthdate.isEmpty()) return false
+        return try {
+            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val dateInput = sdf.parse(birthdate)
+            val today = java.util.Date()
+
+            // Si la fecha es antes que ahora, es válida
+            dateInput != null && dateInput.before(today)
+        } catch (e: Exception) {
+            false
+        }
+    }
 }

@@ -29,7 +29,15 @@ fun NavGraph(
     selectedCurrency: String,
     onCurrencyChange: (String) -> Unit,
     selectedLanguage: String,
-    onLanguageChange: (String) -> Unit
+    onLanguageChange: (String) -> Unit,
+    // Nuevos parámetros Sprint-02
+    username: String,
+    onUsernameChange: (String) -> Unit,
+    birthdate: String,
+    onBirthdateChange: (String) -> Unit,
+    // Tamaño de letra
+    fontSizeScale: Float,
+    onFontSizeScaleChange: (Float) -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -37,7 +45,7 @@ fun NavGraph(
     ) {
         composable(Routes.SPLASH) { SplashScreen(navController) }
 
-        composable(Routes.HOME) { HomeScreen(navController) }
+        composable(Routes.HOME) { HomeScreen(navController, username) }
 
         composable(Routes.DETALLE_VIAJE) {
             DetalleViajeScreen(
@@ -75,7 +83,15 @@ fun NavGraph(
                 selectedCurrency = selectedCurrency,
                 onCurrencyChange = onCurrencyChange,
                 selectedLanguage = selectedLanguage,
-                onLanguageChange = onLanguageChange
+                onLanguageChange = onLanguageChange,
+                // Pasar nuevos campos
+                username = username,
+                onUsernameChange = onUsernameChange,
+                birthdate = birthdate,
+                onBirthdateChange = onBirthdateChange,
+                // Tamaño de letra
+                fontSizeScale = fontSizeScale,
+                onFontSizeScaleChange = onFontSizeScaleChange
             )
         }
 

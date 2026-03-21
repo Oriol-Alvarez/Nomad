@@ -1,9 +1,9 @@
 package com.example.app.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
@@ -11,24 +11,23 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.sp
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF4FC3F7),    // Azul brillante para destacar
-
-    background = DarkBg,            // #121212
-    surface = DarkSurf,             // #1E1E1E
+    primary = Color(0xFF4FC3F7),
+    background = DarkBg,
+    surface = DarkSurf,
     surfaceVariant = DarkSurf,
     tertiary = Color(0xFF2C2C2E),
-    // Textos y elementos sobre fondo
     onPrimary = Color.White,
     primaryContainer = Color.DarkGray,
     inversePrimary = Color.Black,
     onBackground = Color.White,
     onSurface = Color.White,
-    onSurfaceVariant = Color(0xFFB0BEC5), // Gris azulado suave para etiquetas
+    onSurfaceVariant = Color(0xFFB0BEC5),
     outline = Color(0xFF3D3D3D),
     surfaceContainer = Color(0xFF4FC3F7)
-
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -38,23 +37,19 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = NomadBlueDark,
     tertiary = Color(0xFFF5F5F7),
     primaryContainer = NomadBlue,
-
-    // Textos y elementos sobre fondo
     onPrimary = Color.Black,
     inversePrimary = Color.White,
-    onBackground = Color(0xFF0F172A), // Negro azulado muy elegante
+    onBackground = Color(0xFF0F172A),
     onSurface = Color(0xFF0F172A),
-    onSurfaceVariant = NomadBlueDark, // Azul oscuro para etiquetas/subtítulos
+    onSurfaceVariant = NomadBlueDark,
     outline = Color(0xFFCBD5E1),
     surfaceContainer = NomadBlueDark
-
 )
 
 @Composable
 fun AppTheme(
-    // 1. Cambiamos el nombre a 'useDarkTheme' para mayor claridad
     useDarkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color desactivado por defecto para mantener tu paleta personalizada
+    fontScale: Float = 1.0f, // Parámetro para la escala de fuente
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
@@ -63,18 +58,32 @@ fun AppTheme(
             val context = LocalContext.current
             if (useDarkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
-
-        // 2. Si 'useDarkTheme' es true, aplica la paleta oscura definida en tu proyecto
         useDarkTheme -> DarkColorScheme
-
-        // 3. Por defecto, aplica la paleta clara
         else -> LightColorScheme
     }
 
-    // 4. Aplicamos el colorScheme al MaterialTheme global
+    // Aplicar la escala a toda la tipografía
+    val scaledTypography = Typography(
+        displayLarge = Typography.displayLarge.copy(fontSize = Typography.displayLarge.fontSize * fontScale),
+        displayMedium = Typography.displayMedium.copy(fontSize = Typography.displayMedium.fontSize * fontScale),
+        displaySmall = Typography.displaySmall.copy(fontSize = Typography.displaySmall.fontSize * fontScale),
+        headlineLarge = Typography.headlineLarge.copy(fontSize = Typography.headlineLarge.fontSize * fontScale),
+        headlineMedium = Typography.headlineMedium.copy(fontSize = Typography.headlineMedium.fontSize * fontScale),
+        headlineSmall = Typography.headlineSmall.copy(fontSize = Typography.headlineSmall.fontSize * fontScale),
+        titleLarge = Typography.titleLarge.copy(fontSize = Typography.titleLarge.fontSize * fontScale),
+        titleMedium = Typography.titleMedium.copy(fontSize = Typography.titleMedium.fontSize * fontScale),
+        titleSmall = Typography.titleSmall.copy(fontSize = Typography.titleSmall.fontSize * fontScale),
+        bodyLarge = Typography.bodyLarge.copy(fontSize = Typography.bodyLarge.fontSize * fontScale),
+        bodyMedium = Typography.bodyMedium.copy(fontSize = Typography.bodyMedium.fontSize * fontScale),
+        bodySmall = Typography.bodySmall.copy(fontSize = Typography.bodySmall.fontSize * fontScale),
+        labelLarge = Typography.labelLarge.copy(fontSize = Typography.labelLarge.fontSize * fontScale),
+        labelMedium = Typography.labelMedium.copy(fontSize = Typography.labelMedium.fontSize * fontScale),
+        labelSmall = Typography.labelSmall.copy(fontSize = Typography.labelSmall.fontSize * fontScale)
+    )
+
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = scaledTypography,
         content = content
     )
 }

@@ -1,6 +1,7 @@
 package com.example.app.ui.screens
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -17,10 +18,15 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,10 +34,13 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,9 +51,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
@@ -55,10 +66,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PreferenciasScreen(
     navController: NavHostController,
@@ -71,8 +83,24 @@ fun PreferenciasScreen(
     selectedCurrency: String,
     onCurrencyChange: (String) -> Unit,
     selectedLanguage: String,
-    onLanguageChange: (String) -> Unit
+    onLanguageChange: (String) -> Unit,
+    // Nuevos campos Sprint-02
+    username: String = "Viajero",
+    onUsernameChange: (String) -> Unit = {},
+    birthdate: String = "01/01/2000",
+    onBirthdateChange: (String) -> Unit = {},
+    // Tamaño de letra
+    fontSizeScale: Float = 1.0f,
+    onFontSizeScaleChange: (Float) -> Unit = {}
 ) {
+    var showUserDialog by remember { mutableStateOf(false) }
+    var tempUsername by remember { mutableStateOf(username) }
+    val context = LocalContext.current
+    
+    // DatePicker State
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState()
+
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
@@ -95,6 +123,32 @@ fun PreferenciasScreen(
                     .padding(horizontal = 20.dp)
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
+
+                // --- PERFIL DE USUARIO ---
+                GlassCard(title = "Perfil de Usuario") {
+                    CajasPreferencias(
+                        image = R.drawable.user_solid_full,
+                        name = "Nombre de Usuario",
+                        role = username,
+                        value = "nav",
+                        type = "nav",
+                        onClick = { 
+                            tempUsername = username
+                            showUserDialog = true 
+                        }
+                    )
+                    HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
+                    CajasPreferencias(
+                        image = R.drawable.birthday,
+                        name = "Fecha de Nacimiento",
+                        role = birthdate,
+                        value = "nav",
+                        type = "nav",
+                        onClick = { showDatePicker = true }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // --- IDIOMA Y REGIÓN ---
                 GlassCard(title = stringResource(R.string.preferencias_idioma_region)) {
@@ -132,13 +186,31 @@ fun PreferenciasScreen(
                         onCheckedChange = onDarkModeChange
                     )
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
+                    
+                    // Tamaño de letra dinámico
+                    val fontSizeLabel = when(fontSizeScale) {
+                        0.85f -> "Pequeño"
+                        1.15f -> "Grande"
+                        1.30f -> "Extra Grande"
+                        else -> "Normal"
+                    }
+                    
                     CajasPreferencias(
                         image = R.drawable.text_width_solid_full,
                         name = stringResource(R.string.preferencias_titulo_tamaño_letra),
                         role = stringResource(R.string.preferencias_role_tamaño_letra),
-                        value = "Normal",
+                        value = fontSizeLabel,
                         options = listOf("Pequeño", "Normal", "Grande", "Extra Grande"),
-                        type = "select"
+                        type = "select",
+                        onCurrencySelect = { selection ->
+                            val newScale = when(selection) {
+                                "Pequeño" -> 0.85f
+                                "Grande" -> 1.15f
+                                "Extra Grande" -> 1.30f
+                                else -> 1.0f
+                            }
+                            onFontSizeScaleChange(newScale)
+                        }
                     )
                 }
 
@@ -190,18 +262,65 @@ fun PreferenciasScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = stringResource(R.string.preferencias_footer),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.7f),
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-
                 Spacer(modifier = Modifier.height(32.dp))
             }
+        }
+    }
+
+    // Dialog para editar nombre de usuario
+    if (showUserDialog) {
+        AlertDialog(
+            onDismissRequest = { showUserDialog = false },
+            title = { Text("Editar Usuario") },
+            text = {
+                OutlinedTextField(
+                    value = tempUsername,
+                    onValueChange = { tempUsername = it },
+                    label = { Text("Nombre") },
+                    singleLine = true
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (Validator.isNotEmpty(tempUsername)) {
+                        onUsernameChange(tempUsername)
+                        showUserDialog = false
+                    } else {
+                        Toast.makeText(context, "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show()
+                    }
+                }) { Text("Guardar") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showUserDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
+    // DatePickerDialog para fecha de nacimiento con Validación
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let {
+                        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                        val formattedDate = sdf.format(Date(it))
+                        
+                        // VALIDACIÓN SPRINT-02: Debe ser anterior a hoy
+                        if (Validator.isBirthdateValid(formattedDate)) {
+                            onBirthdateChange(formattedDate)
+                            showDatePicker = false
+                        } else {
+                            Toast.makeText(context, "La fecha debe ser anterior a hoy", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }
@@ -220,7 +339,6 @@ fun CajasPreferencias(
     onCheckedChange: (Boolean) -> Unit = {},
     onCurrencySelect: (String) -> Unit = {}
 ) {
-    // Fila que conforma cada ítem de ajuste individual
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -229,8 +347,6 @@ fun CajasPreferencias(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
-        // Bloque de icono identificativo de la preferencia
         Box(
             modifier = Modifier
                 .size(44.dp)
@@ -248,7 +364,6 @@ fun CajasPreferencias(
 
         Spacer(modifier = Modifier.width(14.dp))
 
-        // Bloque de descripción textual
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = name,
@@ -263,7 +378,6 @@ fun CajasPreferencias(
             )
         }
 
-        // Renderizado condicional del componente de interacción según el tipo de dato
         when (type) {
             "slider" -> {
                 Switch(
@@ -304,7 +418,6 @@ fun CajasPreferencias(
                         )
                     }
 
-                    // Menú desplegable para la selección entre múltiples opciones
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
@@ -328,7 +441,6 @@ fun CajasPreferencias(
                 }
             }
             else -> {
-                // Indicador visual para elementos de navegación simple
                 IconButton(onClick = onClick) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -338,57 +450,5 @@ fun CajasPreferencias(
                 }
             }
         }
-    }
-}
-
-
-
-@Preview(
-    name = "Dark Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun PreferenciasPreviewDark() {
-    AppTheme(useDarkTheme = true) {
-        PreferenciasScreen(
-            navController = rememberNavController(),
-            isDarkMode = true,
-            onDarkModeChange = {},
-            recordatorioViajes = true,
-            onRecordatorioChange = {},
-            resumenSemanal = true,
-            onResumenChange = {},
-            // Parámetros faltantes añadidos:
-            selectedCurrency = "EUR(€)",
-            onCurrencyChange = {},
-            selectedLanguage = "Es Español",
-            onLanguageChange = {}
-        )
-    }
-}
-
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
-@Composable
-fun PreferenciasPreviewLight() {
-    AppTheme(useDarkTheme = false) {
-        PreferenciasScreen(
-            navController = rememberNavController(),
-            isDarkMode = false,
-            onDarkModeChange = {},
-            recordatorioViajes = false,
-            onRecordatorioChange = {},
-            resumenSemanal = false,
-            onResumenChange = {},
-            // Parámetros faltantes añadidos:
-            selectedCurrency = "USD($)",
-            onCurrencyChange = {},
-            selectedLanguage = "Es Español",
-            onLanguageChange = {}
-        )
     }
 }

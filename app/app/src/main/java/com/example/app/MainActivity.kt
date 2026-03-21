@@ -17,7 +17,6 @@ import com.example.app.ui.theme.AppTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // 1. LEER IDIOMA ANTES DE SUPER.ONCREATE
-        // Esto asegura que la app cargue los strings correctos desde el segundo 1
         val prefs = getSharedPreferences("config_nomad", MODE_PRIVATE)
         val savedLang = prefs.getString("user_lang", "Es Español") ?: "Es Español"
         updateResourceLocale(savedLang)
@@ -32,8 +31,15 @@ class MainActivity : ComponentActivity() {
             var resumenSemanal by rememberSaveable { mutableStateOf(prefs.getBoolean("pref_resumen", true)) }
             var selectedCurrency by rememberSaveable { mutableStateOf(prefs.getString("user_currency", "EUR(€)") ?: "EUR(€)") }
             var selectedLanguage by rememberSaveable { mutableStateOf(savedLang) }
+            
+            // NUEVOS CAMPOS SPRINT-02
+            var username by rememberSaveable { mutableStateOf(prefs.getString("username", "Viajero") ?: "Viajero") }
+            var birthdate by rememberSaveable { mutableStateOf(prefs.getString("birthdate", "01/01/2000") ?: "01/01/2000") }
+            
+            // TAMAÑO DE LETRA
+            var fontSizeScale by rememberSaveable { mutableStateOf(prefs.getFloat("font_size_scale", 1.0f)) }
 
-            AppTheme(useDarkTheme = darkTheme) {
+            AppTheme(useDarkTheme = darkTheme, fontScale = fontSizeScale) {
                 val navController = rememberNavController()
 
                 NavGraph(
@@ -60,19 +66,30 @@ class MainActivity : ComponentActivity() {
                     },
                     selectedLanguage = selectedLanguage,
                     onLanguageChange = { nuevo ->
-                        // Guardamos el nuevo idioma
                         prefs.edit().putString("user_lang", nuevo).apply()
                         selectedLanguage = nuevo
-
-                        // REINICIO CON ANIMACIÓN
                         recreateWithAnimation()
+                    },
+                    username = username,
+                    onUsernameChange = { nuevo ->
+                        prefs.edit().putString("username", nuevo).apply()
+                        username = nuevo
+                    },
+                    birthdate = birthdate,
+                    onBirthdateChange = { nueva ->
+                        prefs.edit().putString("birthdate", nueva).apply()
+                        birthdate = nueva
+                    },
+                    fontSizeScale = fontSizeScale,
+                    onFontSizeScaleChange = { nuevaEscala ->
+                        prefs.edit().putFloat("font_size_scale", nuevaEscala).apply()
+                        fontSizeScale = nuevaEscala
                     }
                 )
             }
         }
     }
 
-    // Método para forzar la Locale en el contexto de la actividad
     private fun updateResourceLocale(language: String) {
         val locale = when (language) {
             "En English" -> java.util.Locale.ENGLISH
@@ -82,11 +99,9 @@ class MainActivity : ComponentActivity() {
         java.util.Locale.setDefault(locale)
         val config = resources.configuration
         config.setLocale(locale)
-        // Actualizamos los recursos base para que stringResource() funcione
         baseContext.resources.updateConfiguration(config, baseContext.resources.displayMetrics)
     }
 
-    // Método para reiniciar la actividad con un fundido suave
     private fun recreateWithAnimation() {
         finish()
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)

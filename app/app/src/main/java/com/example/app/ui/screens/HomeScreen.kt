@@ -56,7 +56,7 @@ import com.example.app.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(navController: NavHostController, username: String) {
     // Validación de estado de aceptación de términos legales al iniciar la pantalla
     TermsAndConditionsDialog(navController = navController)
 
@@ -70,7 +70,7 @@ fun HomeScreen(navController: NavHostController) {
                 .verticalScroll(rememberScrollState())
         ) {
             // Sección Hero: Bienvenida al usuario y buscador
-            CustomHeader("Hola, Oriol", "Busca tu próxima aventura")
+            CustomHeader("Hola, $username", "Busca tu próxima aventura")
 
             Column(
                 modifier = Modifier
@@ -199,7 +199,6 @@ fun OfertaTipCard(
     title: String,
     onClick: () -> Unit
 ) {
-    // Tarjeta apaisada optimizada para artículos y listas de consejos
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -234,7 +233,6 @@ fun RecomendadoCard(
     name: String,
     onClick: () -> Unit
 ) {
-    // Componente de tarjeta de gran formato para destinos sugeridos
     Card(
         modifier = Modifier
             .width(260.dp)
@@ -271,7 +269,6 @@ fun DestacadoCard(
     name: String,
     onClick: () -> Unit
 ) {
-    // Componente de tarjeta de formato reducido para destinos secundarios
     Card(
         modifier = Modifier
             .width(180.dp)
@@ -310,12 +307,10 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
         context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
     }
 
-    // Persistencia local del estado de aceptación de términos
     var hasAccepted by remember {
         mutableStateOf(sharedPreferences.getBoolean("terms_accepted", false))
     }
 
-    // Sincronización del estado al recuperar el foco de la pantalla
     LaunchedEffect(Unit) {
         hasAccepted = sharedPreferences.getBoolean("terms_accepted", false)
     }
@@ -328,7 +323,6 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
                 Text(text = "Privacidad y términos", fontWeight = FontWeight.Bold)
             },
             text = {
-                // Composición de texto enriquecido con enlace interactivo embebido
                 val annotatedText = buildAnnotatedString {
                     append("Para usar Nomad, debes aceptar nuestros ")
 
@@ -341,54 +335,30 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
                         append("términos y condiciones")
                     }
                     pop()
-
-                    append(" antes de comenzar tu aventura.")
                 }
 
                 ClickableText(
                     text = annotatedText,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        color = MaterialTheme.colorScheme.onSurface
-                    ),
                     onClick = { offset ->
                         annotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
                             .firstOrNull()?.let {
                                 navController.navigate(Routes.TERMINOS_CONDICIONES)
                             }
-                    }
+                    },
+                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground)
                 )
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        sharedPreferences.edit().putBoolean("terms_accepted", true).apply()
                         hasAccepted = true
+                        sharedPreferences.edit().putBoolean("terms_accepted", true).apply()
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        contentColor = MaterialTheme.colorScheme.inversePrimary
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Aceptar y continuar")
+                    Text("Aceptar")
                 }
-            },
-            shape = RoundedCornerShape(24.dp)
+            }
         )
-    }
-}
-
-@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun HomePreviewDark() {
-    AppTheme {
-        HomeScreen(navController = rememberNavController())
-    }
-}
-
-@Preview(name = "Light Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Composable
-fun HomePreviewLight() {
-    AppTheme {
-        HomeScreen(navController = rememberNavController())
     }
 }

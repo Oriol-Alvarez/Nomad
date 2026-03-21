@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -47,6 +48,8 @@ import com.example.app.ui.viewmodels.TripListViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import java.util.Calendar
+import java.util.TimeZone
 
 // 1. Funciones para formatear texto legible
 fun formatDateHeader(dateStr: String): String {
@@ -57,6 +60,24 @@ fun formatDateHeader(dateStr: String): String {
         date?.let { outputSdf.format(it).uppercase() } ?: dateStr
     } catch (e: Exception) {
         dateStr
+    }
+}
+
+// Función adicional para el rango de fechas principal
+fun formatTripRange(inicio: String?, fin: String?): String {
+    if (inicio.isNullOrEmpty() || fin.isNullOrEmpty()) return ""
+    return try {
+        val inputSdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val outputSdf = SimpleDateFormat("dd MMM", Locale("es", "ES"))
+
+        val dateStart = inputSdf.parse(inicio)
+        val dateEnd = inputSdf.parse(fin)
+
+        if (dateStart != null && dateEnd != null) {
+            "${outputSdf.format(dateStart).uppercase()} — ${outputSdf.format(dateEnd).uppercase()}"
+        } else ""
+    } catch (e: Exception) {
+        "$inicio — $fin"
     }
 }
 
@@ -101,12 +122,14 @@ fun DetalleViajeScreen2(
     viewModel: TripListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val trip = viewModel.getTripById(tripId)
-    val activities = viewModel.getActivitiesForTrip(tripId)
+    // Usamos remember para forzar que la lista sea reactiva
+    var activities by remember { mutableStateOf(viewModel.getActivitiesForTrip(tripId)) }
 
     var isEditMode by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteTripDialog by remember { mutableStateOf(false) }
     var activityToDelete by remember { mutableStateOf<ItineraryItem?>(null) }
+    var activityToEdit by remember { mutableStateOf<ItineraryItem?>(null) }
     var showAddActivityDialog by remember { mutableStateOf(false) }
 
     // Estados para edición de campos generales
@@ -127,6 +150,7 @@ fun DetalleViajeScreen2(
     val description = trip?.description ?: ""
 
     val nochesReales = calcularNoches(trip?.dataInici, trip?.dataFinal)
+    val rangoFechas = formatTripRange(trip?.dataInici, trip?.dataFinal)
 
     // Formato de título con destino pequeño y negrita
     val annotatedTitle = buildAnnotatedString {
@@ -170,7 +194,10 @@ fun DetalleViajeScreen2(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        activityToDelete?.let { viewModel.deleteActivity(it) }
+                        activityToDelete?.let { 
+                            viewModel.deleteActivity(it)
+                            activities = viewModel.getActivitiesForTrip(tripId) // Refrescar lista
+                        }
                         activityToDelete = null
                     }
                 ) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
@@ -181,20 +208,56 @@ fun DetalleViajeScreen2(
         )
     }
 
-    // Diálogo Añadir Actividad
-    if (showAddActivityDialog) {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val inicioMs = try { sdf.parse(trip?.dataInici ?: "")?.time } catch (e: Exception) { null }
-        val finMs = try { sdf.parse(trip?.dataFinal ?: "")?.time } catch (e: Exception) { null }
+    // Diálogo Añadir o Editar Actividad
+    if (showAddActivityDialog || activityToEdit != null) {
+        fun getCleanMillis(dateStr: String): Long? {
+            val formatos = listOf("dd/MM/yyyy", "yyyy-MM-dd")
+            for (formato in formatos) {
+                try {
+                    val sdf = SimpleDateFormat(formato, Locale.getDefault())
+                    sdf.timeZone = TimeZone.getTimeZone("UTC")
+                    val date = sdf.parse(dateStr)
+                    if (date != null) {
+                        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+                        cal.time = date
+                        cal.set(Calendar.HOUR_OF_DAY, 0)
+                        cal.set(Calendar.MINUTE, 0)
+                        cal.set(Calendar.SECOND, 0)
+                        cal.set(Calendar.MILLISECOND, 0)
+                        return cal.timeInMillis
+                    }
+                } catch (e: Exception) {}
+            }
+            return null
+        }
+
+        val inicioMs = getCleanMillis(trip?.dataInici ?: "")
+        val finMs = getCleanMillis(trip?.dataFinal ?: "")
 
         DialogoNuevaActividad(
+            actividadAEditar = activityToEdit,
             fechaInicioViaje = inicioMs,
             fechaFinViaje = finMs,
             listaExistente = activities,
-            onDismiss = { showAddActivityDialog = false },
-            onGuardar = { nuevaAct ->
-                viewModel.addActivityToTrip(tripId, nuevaAct)
+            onDismiss = {
                 showAddActivityDialog = false
+                activityToEdit = null
+            },
+            onGuardar = { nuevaAct ->
+                // IMPORTANTE: Aseguramos que la actividad mantenga el ID del viaje actual
+                val actividadCorregida = nuevaAct.copy(tripId = tripId)
+
+                if (activityToEdit != null) {
+                    viewModel.updateActivity(actividadCorregida)
+                } else {
+                    viewModel.addActivityToTrip(tripId, actividadCorregida)
+                }
+
+                // Forzamos el refresco de la lista en la UI
+                activities = viewModel.getActivitiesForTrip(tripId)
+
+                showAddActivityDialog = false
+                activityToEdit = null
             }
         )
     }
@@ -349,6 +412,19 @@ fun DetalleViajeScreen2(
                 }
             }
 
+            // --- RANGO DE FECHAS VISIBLE PARA EL USUARIO ---
+            if (rangoFechas.isNotEmpty()) {
+                Text(
+                    text = rangoFechas,
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -397,7 +473,7 @@ fun DetalleViajeScreen2(
                     }
                 } else {
                     val sdfSort = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                    val sortedActivities = activities.sortedBy { 
+                    val sortedActivities = activities.sortedBy {
                         try { sdfSort.parse("${it.dia} ${it.hora}")?.time ?: 0L } catch(e: Exception) { 0L }
                     }
 
@@ -409,7 +485,7 @@ fun DetalleViajeScreen2(
                         items(activitiesForDay) { activity ->
                             val iconData = getIconForType(activity.tipo)
                             val precioDouble = activity.precio.toDoubleOrNull() ?: 0.0
-                            
+
                             TimelineEvent(
                                 time = activity.hora,
                                 icon = iconData.first,
@@ -420,7 +496,12 @@ fun DetalleViajeScreen2(
                                 price = CurrencyConverter.convert(precioDouble, selectedCurrency),
                                 priceColor = if (precioDouble > 0) Color(0xFFE65100) else Color(0xFF2E7D32),
                                 isEditMode = isEditMode,
-                                onDelete = { activityToDelete = activity }
+                                onDelete = { activityToDelete = activity },
+                                onClick = {
+                                    if (isEditMode) {
+                                        activityToEdit = activity
+                                    }
+                                }
                             )
                         }
                     }
@@ -482,11 +563,13 @@ private fun TimelineEvent(
     price: String,
     priceColor: Color,
     isEditMode: Boolean = false,
-    onDelete: () -> Unit = {}
+    onDelete: () -> Unit = {},
+    onClick: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(enabled = isEditMode, onClick = onClick)
             .padding(horizontal = 24.dp, vertical = 12.dp),
         verticalAlignment = Alignment.Top
     ) {
