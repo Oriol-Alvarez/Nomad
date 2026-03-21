@@ -10,8 +10,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +39,30 @@ fun DetalleViajeScreen(
     viewModel: TripListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val tripsFromDB = viewModel.trips
+    var tripIdToDelete by remember { mutableStateOf<String?>(null) }
+
+    if (tripIdToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { tripIdToDelete = null },
+            title = { Text("Eliminar viaje") },
+            text = { Text("¿Estás seguro de que deseas eliminar este viaje? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        tripIdToDelete?.let { viewModel.deleteTrip(it) }
+                        tripIdToDelete = null
+                    }
+                ) {
+                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { tripIdToDelete = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) },
@@ -83,8 +108,8 @@ fun DetalleViajeScreen(
                         price = trip.budget,
                         imageUri = trip.imageUri,
                         selectedCurrency = selectedCurrency,
-                        // Navegamos enviando el ID (que es un String)
-                        onClick = { navController.navigate("${Routes.DETALLE_VIAJE2}/${trip.id}") }
+                        onClick = { navController.navigate("${Routes.DETALLE_VIAJE2}/${trip.id}") },
+                        onDelete = { tripIdToDelete = trip.id }
                     )
                 }
             }
@@ -129,6 +154,7 @@ fun TripCardModule(
     imageUri: String,
     selectedCurrency: String,
     onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -137,62 +163,81 @@ fun TripCardModule(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         onClick = { onClick() }
     ) {
-        Column {
-            if (imageUri.isNotEmpty()) {
-                AsyncImage(
-                    model = imageUri,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxWidth().height(140.dp),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                androidx.compose.foundation.Image(
-                    painter = painterResource(id = R.drawable.viaje_predefinido),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxWidth().height(140.dp),
-                    contentScale = ContentScale.Crop
-                )
-            }
+        Box {
+            Column {
+                if (imageUri.isNotEmpty()) {
+                    AsyncImage(
+                        model = imageUri,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxWidth().height(140.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    androidx.compose.foundation.Image(
+                        painter = painterResource(id = R.drawable.viaje_predefinido),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxWidth().height(140.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                }
 
-            Column(modifier = Modifier.padding(18.dp)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.CalendarMonth,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = Color.Gray
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = date,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
-                        )
-                    }
-
-                    Surface(
-                        color = Color(0xFFE8F5E9),
-                        shape = RoundedCornerShape(8.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = CurrencyConverter.convert(price, selectedCurrency),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            color = Color(0xFF2E7D32),
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.CalendarMonth,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = Color.Gray
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = date,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Color.Gray
+                            )
+                        }
+
+                        Surface(
+                            color = Color(0xFFE8F5E9),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = CurrencyConverter.convert(price, selectedCurrency),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                color = Color(0xFF2E7D32),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
+            }
+
+            // Botón de eliminar arriba a la derecha
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                    .size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Eliminar viaje",
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
     }
