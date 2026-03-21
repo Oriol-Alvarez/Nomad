@@ -12,6 +12,5 @@ data class Trip(
     var imageUri: String,
     var isFeatured: Boolean,
     var budget: Double,
-    val activities: MutableList<ItineraryItem> = mutableListOf(),
     val images: MutableList<Image> = mutableListOf()
 )
