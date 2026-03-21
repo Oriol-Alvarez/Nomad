@@ -1,5 +1,8 @@
 package com.example.app.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -8,27 +11,37 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Accessibility
-import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ConfirmationNumber
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsBus
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Fastfood
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.LocalActivity
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Museum
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.app.Routes
+import com.example.app.domain.ItineraryItem
 import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.viewmodels.TripListViewModel
 import java.text.SimpleDateFormat
@@ -79,6 +92,7 @@ fun calcularNoches(inicio: String?, fin: String?): String {
     return "0"
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetalleViajeScreen2(
     navController: NavHostController,
@@ -89,12 +103,101 @@ fun DetalleViajeScreen2(
     val trip = viewModel.getTripById(tripId)
     val activities = viewModel.getActivitiesForTrip(tripId)
 
+    var isEditMode by remember { mutableStateOf(false) }
+    var showMenu by remember { mutableStateOf(false) }
+    var showDeleteTripDialog by remember { mutableStateOf(false) }
+    var activityToDelete by remember { mutableStateOf<ItineraryItem?>(null) }
+    var showAddActivityDialog by remember { mutableStateOf(false) }
+
+    // Estados para edición de campos generales
+    var editedTitle by remember(trip) { mutableStateOf(trip?.title ?: "") }
+    var editedDescription by remember(trip) { mutableStateOf(trip?.description ?: "") }
+    var editedImageUri by remember(trip) { mutableStateOf(trip?.imageUri ?: "") }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { editedImageUri = it.toString() }
+    }
+
     val title = trip?.title ?: "Detalle del Viaje"
-    val subtitle = trip?.country ?: "Sin destino"
+    val country = trip?.country ?: "Sin destino"
     val budget = trip?.budget ?: 0.0
     val imageUri = trip?.imageUri ?: ""
+    val description = trip?.description ?: ""
 
     val nochesReales = calcularNoches(trip?.dataInici, trip?.dataFinal)
+
+    // Formato de título con destino pequeño y negrita
+    val annotatedTitle = buildAnnotatedString {
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+            append(title)
+        }
+        withStyle(style = SpanStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.9f))) {
+            append(",  $country")
+        }
+    }
+
+    // Diálogo Eliminar Viaje
+    if (showDeleteTripDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteTripDialog = false },
+            title = { Text("Eliminar viaje") },
+            text = { Text("¿Estás seguro de que deseas eliminar este viaje? Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteTrip(tripId)
+                        showDeleteTripDialog = false
+                        navController.navigate(Routes.DETALLE_VIAJE) {
+                            popUpTo(Routes.DETALLE_VIAJE) { inclusive = true }
+                        }
+                    }
+                ) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteTripDialog = false }) { Text("Cancelar") }
+            }
+        )
+    }
+
+    // Diálogo Eliminar Actividad
+    if (activityToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { activityToDelete = null },
+            title = { Text("Eliminar actividad") },
+            text = { Text("¿Deseas eliminar '${activityToDelete?.nombre}' del itinerario?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        activityToDelete?.let { viewModel.deleteActivity(it) }
+                        activityToDelete = null
+                    }
+                ) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { activityToDelete = null }) { Text("Cancelar") }
+            }
+        )
+    }
+
+    // Diálogo Añadir Actividad
+    if (showAddActivityDialog) {
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val inicioMs = try { sdf.parse(trip?.dataInici ?: "")?.time } catch (e: Exception) { null }
+        val finMs = try { sdf.parse(trip?.dataFinal ?: "")?.time } catch (e: Exception) { null }
+
+        DialogoNuevaActividad(
+            fechaInicioViaje = inicioMs,
+            fechaFinViaje = finMs,
+            listaExistente = activities,
+            onDismiss = { showAddActivityDialog = false },
+            onGuardar = { nuevaAct ->
+                viewModel.addActivityToTrip(tripId, nuevaAct)
+                showAddActivityDialog = false
+            }
+        )
+    }
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
@@ -105,12 +208,145 @@ fun DetalleViajeScreen2(
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            CustomHeader(
-                title = title,
-                subtitle = subtitle,
-                showBackButton = true,
-                backgroundImageRes = imageUri
-            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                CustomHeader(
+                    backgroundImageRes = if (isEditMode) editedImageUri else imageUri,
+                    showBackButton = !isEditMode, // Ocultar flecha atrás en modo edición
+                    content = {
+                        Column {
+                            Box(contentAlignment = Alignment.CenterStart) {
+                                if (isEditMode) {
+                                    OutlinedTextField(
+                                        value = editedTitle,
+                                        onValueChange = { editedTitle = it },
+                                        textStyle = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Color.White),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .offset(x = (-16).dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = Color.White.copy(alpha = 0.5f),
+                                            unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                            cursorColor = Color.White
+                                        )
+                                    )
+                                } else {
+                                    Text(
+                                        text = annotatedTitle,
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(if (isEditMode) 8.dp else 6.dp))
+
+                            Box(contentAlignment = Alignment.CenterStart) {
+                                if (isEditMode) {
+                                    OutlinedTextField(
+                                        value = editedDescription,
+                                        onValueChange = { editedDescription = it },
+                                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .offset(x = (-16).dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = Color.White.copy(alpha = 0.5f),
+                                            unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                                            cursorColor = Color.White
+                                        )
+                                    )
+                                } else {
+                                    Text(
+                                        text = description,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.White.copy(alpha = 0.8f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                )
+
+                // Botón Cambiar Portada en el lugar de la flecha atrás
+                if (isEditMode) {
+                    IconButton(
+                        onClick = { launcher.launch("image/*") },
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(top = 40.dp, start = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Cambiar portada",
+                            tint = Color.White
+                        )
+                    }
+                }
+
+                // Botones Guardar y Cancelar arriba a la derecha
+                Box(modifier = Modifier.align(Alignment.TopEnd).padding(top = 40.dp, end = 8.dp)) {
+                    if (isEditMode) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(
+                                onClick = {
+                                    // Restaurar valores originales y salir
+                                    editedTitle = trip?.title ?: ""
+                                    editedDescription = trip?.description ?: ""
+                                    editedImageUri = trip?.imageUri ?: ""
+                                    isEditMode = false
+                                }
+                            ) {
+                                Text("Cancelar", color = Color.White, fontWeight = FontWeight.Bold)
+                            }
+                            Button(
+                                onClick = {
+                                    trip?.let {
+                                        val updatedTrip = it.copy(
+                                            title = editedTitle,
+                                            description = editedDescription,
+                                            imageUri = editedImageUri
+                                        )
+                                        viewModel.updateTrip(updatedTrip)
+                                    }
+                                    isEditMode = false
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text("Guardar", fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                    } else {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Opciones", tint = Color.White)
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Editar viaje") },
+                                leadingIcon = { Icon(Icons.Default.Edit, null) },
+                                onClick = {
+                                    isEditMode = true
+                                    showMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Eliminar viaje", color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    showDeleteTripDialog = true
+                                    showMenu = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
 
             Row(
                 modifier = Modifier
@@ -119,11 +355,25 @@ fun DetalleViajeScreen2(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 StatItem(value = nochesReales, label = "NIGHTS", modifier = Modifier.weight(1f))
-
                 HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
                 StatItem(value = CurrencyConverter.convert(budget, selectedCurrency), label = "BUDGET", modifier = Modifier.weight(1f))
                 HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
                 StatItem(value = activities.size.toString(), label = "ACTIVITIES", modifier = Modifier.weight(1f))
+            }
+
+            if (isEditMode) {
+                Button(
+                    onClick = { showAddActivityDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Add, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("AÑADIR ACTIVIDAD")
+                }
             }
 
             HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f), thickness = 1.dp)
@@ -167,7 +417,9 @@ fun DetalleViajeScreen2(
                                 title = activity.nombre,
                                 subtitle = activity.descripcion,
                                 price = CurrencyConverter.convert(precioDouble, selectedCurrency),
-                                priceColor = if (precioDouble > 0) Color(0xFFE65100) else Color(0xFF2E7D32)
+                                priceColor = if (precioDouble > 0) Color(0xFFE65100) else Color(0xFF2E7D32),
+                                isEditMode = isEditMode,
+                                onDelete = { activityToDelete = activity }
                             )
                         }
                     }
@@ -178,14 +430,15 @@ fun DetalleViajeScreen2(
 }
 
 private fun getIconForType(type: String): Triple<ImageVector, Color, Color> {
-    return when (type) {
-            "Vuelo" -> Triple(Icons.Default.Flight, Color(0xFFE3F2FD), Color(0xFF1976D2))
-            "Hotel" -> Triple(Icons.Default.Hotel, Color(0xFFF3E5F5), Color(0xFF7B1FA2))
-            "Restaurante" -> Triple(Icons.Default.Restaurant, Color(0xFFFFF3E0), Color(0xFFE65100))
-            "Museo" -> Triple(Icons.Default.Museum, Color(0xFFE8F5E9), Color(0xFF2E7D32))
-            "Otros" -> Triple(Icons.Default.Accessibility, Color(0xFFF5F5F5), Color(0xFF616161))
-            else -> Triple(Icons.Default.ConfirmationNumber, Color(0xFFFFEBEE), Color(0xFFC62828))
-        }
+    return when (type.lowercase()) {
+        "vuelo" -> Triple(Icons.Default.Flight, Color(0xFFE3F2FD), Color(0xFF1976D2))
+        "hotel" -> Triple(Icons.Default.Hotel, Color(0xFFF3E5F5), Color(0xFF7B1FA2))
+        "restaurante" -> Triple(Icons.Default.Restaurant, Color(0xFFFFF3E0), Color(0xFFE65100))
+        "museo" -> Triple(Icons.Default.Museum, Color(0xFFE8F5E9), Color(0xFF2E7D32))
+        "ocio" -> Triple(Icons.Default.LocalActivity, Color(0xFFE1F5FE), Color(0xFF0288D1))
+        "otros" -> Triple(Icons.Default.Accessibility, Color(0xFFF5F5F5), Color(0xFF616161))
+        else -> Triple(Icons.Default.ConfirmationNumber, Color(0xFFFFEBEE), Color(0xFFC62828))
+    }
 }
 
 @Composable
@@ -226,7 +479,9 @@ private fun TimelineEvent(
     title: String,
     subtitle: String,
     price: String,
-    priceColor: Color
+    priceColor: Color,
+    isEditMode: Boolean = false,
+    onDelete: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -256,6 +511,17 @@ private fun TimelineEvent(
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = price, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = priceColor)
         }
+
+        if (isEditMode) {
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = "Borrar actividad",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
     }
 }
 
@@ -265,5 +531,4 @@ fun DetalleViajeScreen2Preview() {
     AppTheme {
         DetalleViajeScreen2(navController = rememberNavController(), selectedCurrency = "EUR(€)", tripId = "1")
     }
-
 }
