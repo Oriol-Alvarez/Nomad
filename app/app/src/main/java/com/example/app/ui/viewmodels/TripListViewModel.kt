@@ -11,6 +11,8 @@ import com.example.app.domain.TripRepository
 import com.example.app.domain.ItineraryItemRepository
 import com.example.app.domain.ItineraryItem
 import java.util.UUID
+import com.example.app.R
+
 
 class TripListViewModel(
     // Inyectamos AMBOS repositorios
@@ -34,13 +36,15 @@ class TripListViewModel(
         activitiesFromForm: List<ItineraryItem> // <-- AHORA RECIBE LA LISTA OFICIAL
     ) {
         val newTripId = UUID.randomUUID().toString()
-
+        val imagenFinal = imageUri.ifBlank {
+            "android.resource://com.example.app/" + R.drawable.viaje_predefinido
+        }
         val newTrip = Trip(
             id = newTripId,
             title = title,
             country = destination,
             description = desc,
-            imageUri = imageUri,
+            imageUri = imagenFinal,
             isFeatured = false,
             budget = budget,
             dataInici = dataInici,
