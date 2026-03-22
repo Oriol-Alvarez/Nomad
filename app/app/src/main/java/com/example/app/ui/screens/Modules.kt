@@ -48,8 +48,10 @@ import java.util.Date
 import java.util.Locale
 import java.util.Calendar
 
-
-
+/**
+ * Aquí tenemos componentes que usamos en varias pantallas,
+ * como el selector de fecha, el de hora o el buscador de ciudades.
+ */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,22 +59,21 @@ fun SelectorFechaModular(
     label: String,
     fechaSeleccionada: String,
     onFechaElegida: (String) -> Unit,
-    fechaMinima: Long? = null, // Parámetro añadido
-    fechaMaxima: Long? = null, // Parámetro añadido
+    fechaMinima: Long? = null,
+    fechaMaxima: Long? = null,
     modifier: Modifier = Modifier,
     isError: Boolean = false
 ) {
     var mostrar by remember { mutableStateOf(false) }
 
-    // --- EL TRUCO CLAVE ESTÁ AQUÍ ---
-    // Esto obliga al calendario a leer siempre el valor más reciente
+    // Guardamos los límites de fecha para que el calendario no deje elegir días fuera de rango
     val minActual by rememberUpdatedState(fechaMinima)
     val maxActual by rememberUpdatedState(fechaMaxima)
 
     val state = rememberDatePickerState(
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                // Función auxiliar para quitarle las horas al min/max y dejarlos a las 00:00 UTC
+                // Ponemos la fecha a las 00:00 para comparar solo el día
                 fun inicioDelDia(millis: Long): Long {
                     val cal = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC"))
                     cal.timeInMillis = millis
@@ -86,7 +87,6 @@ fun SelectorFechaModular(
                 val minDia = minActual?.let { inicioDelDia(it) }
                 val maxDia = maxActual?.let { inicioDelDia(it) }
 
-                // Ahora comparamos días exactos (00:00 vs 00:00)
                 val despuesDeMin = minDia == null || utcTimeMillis >= minDia
                 val antesDeMax = maxDia == null || utcTimeMillis <= maxDia
 
@@ -95,6 +95,7 @@ fun SelectorFechaModular(
         }
     )
 
+    // Al pulsar en el campo, se abre el calendario
     Box(modifier = modifier.clickable { mostrar = true }) {
         OutlinedTextField(
             value = fechaSeleccionada,
@@ -103,16 +104,16 @@ fun SelectorFechaModular(
             label = { Text(label) },
             isError = isError,
             leadingIcon = { Icon(Icons.Default.DateRange, null) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = MaterialTheme.colorScheme.background),
+            modifier = Modifier.fillMaxWidth().background(color = MaterialTheme.colorScheme.background),
             enabled = false,
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
+                // Colores cuando está deshabilitado (nuestro caso)
                 disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                disabledBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
-                disabledLabelColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                disabledLeadingIconColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                disabledBorderColor =  if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
+                disabledLabelColor =  if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledLeadingIconColor =  if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         )
     }
@@ -134,14 +135,13 @@ fun SelectorFechaModular(
             },
             dismissButton = {
                 TextButton(onClick = { mostrar = false }) { Text("Cancelar") }
-            }
+            },
+
         ) {
-            DatePicker(
-                state = state,
+            DatePicker(state = state,
                 colors = DatePickerDefaults.colors(
                     containerColor = MaterialTheme.colorScheme.background
-                )
-            )
+                ))
         }
     }
 }
@@ -155,11 +155,10 @@ fun SelectorHoraModular(
     modifier: Modifier = Modifier,
     isError: Boolean = false
 ) {
-    // Componente auxiliar para la selección de tiempo utilizando un TimePicker nativo
     var mostrar by remember { mutableStateOf(false) }
     val state = rememberTimePickerState()
 
-    // Campo de texto interactivo que despliega el selector horario
+    // Al pulsar en el campo, se abre el reloj
     Box(modifier = modifier.clickable { mostrar = true }) {
         OutlinedTextField(
             value = horaSeleccionada,
@@ -172,10 +171,12 @@ fun SelectorHoraModular(
             isError = isError,
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
+                // Colores cuando está deshabilitado (nuestro caso)
                 disabledTextColor = MaterialTheme.colorScheme.onSurface,
                 disabledBorderColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline,
                 disabledLabelColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                disabledLeadingIconColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                disabledLeadingIconColor =  if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         )
     }
@@ -183,20 +184,14 @@ fun SelectorHoraModular(
     if (mostrar) {
         AlertDialog(
             onDismissRequest = { mostrar = false },
-            containerColor = MaterialTheme.colorScheme.background,
             confirmButton = {
-                Button(
-                    onClick = {
-                        onHoraElegida(String.format("%02d:%02d", state.hour, state.minute))
-                        mostrar = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-                ) { Text("Aceptar", color = Color.White) }
+                Button(onClick = {
+                    onHoraElegida(String.format("%02d:%02d", state.hour, state.minute))
+                    mostrar = false
+                }) { Text("Aceptar") }
             },
             text = {
-                // Configuración visual del reloj para mantener la consistencia con el tema principal
-                TimePicker(
-                    state = state,
+                TimePicker(state = state,
                     colors = TimePickerDefaults.colors(
                         timeSelectorSelectedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                         timeSelectorSelectedContentColor = Color.White,
@@ -208,13 +203,17 @@ fun SelectorHoraModular(
                         selectorColor = MaterialTheme.colorScheme.surfaceContainer,
                         periodSelectorSelectedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                         periodSelectorSelectedContentColor = Color.White
-                    )
-                )
-            }
+                    ))
+            },
+            containerColor = MaterialTheme.colorScheme.background
         )
     }
 }
 
+/**
+ * Busca ciudades en internet usando el servicio de OpenStreetMap.
+ * Le pasas un texto (ej: "Mad") y te devuelve una lista (ej: ["Madrid, España", ...])
+ */
 suspend fun buscarCiudadesOSM(consulta: String): List<String> = withContext(Dispatchers.IO) {
     if (consulta.isBlank()) return@withContext emptyList()
     try {
@@ -229,7 +228,7 @@ suspend fun buscarCiudadesOSM(consulta: String): List<String> = withContext(Disp
         for (i in 0 until array.length()) {
             val addr = array.getJSONObject(i).optJSONObject("address")
             if (addr != null) {
-                // Prioridad: ciudad, si no pueblo, si no villa
+                // Buscamos el nombre de la ciudad o pueblo
                 val ciudad = addr.optString("city", addr.optString("town", addr.optString("village", "")))
                 val pais = addr.optString("country", "")
 
@@ -244,6 +243,9 @@ suspend fun buscarCiudadesOSM(consulta: String): List<String> = withContext(Disp
     }
 }
 
+/**
+ * Pasa los precios de Euros a otras monedas (Dólares, Libras, etc.)
+ */
 object CurrencyConverter {
     private val rates = mapOf(
         "EUR(€)" to 1.0,
@@ -255,18 +257,12 @@ object CurrencyConverter {
     fun convert(amount: Double, targetCurrency: String): String {
         val rate = rates[targetCurrency] ?: 1.0
         val converted = amount * rate
-
-        // Extraemos el símbolo (ej. "€")
         val symbol = targetCurrency.substringAfter("(").substringBefore(")")
 
-        // Configuración del formato:
-        // "#.##" significa: muestra hasta 2 decimales, pero solo si no son cero.
         val symbols = DecimalFormatSymbols(Locale.getDefault())
         val df = DecimalFormat("#.##", symbols)
-
         val formattedNumber = df.format(converted)
 
         return "$formattedNumber $symbol"
     }
 }
-

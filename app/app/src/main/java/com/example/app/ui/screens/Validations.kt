@@ -3,115 +3,98 @@ package com.example.app.ui.screens
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+/**
+ * Este objeto sirve para revisar que los datos que escribe el usuario estén bien.
+ * Por ejemplo, que no deje campos vacíos o que las fechas tengan sentido.
+ */
 object Validator {
 
-    // --- VALIDACIONES DE TEXTO BÁSICAS ---
-
-    // 1. Validar que no esté vacío
+    // Comprueba si el texto no está vacío
     fun isNotEmpty(text: String): Boolean = text.trim().isNotEmpty()
-
-    // 2. Validar longitud mínima
+    
+    // Comprueba si el texto tiene un mínimo de letras
     fun hasMinLength(text: String, min: Int): Boolean = text.trim().length >= min
-
-    // 3. Validar longitud máxima (evita textos infinitos en la base de datos)
+    
+    // Comprueba si el texto se pasa de largo
     fun hasMaxLength(text: String, max: Int): Boolean = text.trim().length <= max
 
-    // 4. Validar que solo contenga letras (nombres de usuario o etiquetas simples)
+    // Mira si el texto solo tiene letras y espacios (útil para nombres)
     fun isOnlyLetters(text: String): Boolean {
         return text.isNotEmpty() && text.all { it.isLetter() || it.isWhitespace() }
     }
 
-    // --- VALIDACIONES ESPECÍFICAS DE NEGOCIO ---
+    // --- REGLAS PARA LOS VIAJES ---
 
-    // 5. Validar Título del Viaje (Mínimo 3 letras, máximo 50, sin símbolos raros)
+    // El título debe tener entre 3 y 50 letras y ser seguro
     fun isValidTitle(title: String): Boolean {
         return isNotEmpty(title) && hasMinLength(title, 3) && hasMaxLength(title, 50) && isSecureText(title)
     }
 
-    // 6. Validar Ubicación (Debe venir del buscador con formato "Ciudad, País")
+    // La ubicación debe tener al menos una coma (ej: "Madrid, España")
     fun isValidLocation(location: String): Boolean {
         return location.contains(",") && location.split(",").size >= 2
     }
 
-    // 7. Validar Formato de Precio
+    // El precio debe ser un número válido y no ser negativo
     fun isValidPrice(price: String): Boolean {
         if (price.isEmpty()) return false
-        val cleanPrice = price.replace(",", ".") // Soporte para decimales con coma
+        val cleanPrice = price.replace(",", ".") 
         val value = cleanPrice.toDoubleOrNull()
         return value != null && value >= 0
     }
 
-    // --- VALIDACIONES DE SEGURIDAD ---
-
-    // 8. Evitar caracteres de inyección de código o scripts
+    // Filtra caracteres raros que podrían dar problemas de seguridad
     fun isSecureText(text: String): Boolean {
         val forbiddenChars = listOf("<", ">", "{", "}", "[", "]", ";", "$", "http", "www")
         return forbiddenChars.none { text.lowercase().contains(it) }
     }
 
-    // --- VALIDACIONES DE FECHAS ---
+    // --- MANEJO DE FECHAS ---
 
-    // 9. Lógica de coherencia temporal (Ida <= Vuelta)
+    // Intenta entender la fecha sin importar si usa guiones o barras
+    private fun parseAnyDate(dateStr: String): java.util.Date? {
+        val formats = listOf("dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "dd-MM-yyyy")
+        for (format in formats) {
+            try {
+                val sdf = SimpleDateFormat(format, Locale.getDefault())
+                sdf.isLenient = false
+                return sdf.parse(dateStr)
+            } catch (e: Exception) { continue }
+        }
+        return null
+    }
+
+    // La fecha de ida no puede ser después de la de vuelta
     fun areDatesValid(fechaIda: String, fechaVuelta: String): Boolean {
-        if (fechaIda.isEmpty() || fechaVuelta.isEmpty()) return false
-        return try {
-            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val dateIda = sdf.parse(fechaIda)
-            val dateVuelta = sdf.parse(fechaVuelta)
-
-            if (dateIda == null || dateVuelta == null) return false
-
-            // La vuelta debe ser igual o posterior a la ida
-            !dateIda.after(dateVuelta)
-        } catch (e: Exception) {
-            false
-        }
+        val dateIda = parseAnyDate(fechaIda)
+        val dateVuelta = parseAnyDate(fechaVuelta)
+        if (dateIda == null || dateVuelta == null) return false
+        return !dateIda.after(dateVuelta)
     }
 
-    // 10. Validar que la fecha no sea pasada (No viajar al ayer)
+    // Comprueba que la fecha no sea de ayer o antes
     fun isNotPastDate(fecha: String): Boolean {
-        if (fecha.isEmpty()) return false
-        return try {
-            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val dateInput = sdf.parse(fecha)
-            val today = sdf.parse(sdf.format(java.util.Date())) // Hoy a las 00:00
-
-            dateInput != null && !dateInput.before(today)
-        } catch (e: Exception) {
-            false
-        }
+        val dateInput = parseAnyDate(fecha) ?: return false
+        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val today = sdf.parse(sdf.format(java.util.Date()))
+        return !dateInput.before(today)
     }
 
-    // 11. Validar que la actividad esté dentro del rango del viaje (Sprint-02)
+    // Mira si una actividad cae dentro de los días que dura el viaje
     fun isActivityInTripRange(activityDate: String, tripStartDate: String, tripEndDate: String): Boolean {
-        if (activityDate.isEmpty() || tripStartDate.isEmpty() || tripEndDate.isEmpty()) return false
-        return try {
-            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val dateAct = sdf.parse(activityDate)
-            val dateStart = sdf.parse(tripStartDate)
-            val dateEnd = sdf.parse(tripEndDate)
+        val dateAct = parseAnyDate(activityDate)
+        val dateStart = parseAnyDate(tripStartDate)
+        val dateEnd = parseAnyDate(tripEndDate)
 
-            if (dateAct == null || dateStart == null || dateEnd == null) return false
+        if (dateAct == null || dateStart == null || dateEnd == null) return false
 
-            // La fecha de la actividad debe ser >= inicio y <= fin
-            !dateAct.before(dateStart) && !dateAct.after(dateEnd)
-        } catch (e: Exception) {
-            false
-        }
+        return !dateAct.before(dateStart) && !dateAct.after(dateEnd)
     }
 
-    // 12. Validar fecha de nacimiento (Debe ser anterior a hoy) (Sprint-02)
+    // Comprueba que la fecha de nacimiento sea anterior a hoy
     fun isBirthdateValid(birthdate: String): Boolean {
-        if (birthdate.isEmpty()) return false
-        return try {
-            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val dateInput = sdf.parse(birthdate)
-            val today = java.util.Date()
-
-            // Si la fecha es antes que ahora, es válida
-            dateInput != null && dateInput.before(today)
-        } catch (e: Exception) {
-            false
-        }
+        val dateInput = parseAnyDate(birthdate) ?: return false
+        val today = java.util.Date()
+        return dateInput.before(today)
     }
 }

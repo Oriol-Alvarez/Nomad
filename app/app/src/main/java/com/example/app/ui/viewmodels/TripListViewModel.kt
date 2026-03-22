@@ -1,6 +1,7 @@
 package com.example.app.ui.viewmodels
 
 import android.util.Log
+import com.example.app.R
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -14,6 +15,10 @@ import com.example.app.domain.ItineraryItem
 import com.example.app.ui.screens.Validator
 import java.util.UUID
 
+/**
+ * Este es el "cerebro" que maneja la lista de viajes y sus actividades.
+ * Aquí es donde se guarda, se borra y se actualiza todo lo relacionado con los viajes.
+ */
 class TripListViewModel(
     private val tripRepository: TripRepository = TripRepositoryImpl(),
     private val itineraryRepository: ItineraryItemRepository = ItineraryItemRepositoryImpl()
@@ -21,12 +26,12 @@ class TripListViewModel(
 
     private val TAG = "TripListViewModel"
 
+    // La lista de viajes que se muestra en la pantalla
     var trips by mutableStateOf(tripRepository.getTrips())
         private set
 
     /**
-     * T3.1 & T3.5: Validación y Logs.
-     * Guarda un nuevo viaje tras validar los campos obligatorios y coherencia de fechas.
+     * Guarda un viaje nuevo. Primero mira que el nombre y las fechas estén bien.
      */
     fun saveTrip(
         title: String,
@@ -38,16 +43,23 @@ class TripListViewModel(
         imageUri: String,
         activitiesFromForm: List<ItineraryItem>
     ): Boolean {
-        Log.d(TAG, "Intentando guardar viaje: $title en $destination")
+        Log.d(TAG, "Guardando viaje: $title")
 
+        // Comprobamos que el título y el sitio no estén vacíos
         if (!Validator.isValidTitle(title) || !Validator.isValidLocation(destination)) {
-            Log.e(TAG, "Error de validación: Título o destino no válidos.")
+            Log.e(TAG, "Fallo: Título o destino mal puestos.")
             return false
         }
 
+        // Comprobamos que la fecha de vuelta sea después de la de ida
         if (!Validator.areDatesValid(dataInici, dataFinal)) {
-            Log.e(TAG, "Error de validación: Rango de fechas incoherente ($dataInici - $dataFinal).")
+            Log.e(TAG, "Fallo: Las fechas no tienen sentido.")
             return false
+        }
+
+        // Si no han puesto foto, le ponemos una por defecto
+        val imagenFinal = imageUri.ifBlank {
+            "android.resource://com.example.app/" + R.drawable.viaje_predefinido
         }
 
         try {
@@ -57,7 +69,7 @@ class TripListViewModel(
                 title = title,
                 country = destination,
                 description = desc,
-                imageUri = imageUri,
+                imageUri = imagenFinal,
                 isFeatured = false,
                 budget = budget,
                 dataInici = dataInici,
@@ -65,68 +77,64 @@ class TripListViewModel(
             )
             
             tripRepository.insertTrip(newTrip)
-            Log.i(TAG, "Viaje insertado con ID: $newTripId")
 
+            // Guardamos también las paradas/actividades que haya puesto el usuario
             activitiesFromForm.forEach { item ->
-                val finalItem = item.copy(tripId = newTripId)
-                itineraryRepository.insertItineraryItem(finalItem)
+                itineraryRepository.insertItineraryItem(item.copy(tripId = newTripId))
             }
             
-            refreshTrips()
+            refreshTrips() // Actualizamos la lista para que se vea el cambio
             return true
         } catch (e: Exception) {
-            Log.e(TAG, "Error inesperado al guardar el viaje", e)
+            Log.e(TAG, "Error al guardar el viaje", e)
             return false
         }
     }
 
+    // Borra un viaje y todas sus paradas
     fun deleteTrip(id: String) {
-        Log.d(TAG, "Borrando viaje con ID: $id")
         itineraryRepository.deleteItineraryItemsByTripId(id)
         tripRepository.deleteTrip(id)
         refreshTrips()
     }
 
+    // Busca un viaje por su ID
     fun getTripById(id: String): Trip? {
         return tripRepository.getTripById(id)
     }
 
+    // Saca todas las paradas de un viaje concreto
     fun getActivitiesForTrip(tripId: String): List<ItineraryItem> {
         return itineraryRepository.getItineraryItemsForTrip(tripId)
     }
 
     /**
-     * T3.1 & T3.5: Validación de actividad y Logs.
+     * Añade una parada a un viaje. Mira que la fecha caiga dentro de los días del viaje.
      */
     fun addActivityToTrip(tripId: String, item: ItineraryItem): Boolean {
-        Log.d(TAG, "Añadiendo actividad '${item.nombre}' al viaje $tripId")
-
         val trip = tripRepository.getTripById(tripId)
-        if (trip == null) {
-            Log.e(TAG, "Error: El viaje $tripId no existe.")
-            return false
-        }
+        if (trip == null) return false
 
+        // Comprobamos la fecha
         if (!Validator.isActivityInTripRange(item.dia, trip.dataInici, trip.dataFinal)) {
-            Log.e(TAG, "Error: La fecha de la actividad ${item.dia} está fuera del rango del viaje.")
+            Log.e(TAG, "La actividad está fuera de los días del viaje.")
             return false
         }
 
         itineraryRepository.insertItineraryItem(item.copy(tripId = tripId))
-        updateTripBudget(tripId)
+        updateTripBudget(tripId) // Recalculamos el gasto total
         refreshTrips()
         return true
     }
 
     /**
-     * Actualiza una actividad existente validando que siga dentro del rango del viaje.
+     * Actualiza una parada que ya existe.
      */
     fun updateActivity(item: ItineraryItem): Boolean {
-        Log.d(TAG, "Actualizando actividad: ${item.id}")
         val trip = tripRepository.getTripById(item.tripId)
 
+        // Miramos que la nueva fecha siga estando dentro del viaje
         if (trip != null && !Validator.isActivityInTripRange(item.dia, trip.dataInici, trip.dataFinal)) {
-            Log.e(TAG, "Error al actualizar: La nueva fecha ${item.dia} está fuera del rango del viaje.")
             return false
         }
 
@@ -136,13 +144,14 @@ class TripListViewModel(
         return true
     }
 
+    // Borra una parada suelta
     fun deleteActivity(activity: ItineraryItem) {
-        Log.d(TAG, "Borrando actividad ${activity.id}")
         itineraryRepository.deleteItineraryItem(activity)
         updateTripBudget(activity.tripId)
         refreshTrips()
     }
 
+    // Suma el precio de todas las paradas para saber cuánto cuesta el viaje
     private fun updateTripBudget(tripId: String) {
         val trip = tripRepository.getTripById(tripId) ?: return
         val activities = itineraryRepository.getItineraryItemsForTrip(tripId)
@@ -150,16 +159,15 @@ class TripListViewModel(
         trip.budget = newBudget
     }
 
+    // Cambia los datos de un viaje (ej: el título o la foto)
     fun updateTrip(trip: Trip) {
-        Log.d(TAG, "Actualizando viaje: ${trip.id}")
         if (Validator.isValidTitle(trip.title)) {
             tripRepository.updateTrip(trip)
             refreshTrips()
-        } else {
-            Log.e(TAG, "Error al actualizar: El título no es válido.")
         }
     }
 
+    // Recarga la lista de viajes desde la base de datos
     fun refreshTrips() {
         trips = tripRepository.getTrips()
     }

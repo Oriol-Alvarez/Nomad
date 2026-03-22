@@ -40,34 +40,38 @@ import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
 import kotlinx.coroutines.delay
 
+/**
+ * Pantalla de carga inicial (Splash).
+ * Muestra el logo y una barrita de progreso antes de entrar a la app.
+ */
 @Composable
 fun SplashScreen(navController: NavHostController) {
 
-    // Estado del progreso de carga (rango 0.0 a 1.0)
+    // Controlamos cuánto lleva la barra de carga (de 0 a 100%)
     var progress by remember { mutableStateOf(0f) }
 
-    // Control de visibilidad para la animación de entrada del logotipo
+    // Para que el logo aparezca poco a poco con una animación
     var visible by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
-    // Obtención de la versión del paquete definida en el manifiesto
+    // Intentamos sacar la versión de la app para ponerla abajo
     val versionName = remember {
         try {
             context.packageManager
                 .getPackageInfo(context.packageName, 0).versionName
         } catch (e: Exception) {
-            "2.0"
+            "2.0" // Por si falla, ponemos una por defecto
         }
     }
 
-    // Disparador de la animación de entrada tras el inflado inicial
+    // Al arrancar, esperamos un pelín y mostramos el logo
     LaunchedEffect(Unit) {
         delay(100)
         visible = true
     }
 
-    // Lógica de simulación de carga asíncrona
+    // Simulamos que la app está cargando algo
     LaunchedEffect(Unit) {
         while (progress < 1f) {
             delay(50L)
@@ -75,24 +79,22 @@ fun SplashScreen(navController: NavHostController) {
         }
     }
 
-    // Gestión de la transición a la pantalla principal al completar el progreso
+    // Cuando la barra llega al final, nos vamos a la pantalla de inicio
     if (progress >= 1f) {
         LaunchedEffect(Unit) {
             navController.navigate(Routes.HOME) {
-                // Eliminación de la Splash de la pila de retroceso para evitar re-entradas
+                // Borramos esta pantalla del historial para que no se pueda volver atrás
                 popUpTo(Routes.SPLASH) { inclusive = true }
             }
         }
     }
 
-    // Interfaz de usuario de la pantalla de bienvenida
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
 
-        // Contenedor central: Branding y progreso
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -101,7 +103,7 @@ fun SplashScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.Center
         ) {
 
-            // Logotipo con transición de opacidad suave
+            // El logo de Nomad
             AnimatedVisibility(
                 visible = visible,
                 enter = fadeIn()
@@ -122,7 +124,7 @@ fun SplashScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Indicador de progreso lineal personalizado
+            // La barrita azul que se va rellenando
             LinearProgressIndicator(
                 progress = progress,
                 modifier = Modifier
@@ -135,7 +137,7 @@ fun SplashScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Etiqueta de porcentaje de carga
+            // El texto que dice el porcentaje (ej: 50%)
             Text(
                 text = "${(progress * 100).toInt()}%",
                 fontSize = 14.sp,
@@ -144,7 +146,7 @@ fun SplashScreen(navController: NavHostController) {
             )
         }
 
-        // Información de versión anclada en la parte inferior
+        // La versión de la app abajo del todo
         Text(
             text = "v $versionName",
             fontSize = 15.sp,
@@ -154,21 +156,5 @@ fun SplashScreen(navController: NavHostController) {
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 24.dp)
         )
-    }
-}
-
-@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun SplashScreenPreviewDark() {
-    AppTheme {
-        SplashScreen(navController = rememberNavController())
-    }
-}
-
-@Preview(name = "Light Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Composable
-fun SplashScreenPreviewLight() {
-    AppTheme {
-        SplashScreen(navController = rememberNavController())
     }
 }

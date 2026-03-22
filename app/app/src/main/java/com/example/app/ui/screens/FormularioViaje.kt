@@ -56,7 +56,11 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-
+/**
+ * Pantalla para crear un viaje nuevo paso a paso.
+ * Paso 1: Datos básicos (título, destino, fechas).
+ * Paso 2: Añadir actividades al plan (itinerario).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FormularioViaje(
@@ -65,7 +69,7 @@ fun FormularioViaje(
     ciudadDestino: String = "",
     viewModel: TripListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
-    // --- 1. ESTADOS DE DATOS ---
+    // --- DATOS DEL VIAJE ---
     var title by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
     var country by rememberSaveable(stateSaver = TextFieldValue.Saver) {
@@ -79,29 +83,31 @@ fun FormularioViaje(
     var fechaVuelta by rememberSaveable { mutableStateOf("") }
     var selectedImageUri by rememberSaveable { mutableStateOf<Uri?>(null) }
 
-    // --- 2. ESTADOS DE BÚSQUEDA OSM ---
+    // --- BÚSQUEDA DE CIUDADES (OSM) ---
     var expandido by remember { mutableStateOf(false) }
     var sugerencias by remember { mutableStateOf(listOf<String>()) }
     var job by remember { mutableStateOf<Job?>(null) }
     val scope = rememberCoroutineScope()
 
-    // --- 3. ESTADOS DE ERRORES (VALIDACIÓN) ---
+    // --- MENSAJES DE ERROR ---
     var errorTitle by remember { mutableStateOf<String?>(null) }
     var errorCountry by remember { mutableStateOf<String?>(null) }
     var errorFechas by remember { mutableStateOf<String?>(null) }
 
-    // --- 4. LÓGICA DE UI E ITINERARIO ---
+    // --- CONTROL DE LA PANTALLA ---
     var listaItinerarios by remember { mutableStateOf(listOf<ItineraryItem>()) }
     var etapaActual by rememberSaveable { mutableIntStateOf(previewStep ?: 0) }
     var mostrarDialogo by rememberSaveable { mutableStateOf(false) }
     var isFocused by remember { mutableStateOf(false) }
 
     var indiceEdicion by rememberSaveable { mutableIntStateOf(-1) }
+    var itemAEliminar by remember { mutableStateOf<Int?>(null) }
+
+    // Calcula la fecha mínima de vuelta según la de ida
     val minimaVueltaMs = remember(fechaIda) {
         if (fechaIda.isNotEmpty()) {
             try {
                 val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                // OBLIGATORIO PARA QUE COMPOSE NO SE EQUIVOQUE DE DÍA
                 sdf.timeZone = java.util.TimeZone.getTimeZone("UTC")
                 sdf.parse(fechaIda)?.time ?: System.currentTimeMillis()
             } catch (e: Exception) {
@@ -111,39 +117,26 @@ fun FormularioViaje(
             System.currentTimeMillis()
         }
     }
+
+    // Selector de imagen de la galería
     val launcherPrincipal = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? -> selectedImageUri = uri }
+
+    // Si venimos de una sugerencia (ej: "Paris" desde Home), la buscamos oficialmente
     LaunchedEffect(ciudadDestino) {
         val textoLimpio = ciudadDestino.replace("{ciudad}", "").trim()
-
         if (textoLimpio.length > 2) {
             scope.launch {
                 try {
-                    // Llamamos a tu función de búsqueda OSM
                     val resultados = buscarCiudadesOSM(textoLimpio)
-
                     if (resultados.isNotEmpty()) {
                         val primeraOpcion = resultados[0]
-
-                        // Actualizamos el estado con la primera sugerencia oficial
-                        country = TextFieldValue(
-                            text = primeraOpcion,
-                            selection = TextRange(primeraOpcion.length)
-                        )
-
-                        // Al ser un valor de OSM, debería pasar tu Validator
-                        if (Validator.isValidLocation(primeraOpcion)) {
-                            errorCountry = null
-                        }
-
-                        // Cerramos el menú ya que hemos auto-seleccionado
+                        country = TextFieldValue(text = primeraOpcion, selection = TextRange(primeraOpcion.length))
+                        if (Validator.isValidLocation(primeraOpcion)) errorCountry = null
                         expandido = false
-                        sugerencias = emptyList()
                     }
-                } catch (e: Exception) {
-                    // Manejo de error silencioso o log
-                }
+                } catch (e: Exception) { }
             }
         }
     }
@@ -169,16 +162,10 @@ fun FormularioViaje(
             )
 
             AnimatedContent(targetState = etapaActual, label = "AnimacionPasos") { targetEtapa ->
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     if (targetEtapa == 0) {
-                        // -------------------------------------------------------
-                        // VISTA: PASO 1 (DATOS GENERALES)
-                        // -------------------------------------------------------
-
-                        // Título con Validación
+                        // --- PASO 1: RELLENAR DATOS GENERALES ---
+                        
                         OutlinedTextField(
                             value = title,
                             onValueChange = {
@@ -192,124 +179,51 @@ fun FormularioViaje(
                             shape = RoundedCornerShape(12.dp)
                         )
 
-                        // Buscador OSM con Validación
+                        // Buscador de destinos (con autocompletado)
                         Box(modifier = Modifier.fillMaxWidth()) {
                             OutlinedTextField(
                                 value = country,
                                 onValueChange = { newValue ->
                                     country = newValue
-                                    if (Validator.isValidLocation(newValue.text)) errorCountry =
-                                        null
-
-                                    val queryText = newValue.text
-                                    expandido = queryText.length > 2
-
+                                    if (Validator.isValidLocation(newValue.text)) errorCountry = null
+                                    expandido = newValue.text.length > 2
                                     job?.cancel()
                                     job = scope.launch {
                                         delay(500)
-                                        if (queryText.length > 2) {
-                                            val list = buscarCiudadesOSM(queryText)
-                                            if (country.text.length > 2) {
-                                                sugerencias = list
-                                                expandido = sugerencias.isNotEmpty()
-                                            }
-                                        } else {
-                                            expandido = false
+                                        if (newValue.text.length > 2) {
+                                            sugerencias = buscarCiudadesOSM(newValue.text)
+                                            expandido = sugerencias.isNotEmpty()
                                         }
                                     }
                                 },
                                 label = { Text(stringResource(id = R.string.form_destino_label)) },
                                 isError = errorCountry != null,
-                                supportingText = {
-                                    if (errorCountry != null) {
-                                        Text(
-                                            text = errorCountry!!,
-                                            color = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = Icons.Default.Place,
-                                        contentDescription = null,
-                                        tint = if (errorCountry != null) MaterialTheme.colorScheme.error
-                                        else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                },
-                                // --- BOTÓN X PARA BORRAR TODO ---
+                                supportingText = { if (errorCountry != null) Text(text = errorCountry!!, color = MaterialTheme.colorScheme.error) },
+                                leadingIcon = { Icon(imageVector = Icons.Default.Place, contentDescription = null) },
                                 trailingIcon = {
                                     if (country.text.isNotEmpty()) {
-                                        IconButton(
-                                            onClick = {
-                                                country = TextFieldValue("")
-                                                expandido = false
-                                                sugerencias = emptyList()
-                                                errorCountry = null
-                                            }
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Clear,
-                                                contentDescription = "Limpiar campo",
-                                                tint = if (errorCountry != null) MaterialTheme.colorScheme.error
-                                                else MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
+                                        IconButton(onClick = { country = TextFieldValue(""); expandido = false; sugerencias = emptyList(); errorCountry = null }) {
+                                            Icon(imageVector = Icons.Default.Clear, contentDescription = "Borrar")
                                         }
                                     }
                                 },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .onFocusChanged { focusState ->
-                                        // --- LÓGICA AL SALIR DEL FOCO ---
-                                        if (isFocused && !focusState.isFocused) {
-                                            val currentText = country.text
-                                            if (currentText.length > 2 && !Validator.isValidLocation(
-                                                    currentText
-                                                )
-                                            ) {
-                                                scope.launch {
-                                                    val resultados = buscarCiudadesOSM(currentText)
-                                                    if (resultados.isNotEmpty()) {
-                                                        val mejorCoincidencia = resultados[0]
-                                                        country = TextFieldValue(
-                                                            text = mejorCoincidencia,
-                                                            selection = TextRange(mejorCoincidencia.length)
-                                                        )
-                                                        errorCountry = null
-                                                        expandido = false
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        isFocused = focusState.isFocused
-                                    },
+                                modifier = Modifier.fillMaxWidth().onFocusChanged { isFocused = it.isFocused },
                                 shape = RoundedCornerShape(12.dp),
-                                singleLine = true,
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    errorBorderColor = MaterialTheme.colorScheme.error,
-                                    errorLabelColor = MaterialTheme.colorScheme.error,
-                                    errorSupportingTextColor = MaterialTheme.colorScheme.error
-                                )
+                                singleLine = true
                             )
 
-                            // Menú de sugerencias
                             DropdownMenu(
                                 expanded = expandido && sugerencias.isNotEmpty(),
                                 onDismissRequest = { expandido = false },
                                 properties = PopupProperties(focusable = false),
-                                modifier = Modifier
-                                    .fillMaxWidth(0.9f)
-                                    .background(MaterialTheme.colorScheme.surface)
+                                modifier = Modifier.fillMaxWidth(0.9f).background(MaterialTheme.colorScheme.surface)
                             ) {
                                 sugerencias.forEach { ciudad ->
                                     DropdownMenuItem(
                                         text = { Text(ciudad) },
                                         onClick = {
-                                            country = TextFieldValue(
-                                                text = ciudad,
-                                                selection = TextRange(ciudad.length)
-                                            )
+                                            country = TextFieldValue(text = ciudad, selection = TextRange(ciudad.length))
                                             expandido = false
-                                            sugerencias = emptyList()
                                             errorCountry = null
                                         }
                                     )
@@ -317,55 +231,32 @@ fun FormularioViaje(
                             }
                         }
 
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                // Selector de Ida
+                        // Fechas de Ida y Vuelta
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                                 SelectorFechaModular(
                                     label = stringResource(id = R.string.form_ida_label),
                                     fechaSeleccionada = fechaIda,
-                                    onFechaElegida = {
-                                        fechaIda = it
-                                        errorFechas = null
-                                    },
+                                    onFechaElegida = { fechaIda = it; errorFechas = null },
                                     fechaMinima = System.currentTimeMillis(),
-                                    // Pasamos el estado de error al componente (si tu Selector lo soporta)
                                     isError = errorFechas != null,
                                     modifier = Modifier.weight(1f)
                                 )
-
-                                // Selector de Vuelta
                                 SelectorFechaModular(
                                     label = stringResource(id = R.string.form_vuelta_label),
                                     fechaSeleccionada = fechaVuelta,
-                                    onFechaElegida = {
-                                        fechaVuelta = it
-                                        errorFechas = null
-                                    },
-                                    // --- AQUÍ APLICAMOS LA LÓGICA ---
+                                    onFechaElegida = { fechaVuelta = it; errorFechas = null },
                                     fechaMinima = minimaVueltaMs,
                                     isError = errorFechas != null,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
-
-                            // Mensaje de error en Rojo debajo de los campos
                             if (errorFechas != null) {
-                                Text(
-                                    text = errorFechas!!,
-                                    color = MaterialTheme.colorScheme.error, // Color rojo del tema
-                                    style = MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                                )
+                                Text(text = errorFechas!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 16.dp))
                             }
                         }
 
-                        // Selección de Imagen Portada
+                        // Foto de portada
                         CampoSeleccionImagen(
                             uriSeleccionada = selectedImageUri,
                             label = stringResource(id = R.string.form_portada_label),
@@ -377,144 +268,67 @@ fun FormularioViaje(
                             value = description,
                             onValueChange = { description = it },
                             label = { Text(stringResource(id = R.string.form_desc_label)) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(100.dp),
+                            modifier = Modifier.fillMaxWidth().height(100.dp),
                             shape = RoundedCornerShape(12.dp)
                         )
 
-
-
                         Button(
                             onClick = {
-                                // 1. Validamos Título y Localización usando tu Validator
                                 val tOk = Validator.isValidTitle(title)
                                 val lOk = Validator.isValidLocation(country.text)
+                                val fRellenas = fechaIda.isNotEmpty() && fechaVuelta.isNotEmpty()
+                                val fCoherentes = if (fRellenas) Validator.areDatesValid(fechaIda, fechaVuelta) else false
 
-                                // 2. Nueva lógica de fechas:
-                                // Primero comprobamos que NO estén vacías.
-                                // Segundo comprobamos que sean válidas entre sí.
-                                val fechasRellenas =
-                                    fechaIda.isNotEmpty() && fechaVuelta.isNotEmpty()
-                                val fechasCoherentes = if (fechasRellenas) {
-                                    Validator.areDatesValid(fechaIda, fechaVuelta)
-                                } else false
-
-                                // 3. Asignación de mensajes de error
                                 if (!tOk) errorTitle = errTitleText
-
                                 if (!lOk) errorCountry = errDestText
+                                if (!fRellenas) errorFechas = errFechasVaciasText
+                                else if (!fCoherentes) errorFechas = errFechasCoherenciaText
 
-                                if (!fechasRellenas) {
-                                    errorFechas = errFechasVaciasText
-                                } else if (!fechasCoherentes) {
-                                    errorFechas = errFechasCoherenciaText
-                                }
-
-                                // 4. Solo pasamos de página si TODO es true
-                                if (tOk && lOk && fechasRellenas && fechasCoherentes) {
-                                    etapaActual = 1
-                                }
+                                if (tOk && lOk && fRellenas && fCoherentes) etapaActual = 1
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainer
-                            )
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                         ) {
-                            Text(
-                                stringResource(id = R.string.form_add_itinerary),
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.inversePrimary
-                            )
+                            Text(stringResource(id = R.string.form_add_itinerary), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.inversePrimary)
                             Spacer(Modifier.width(8.dp))
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowForward,
-                                null,
-                                tint = MaterialTheme.colorScheme.inversePrimary
-                            )
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = MaterialTheme.colorScheme.inversePrimary)
                         }
 
                     } else {
-                        // -------------------------------------------------------
-                        // VISTA: PASO 2 (ITINERARIO)
-                        // -------------------------------------------------------
+                        // --- PASO 2: AÑADIR ACTIVIDADES ---
+                        
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { etapaActual = 0 }) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                            }
-                            Text(
-                                stringResource(id = R.string.form_actividades_para, title),
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                            IconButton(onClick = { etapaActual = 0 }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, null) }
+                            Text(stringResource(id = R.string.form_actividades_para, title), style = MaterialTheme.typography.titleMedium)
                         }
 
                         if (listaItinerarios.isEmpty()) {
-                            Text(
-                                text = stringResource(id = R.string.form_no_itinerary),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                color = Color.Gray
-                            )
+                            Text(text = stringResource(id = R.string.form_no_itinerary), modifier = Modifier.fillMaxWidth().padding(32.dp), color = Color.Gray)
                         } else {
                             listaItinerarios.forEachIndexed { index, act ->
                                 ItemItinerario(
                                     act = act,
-                                    onEdit = {
-                                        indiceEdicion = index
-                                        mostrarDialogo = true
-                                    },
-                                    onDelete = {
-                                        // Filtramos la lista para quitar el elemento actual
-                                        listaItinerarios = listaItinerarios.toMutableList().apply {
-                                            removeAt(index)
-                                        }
-                                    }
+                                    onEdit = { indiceEdicion = index; mostrarDialogo = true },
+                                    onDelete = { itemAEliminar = index }
                                 )
                             }
                         }
 
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Button(
-                                onClick = { mostrarDialogo = true },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
-                            ) {
-                                Icon(Icons.Default.AddCircle, null)
-                                Spacer(Modifier.width(4.dp))
-                                Text(stringResource(id = R.string.form_add_btn))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Button(onClick = { mostrarDialogo = true }, modifier = Modifier.weight(1f), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)) {
+                                Icon(Icons.Default.AddCircle, null); Spacer(Modifier.width(4.dp)); Text(stringResource(id = R.string.form_add_btn))
                             }
-
                             Button(
                                 onClick = {
-                                    val budget =
-                                        listaItinerarios.sumOf { it.precio.toDoubleOrNull() ?: 0.0 }
-                                    viewModel.saveTrip(
-                                        title = title,
-                                        destination = country.text,
-                                        dataInici = fechaIda,
-                                        dataFinal = fechaVuelta,
-                                        desc = description,
-                                        budget = budget,
-                                        imageUri = selectedImageUri?.toString() ?: "",
-                                        activitiesFromForm = listaItinerarios
-                                    )
+                                    val budget = listaItinerarios.sumOf { it.precio.toDoubleOrNull() ?: 0.0 }
+                                    viewModel.saveTrip(title, country.text, fechaIda, fechaVuelta, description, budget, selectedImageUri?.toString() ?: "", listaItinerarios)
                                     navController.popBackStack()
                                 },
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                             ) {
-                                Icon(
-                                    Icons.Default.CheckCircle,
-                                    null,
-                                    tint = MaterialTheme.colorScheme.inversePrimary
-                                )
+                                Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.inversePrimary)
                                 Spacer(Modifier.width(4.dp))
                                 Text(stringResource(id = R.string.form_finalizar_btn), color = MaterialTheme.colorScheme.inversePrimary)
                             }
@@ -525,47 +339,51 @@ fun FormularioViaje(
         }
     }
 
+    // Ventana para añadir una actividad nueva o editarla
     if (mostrarDialogo) {
-        // Ejemplo de conversión rápida (asegúrate de que el formato coincida con tu SelectorFecha)
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val inicioMs = try {
-            sdf.parse(fechaIda)?.time
-        } catch (e: Exception) {
-            null
-        }
-        val finMs = try {
-            sdf.parse(fechaVuelta)?.time
-        } catch (e: Exception) {
-            null
-        }
+        val inicioMs = try { sdf.parse(fechaIda)?.time } catch (e: Exception) { null }
+        val finMs = try { sdf.parse(fechaVuelta)?.time } catch (e: Exception) { null }
 
         DialogoNuevaActividad(
             actividadAEditar = if (indiceEdicion != -1) listaItinerarios[indiceEdicion] else null,
             fechaInicioViaje = inicioMs,
             fechaFinViaje = finMs,
             listaExistente = listaItinerarios,
-            onDismiss = {
-                mostrarDialogo = false
-                indiceEdicion = -1
-            },
+            onDismiss = { mostrarDialogo = false; indiceEdicion = -1 },
             onGuardar = { nuevaAct ->
                 val listaMutable = listaItinerarios.toMutableList()
-                if (indiceEdicion != -1) {
-                    listaMutable[indiceEdicion] = nuevaAct
-                } else {
-                    listaMutable.add(nuevaAct)
-                }
-                // Ordenar por día y hora automáticamente sería un puntazo aquí
+                if (indiceEdicion != -1) listaMutable[indiceEdicion] = nuevaAct
+                else listaMutable.add(nuevaAct)
                 listaItinerarios = listaMutable
                 mostrarDialogo = false
                 indiceEdicion = -1
             }
         )
     }
+
+    // Aviso antes de borrar una actividad
+    if (itemAEliminar != null) {
+        AlertDialog(
+            onDismissRequest = { itemAEliminar = null },
+            title = { Text(stringResource(id = R.string.detalle2_delete_activity_titulo)) },
+            text = { Text(stringResource(id = R.string.detalle2_delete_activity_msg, listaItinerarios[itemAEliminar!!].nombre)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    listaItinerarios = listaItinerarios.toMutableList().apply { removeAt(itemAEliminar!!) }
+                    itemAEliminar = null
+                }) { Text(stringResource(id = R.string.detalle_eliminar_btn), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { itemAEliminar = null }) { Text(stringResource(id = R.string.detalle_cancelar_btn)) }
+            },
+            containerColor = MaterialTheme.colorScheme.background
+        )
+    }
 }
 
 /**
- * Mapea el valor interno del tipo de actividad a su traducción correspondiente.
+ * Traduce el tipo de actividad para mostrarlo al usuario.
  */
 @Composable
 fun getTipoTraduccion(tipo: String): String {
@@ -580,9 +398,9 @@ fun getTipoTraduccion(tipo: String): String {
     }
 }
 
-// ----------------------------------------------------------------------------
-// DIÁLOGO CON VALIDACIÓN DE PRECIO Y NOMBRE
-// ----------------------------------------------------------------------------
+/**
+ * Ventana (Dialog) que sale para rellenar los datos de una actividad.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DialogoNuevaActividad(
@@ -593,7 +411,7 @@ fun DialogoNuevaActividad(
     onDismiss: () -> Unit,
     onGuardar: (ItineraryItem) -> Unit
 ) {
-    // Si editamos, cogemos sus valores. Si no, vacío.
+    // Valores de la actividad
     var n by remember { mutableStateOf(actividadAEditar?.nombre ?: "") }
     var d by remember { mutableStateOf(actividadAEditar?.dia ?: "") }
     var h by remember { mutableStateOf(actividadAEditar?.hora ?: "") }
@@ -601,6 +419,7 @@ fun DialogoNuevaActividad(
     var t by remember { mutableStateOf(actividadAEditar?.tipo ?: "Vuelo") }
     var desc by remember { mutableStateOf(actividadAEditar?.descripcion ?: "") }
 
+    // Estados de error de cada campo
     var errorN by remember { mutableStateOf(false) }
     var errorD by remember { mutableStateOf(false) }
     var errorH by remember { mutableStateOf(false) }
@@ -618,121 +437,63 @@ fun DialogoNuevaActividad(
             Text(if (actividadAEditar == null) stringResource(id = R.string.act_nueva_parada) else stringResource(id = R.string.act_editar_parada))
         },
         text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
 
-                // --- 1. Nombre ---
+                // Nombre de la actividad
                 Column {
                     OutlinedTextField(
                         value = n,
-                        onValueChange = {
-                            n = it
-                            errorN = false
-                        },
+                        onValueChange = { n = it; errorN = false },
                         label = { Text(stringResource(id = R.string.act_nombre_label)) },
                         isError = errorN,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     )
-                    if (errorN) {
-                        Text(
-                            text = stringResource(id = R.string.act_error_nombre),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 12.dp, top = 4.dp)
-                        )
-                    }
+                    if (errorN) Text(text = stringResource(id = R.string.act_error_nombre), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 12.dp))
                 }
 
-                // --- 2. Día ---
+                // Selector de día
                 Column {
                     SelectorFechaModular(
                         label = stringResource(id = R.string.act_dia_label),
                         fechaSeleccionada = d,
                         fechaMinima = fechaInicioViaje,
                         fechaMaxima = fechaFinViaje,
-                        onFechaElegida = {
-                            d = it
-                            errorD = false
-                        },
+                        onFechaElegida = { d = it; errorD = false },
                         isError = errorD
                     )
-                    if (errorD) {
-                        Text(
-                            text = stringResource(id = R.string.act_error_dia),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 12.dp, top = 4.dp)
-                        )
-                    }
+                    if (errorD) Text(text = stringResource(id = R.string.act_error_dia), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 12.dp))
                 }
 
-                // --- 3. Hora ---
+                // Selector de hora
                 Column {
-                    SelectorHoraModular(
-                        label = stringResource(id = R.string.act_hora_label),
-                        horaSeleccionada = h,
-                        onHoraElegida = {
-                            h = it
-                            errorH = false
-                            errorHoraRepetida = false
-                        },
-                        isError = errorH
-                    )
-                    if (errorH) {
-                        Text(
-                            text = stringResource(id = R.string.act_error_hora),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 12.dp, top = 4.dp)
-                        )
-                    } else if (errorHoraRepetida) {
-                        Text(
-                            text = stringResource(id = R.string.act_error_hora_repetida),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = 12.dp, top = 4.dp)
-                        )
-                    }
+                    SelectorHoraModular(label = stringResource(id = R.string.act_hora_label), horaSeleccionada = h, onHoraElegida = { h = it; errorH = false; errorHoraRepetida = false }, isError = errorH)
+                    if (errorH) Text(text = stringResource(id = R.string.act_error_hora), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 12.dp))
+                    else if (errorHoraRepetida) Text(text = stringResource(id = R.string.act_error_hora_repetida), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 12.dp))
                 }
 
-                // --- 4. Precio ---
+                // Precio
                 OutlinedTextField(
                     value = p,
-                    onValueChange = { input ->
-                        if (input.isEmpty() || input.matches(Regex("""^\d*[.,]?\d{0,2}$"""))) {
-                            p = input.replace(",", ".")
-                        }
-                    },
+                    onValueChange = { input -> if (input.isEmpty() || input.matches(Regex("""^\d*[.,]?\d{0,2}$"""))) p = input.replace(",", ".") },
                     label = { Text(stringResource(id = R.string.act_precio_label, monedaSimbolo)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
 
-                // --- 5. Notas ---
+                // Notas
                 OutlinedTextField(
                     value = desc,
-                    onValueChange = {
-                        desc = it
-                        errorDesc = false
-                    },
+                    onValueChange = { desc = it; errorDesc = false },
                     label = { Text(stringResource(id = R.string.act_notas_label)) },
                     isError = errorDesc,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp),
+                    modifier = Modifier.fillMaxWidth().height(100.dp),
                     shape = RoundedCornerShape(12.dp),
-                    supportingText = {
-                        if (errorDesc) {
-                            Text(stringResource(id = R.string.act_error_desc))
-                        }
-                    }
+                    supportingText = { if (errorDesc) Text(stringResource(id = R.string.act_error_desc)) }
                 )
 
-                // --- 6. Tipo ---
+                // Tipo de actividad (Vuelo, Hotel, etc.)
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = getTipoTraduccion(t),
@@ -740,121 +501,54 @@ fun DialogoNuevaActividad(
                         readOnly = true,
                         enabled = false,
                         label = { Text(stringResource(id = R.string.act_tipo_label)) },
-                        trailingIcon = {
-                            IconButton(onClick = { exp = true }) {
-                                Icon(Icons.Default.KeyboardArrowDown, null)
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { exp = true },
+                        trailingIcon = { IconButton(onClick = { exp = true }) { Icon(Icons.Default.KeyboardArrowDown, null) } },
+                        modifier = Modifier.fillMaxWidth().clickable { exp = true },
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
+                            // Colores cuando está deshabilitado (nuestro caso)
                             disabledTextColor = MaterialTheme.colorScheme.onSurface,
                             disabledBorderColor = MaterialTheme.colorScheme.outline,
                             disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     )
-                    DropdownMenu(
-                        expanded = exp,
-                        onDismissRequest = { exp = false },
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ) {
-                        listOf(
-                            stringResource(id = R.string.act_tipo_vuelo) to "Vuelo",
-                            stringResource(id = R.string.act_tipo_restaurante) to "Restaurante",
-                            stringResource(id = R.string.act_tipo_hotel) to "Hotel",
-                            stringResource(id = R.string.act_tipo_museo) to "Museo",
-                            stringResource(id = R.string.act_tipo_ocio) to "Ocio",
-                            stringResource(id = R.string.act_tipo_otros) to "Otros"
-                        ).forEach { (label, value) ->
-                            DropdownMenuItem(
-                                text = { Text(label) },
-                                onClick = {
-                                    t = value
-                                    exp = false
-                                }
-                            )
+                    DropdownMenu(expanded = exp, onDismissRequest = { exp = false }, containerColor = MaterialTheme.colorScheme.surface) {
+                        listOf("Vuelo", "Restaurante", "Hotel", "Museo", "Ocio", "Otros").forEach { label ->
+                            DropdownMenuItem(text = { Text(label) }, onClick = { t = label; exp = false })
                         }
                     }
                 }
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    // Comprobamos colisión usando el id de la actividad
-                    val colision =
-                        listaExistente.any { it.dia == d && it.hora == h && it.id != actividadAEditar?.id }
-
-                    errorN = n.isBlank()
-                    errorD = d.isBlank()
-                    errorH = h.isBlank()
-                    errorDesc = desc.isBlank()
-                    errorHoraRepetida = !errorH && colision
-
-                    if (!errorN && !errorD && !errorH && !errorDesc && !errorHoraRepetida) {
-                        onGuardar(
-                            ItineraryItem(
-                                // Si estamos editando, mantenemos el ID. Si es nueva, generamos uno nuevo.
-                                id = actividadAEditar?.id ?: java.util.UUID.randomUUID().toString(),
-                                tripId = "", // Todavía no sabemos el Trip ID, se lo ponemos en el ViewModel
-                                nombre = n,
-                                dia = d,
-                                hora = h,
-                                precio = if (p.isEmpty()) "0" else p,
-                                tipo = t,
-                                descripcion = desc
-                            )
-                        )
-                    }
+            Button(onClick = {
+                val colision = listaExistente.any { it.dia == d && it.hora == h && it.id != actividadAEditar?.id }
+                errorN = n.isBlank(); errorD = d.isBlank(); errorH = h.isBlank(); errorDesc = desc.isBlank(); errorHoraRepetida = !errorH && colision
+                if (!errorN && !errorD && !errorH && !errorDesc && !errorHoraRepetida) {
+                    onGuardar(ItineraryItem(actividadAEditar?.id ?: java.util.UUID.randomUUID().toString(), "", n, d, h, if (p.isEmpty()) "0" else p, t, desc))
                 }
-            ) {
-                Text(stringResource(id = R.string.act_guardar))
-            }
+            }) { Text(stringResource(id = R.string.act_guardar)) }
         },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(id = R.string.act_cancelar))
-            }
-        }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(id = R.string.act_cancelar)) } }
     )
 }
 
-// ----------------------------------------------------------------------------
-// COMPONENTES AUXILIARES
-// ----------------------------------------------------------------------------
+/**
+ * Campo especial para seleccionar una foto de la galería.
+ */
 @Composable
-fun CampoSeleccionImagen(
-    uriSeleccionada: Uri?,
-    label: String,
-    onBorrar: () -> Unit,
-    onClick: () -> Unit
-) {
+fun CampoSeleccionImagen(uriSeleccionada: Uri?, label: String, onBorrar: () -> Unit, onClick: () -> Unit) {
     OutlinedTextField(
         value = if (uriSeleccionada != null) stringResource(id = R.string.form_portada_selected) else "",
         onValueChange = {},
         readOnly = true,
         enabled = false,
         label = { Text(label) },
-        leadingIcon = {
-            Icon(
-                if (uriSeleccionada != null) Icons.Default.CheckCircle else Icons.Default.Image,
-                null
-            )
-        },
-        trailingIcon = {
-            if (uriSeleccionada != null) IconButton(onBorrar) {
-                Icon(
-                    Icons.Default.Clear,
-                    null
-                )
-            }
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
+        leadingIcon = { Icon(if (uriSeleccionada != null) Icons.Default.CheckCircle else Icons.Default.Image, null) },
+        trailingIcon = { if (uriSeleccionada != null) IconButton(onBorrar) { Icon(Icons.Default.Clear, null) } },
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             // Colores cuando está deshabilitado (nuestro caso)
             disabledTextColor = MaterialTheme.colorScheme.onSurface,
@@ -864,16 +558,14 @@ fun CampoSeleccionImagen(
             disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
 
             ),
-        shape = RoundedCornerShape(12.dp)
     )
 }
 
+/**
+ * Tarjeta que muestra una actividad resumida en el paso 2 del formulario.
+ */
 @Composable
-fun ItemItinerario(
-    act: ItineraryItem, // <-- Usamos el modelo real
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
-) {
+fun ItemItinerario(act: ItineraryItem, onEdit: () -> Unit, onDelete: () -> Unit) {
     val (icono, colorFondo, colorIcono) = when (act.tipo) {
         "Vuelo" -> Triple(Icons.Default.Flight, Color(0xFFE3F2FD), Color(0xFF1976D2))
         "Hotel" -> Triple(Icons.Default.Hotel, Color(0xFFF3E5F5), Color(0xFF7B1FA2))
@@ -884,268 +576,30 @@ fun ItemItinerario(
     }
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
-        Box(modifier = Modifier
-            .clickable { onEdit() }
-            .padding(16.dp)) {
+        Box(modifier = Modifier.clickable { onEdit() }.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                 Surface(modifier = Modifier.size(44.dp), shape = CircleShape, color = colorFondo) {
-                    Icon(
-                        imageVector = icono,
-                        contentDescription = null,
-                        tint = colorIcono,
-                        modifier = Modifier.padding(10.dp)
-                    )
+                    Icon(imageVector = icono, contentDescription = null, tint = colorIcono, modifier = Modifier.padding(10.dp))
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = act.nombre,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "${act.dia} • ${act.hora} (${getTipoTraduccion(act.tipo)})",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = act.descripcion,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 2,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "€${act.precio}",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Black,
-                            color = Color(0xFFE65100)
-                        )
+                    Text(text = act.nombre, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(text = "${act.dia} • ${act.hora} (${getTipoTraduccion(act.tipo)})", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(text = act.descripcion, style = MaterialTheme.typography.bodySmall, color = Color.Gray, maxLines = 1, modifier = Modifier.weight(1f))
+                        Text(text = "€${act.precio}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = Color(0xFFE65100))
                     }
                 }
-                Spacer(modifier = Modifier.width(20.dp))
             }
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .offset(x = 8.dp, y = (-8).dp)
-                    .size(30.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Clear,
-                    contentDescription = "Borrar",
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.error
-                )
+            IconButton(onClick = onDelete, modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-8).dp)) {
+                Icon(imageVector = Icons.Rounded.Clear, contentDescription = "Borrar", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
             }
-        }
-    }
-}
-
-// Bloque de vistas previas (Previews) para el editor de diseño
-@Preview(
-    name = "Dark Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun FormularioViajePreviewDark() {
-    AppTheme {
-        FormularioViaje(
-            navController = rememberNavController()
-        )
-    }
-}
-
-@Preview(
-    name = "Light Mode",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
-@Composable
-fun FormularioViajePreviewLight() {
-    AppTheme {
-        FormularioViaje(
-            navController = rememberNavController()
-        )
-    }
-}
-
-@Preview(
-    name = "Formulario Paso 1",
-    showBackground = true
-)
-@Composable
-fun PreviewFormularioPaso1() {
-    AppTheme {
-        FormularioViaje(
-            navController = rememberNavController(),
-            previewStep = 0
-        )
-    }
-}
-
-@Preview(
-    name = "Formulario Paso 2 Itinerario",
-    showBackground = true
-)
-@Composable
-fun PreviewFormularioPaso2() {
-    AppTheme {
-        FormularioViaje(
-            navController = rememberNavController(),
-            previewStep = 1
-        )
-    }
-}
-
-@Preview(
-    name = "Formulario Paso 2 Itinerario",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun PreviewFormularioPaso2Black() {
-    AppTheme {
-        FormularioViaje(
-            navController = rememberNavController(),
-            previewStep = 1
-        )
-    }
-}
-
-@Preview(
-    name = "Preview Unificada Itinerario",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun PreviewDialogoLimpio() {
-    AppTheme {
-        DialogoNuevaActividad(
-            onDismiss = {},
-            onGuardar = {},
-            listaExistente = emptyList()
-        )
-    }
-}
-
-// ----------------------------------------------------------------------------
-// PREVIEWS DE LOS ITEMS (COPIAR Y PEGAR)
-// ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
-// PREVIEWS DE LOS ITEMS
-// ----------------------------------------------------------------------------
-
-@Preview(
-    name = "Item Completo - Modo Claro",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_NO
-)
-@Composable
-fun PreviewItemCompletoLight() {
-    AppTheme {
-        Box(modifier = Modifier.padding(16.dp)) {
-            ItemItinerario(
-                act = ItineraryItem(
-                    id = "preview_1",
-                    tripId = "trip_preview",
-                    nombre = "Cena Romántica",
-                    dia = "22 Mar",
-                    hora = "21:30",
-                    precio = "65.50",
-                    tipo = "Restaurante",
-                    descripcion = "Reserva a nombre de Juan. Mesa cerca de la ventana con vistas al río."
-                ),
-                onEdit = { /* No hace nada en el preview */ },
-                onDelete = { /* No hace nada en el preview */ }
-            )
-        }
-    }
-}
-
-@Preview(
-    name = "Item Simple - Modo Noche",
-    showBackground = true,
-    uiMode = Configuration.UI_MODE_NIGHT_YES
-)
-@Composable
-fun PreviewItemSimpleDark() {
-    AppTheme {
-        Box(modifier = Modifier.padding(16.dp)) { // Añadido un Box con padding para que se vea mejor
-            ItemItinerario(
-                act = ItineraryItem(
-                    id = "preview_2",
-                    tripId = "trip_preview",
-                    nombre = "Vuelo de Ida",
-                    dia = "20 Mar",
-                    hora = "08:00",
-                    precio = "145.00",
-                    tipo = "Vuelo",
-                    descripcion = "" // Probamos cómo queda sin descripción
-                ),
-                onEdit = { },
-                onDelete = { }
-            )
-        }
-    }
-}
-
-@Preview(
-    name = "Lista de Ejemplo",
-    showBackground = true
-)
-@Composable
-fun PreviewListaItems() {
-    AppTheme {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            ItemItinerario(
-                act = ItineraryItem(
-                    id = "preview_3",
-                    tripId = "trip_preview",
-                    nombre = "Hotel Palace",
-                    dia = "20 Mar",
-                    hora = "14:00",
-                    precio = "200.00",
-                    tipo = "Hotel",
-                    descripcion = "Check-in temprano solicitado."
-                ),
-                onEdit = {},
-                onDelete = {}
-            )
-            ItemItinerario(
-                act = ItineraryItem(
-                    id = "preview_4",
-                    tripId = "trip_preview",
-                    nombre = "Museo del Prado",
-                    dia = "21 Mar",
-                    hora = "10:30",
-                    precio = "15.00",
-                    tipo = "Museo",
-                    descripcion = "Entradas digitales en el correo."
-                ),
-                onEdit = {},
-                onDelete = {}
-            )
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.app.ui.screens
 
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -36,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,65 +55,64 @@ import java.util.concurrent.TimeUnit
 import java.util.Calendar
 import java.util.TimeZone
 
-// 1. Funciones para formatear texto legible
+/**
+ * Pantalla que muestra todos los detalles de un viaje concreto.
+ * Aquí puedes ver el itinerario día a día, editar el viaje o borrarlo.
+ */
+
+// Formatea la fecha para que se vea bonita (ej: 1 Mar)
 fun formatDateHeader(dateStr: String): String {
     return try {
-        val inputSdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val outputSdf = SimpleDateFormat("dd MMM", Locale("es", "ES"))
-        val date = inputSdf.parse(dateStr)
-        date?.let { outputSdf.format(it).uppercase() } ?: dateStr
+        val date = if (dateStr.contains("-")) {
+            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(dateStr)
+        } else {
+            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(dateStr)
+        }
+        // Usamos 'd MMM' y quitamos el punto que a veces pone Java en español (abr.)
+        val outputSdf = SimpleDateFormat("d MMM", Locale("es", "ES"))
+        date?.let { 
+            outputSdf.format(it).replace(".", "").replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+        } ?: dateStr
     } catch (e: Exception) {
         dateStr
     }
 }
 
-// Función adicional para el rango de fechas principal
+// Para mostrar el rango de fechas arriba (ej: 1 Ago — 5 Ago)
 fun formatTripRange(inicio: String?, fin: String?): String {
     if (inicio.isNullOrEmpty() || fin.isNullOrEmpty()) return ""
     return try {
         val inputSdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        val outputSdf = SimpleDateFormat("dd MMM", Locale("es", "ES"))
-
+        val outputSdf = SimpleDateFormat("d MMM", Locale("es", "ES"))
         val dateStart = inputSdf.parse(inicio)
         val dateEnd = inputSdf.parse(fin)
-
         if (dateStart != null && dateEnd != null) {
-            "${outputSdf.format(dateStart).uppercase()} — ${outputSdf.format(dateEnd).uppercase()}"
+            val start = outputSdf.format(dateStart).replace(".", "")
+            val end = outputSdf.format(dateEnd).replace(".", "")
+            "$start — $end"
         } else ""
     } catch (e: Exception) {
         "$inicio — $fin"
     }
 }
 
+// Calcula cuántas noches dura el viaje restando las fechas
 fun calcularNoches(inicio: String?, fin: String?): String {
     if (inicio.isNullOrEmpty() || fin.isNullOrEmpty()) return "0"
-
-    val formatosPosibles = listOf(
-        "dd/MM/yyyy", "d/M/yyyy",
-        "yyyy-MM-dd", "yyyy-M-d",
-        "yyyy/MM/dd", "yyyy/M/d",
-        "dd-MM-yyyy"
-    )
-
+    val formatosPosibles = listOf("yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy", "yyyy-M-d", "yyyy/MM/dd", "yyyy/M/d", "dd-MM-yyyy")
     for (patron in formatosPosibles) {
         try {
             val sdf = SimpleDateFormat(patron, Locale.getDefault())
             sdf.isLenient = false
-
             val startDate = sdf.parse(inicio)
             val endDate = sdf.parse(fin)
-
             if (startDate != null && endDate != null) {
                 val diffInMillis = endDate.time - startDate.time
                 val noches = TimeUnit.DAYS.convert(diffInMillis, TimeUnit.MILLISECONDS)
-
-                if (noches > 0) return noches.toString()
+                if (noches >= 0) return noches.toString()
             }
-        } catch (e: Exception) {
-            continue
-        }
+        } catch (e: Exception) { continue }
     }
-
     return "0"
 }
 
@@ -124,9 +125,9 @@ fun DetalleViajeScreen2(
     viewModel: TripListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val trip = viewModel.getTripById(tripId)
-    // Usamos remember para forzar que la lista sea reactiva
     var activities by remember { mutableStateOf(viewModel.getActivitiesForTrip(tripId)) }
 
+    // Control de diálogos y modo edición
     var isEditMode by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteTripDialog by remember { mutableStateOf(false) }
@@ -134,16 +135,14 @@ fun DetalleViajeScreen2(
     var activityToEdit by remember { mutableStateOf<ItineraryItem?>(null) }
     var showAddActivityDialog by remember { mutableStateOf(false) }
 
-    // Estados para edición de campos generales
+    // Valores temporales mientras editamos el viaje
     var editedTitle by remember(trip) { mutableStateOf(trip?.title ?: "") }
     var editedDescription by remember(trip) { mutableStateOf(trip?.description ?: "") }
     var editedImageUri by remember(trip) { mutableStateOf(trip?.imageUri ?: "") }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let { editedImageUri = it.toString() }
-    }
+    ) { uri: Uri? -> uri?.let { editedImageUri = it.toString() } }
 
     val title = trip?.title ?: stringResource(id = R.string.app_name)
     val country = trip?.country ?: ""
@@ -154,55 +153,43 @@ fun DetalleViajeScreen2(
     val nochesReales = calcularNoches(trip?.dataInici, trip?.dataFinal)
     val rangoFechas = formatTripRange(trip?.dataInici, trip?.dataFinal)
 
-    // Formato de título con destino pequeño y negrita
+    // Mezclamos el título con el país en el mismo texto
     val annotatedTitle = buildAnnotatedString {
-        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-            append(title)
-        }
-        withStyle(style = SpanStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.9f))) {
-            append(",  $country")
-        }
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(title) }
+        withStyle(style = SpanStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.9f))) { append(",  $country") }
     }
 
-    // Diálogo Eliminar Viaje
+    // Diálogo para confirmar borrar el viaje entero
     if (showDeleteTripDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteTripDialog = false },
             title = { Text(stringResource(id = R.string.detalle_eliminar_titulo)) },
             text = { Text(stringResource(id = R.string.detalle_eliminar_msg)) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteTrip(tripId)
-                        showDeleteTripDialog = false
-                        navController.navigate(Routes.DETALLE_VIAJE) {
-                            popUpTo(Routes.DETALLE_VIAJE) { inclusive = true }
-                        }
-                    }
-                ) { Text(stringResource(id = R.string.detalle_eliminar_btn), color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = {
+                    viewModel.deleteTrip(tripId)
+                    showDeleteTripDialog = false
+                    navController.navigate(Routes.DETALLE_VIAJE) { popUpTo(Routes.DETALLE_VIAJE) { inclusive = true } }
+                }) { Text(stringResource(id = R.string.detalle_eliminar_btn), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteTripDialog = false }) { Text(stringResource(id = R.string.detalle_cancelar_btn)) }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background
         )
     }
 
-    // Diálogo Eliminar Actividad
+    // Diálogo para confirmar borrar una actividad suelta
     if (activityToDelete != null) {
         AlertDialog(
             onDismissRequest = { activityToDelete = null },
             title = { Text(stringResource(id = R.string.detalle2_delete_activity_titulo)) },
             text = { Text(stringResource(id = R.string.detalle2_delete_activity_msg, activityToDelete?.nombre ?: "")) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        activityToDelete?.let { 
-                            viewModel.deleteActivity(it)
-                            activities = viewModel.getActivitiesForTrip(tripId) // Refrescar lista
-                        }
-                        activityToDelete = null
-                    }
-                ) { Text(stringResource(id = R.string.detalle_eliminar_btn), color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = {
+                    activityToDelete?.let { viewModel.deleteActivity(it); activities = viewModel.getActivitiesForTrip(tripId) }
+                    activityToDelete = null
+                }) { Text(stringResource(id = R.string.detalle_eliminar_btn), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
                 TextButton(onClick = { activityToDelete = null }) { Text(stringResource(id = R.string.detalle_cancelar_btn)) }
@@ -210,56 +197,32 @@ fun DetalleViajeScreen2(
         )
     }
 
-    // Diálogo Añadir o Editar Actividad
+    // Ventana para añadir o cambiar una actividad
     if (showAddActivityDialog || activityToEdit != null) {
         fun getCleanMillis(dateStr: String): Long? {
-            val formatos = listOf("dd/MM/yyyy", "yyyy-MM-dd")
+            val formatos = listOf("yyyy-MM-dd", "dd/MM/yyyy")
             for (formato in formatos) {
                 try {
                     val sdf = SimpleDateFormat(formato, Locale.getDefault())
                     sdf.timeZone = TimeZone.getTimeZone("UTC")
-                    val date = sdf.parse(dateStr)
-                    if (date != null) {
-                        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-                        cal.time = date
-                        cal.set(Calendar.HOUR_OF_DAY, 0)
-                        cal.set(Calendar.MINUTE, 0)
-                        cal.set(Calendar.SECOND, 0)
-                        cal.set(Calendar.MILLISECOND, 0)
-                        return cal.timeInMillis
-                    }
+                    val date = sdf.parse(dateStr); if (date != null) return date.time
                 } catch (e: Exception) {}
             }
             return null
         }
 
-        val inicioMs = getCleanMillis(trip?.dataInici ?: "")
-        val finMs = getCleanMillis(trip?.dataFinal ?: "")
-
         DialogoNuevaActividad(
             actividadAEditar = activityToEdit,
-            fechaInicioViaje = inicioMs,
-            fechaFinViaje = finMs,
+            fechaInicioViaje = getCleanMillis(trip?.dataInici ?: ""),
+            fechaFinViaje = getCleanMillis(trip?.dataFinal ?: ""),
             listaExistente = activities,
-            onDismiss = {
-                showAddActivityDialog = false
-                activityToEdit = null
-            },
+            onDismiss = { showAddActivityDialog = false; activityToEdit = null },
             onGuardar = { nuevaAct ->
-                // IMPORTANTE: Aseguramos que la actividad mantenga el ID del viaje actual
-                val actividadCorregida = nuevaAct.copy(tripId = tripId)
-
-                if (activityToEdit != null) {
-                    viewModel.updateActivity(actividadCorregida)
-                } else {
-                    viewModel.addActivityToTrip(tripId, actividadCorregida)
-                }
-
-                // Forzamos el refresco de la lista en la UI
+                val act = nuevaAct.copy(tripId = tripId)
+                if (activityToEdit != null) viewModel.updateActivity(act)
+                else viewModel.addActivityToTrip(tripId, act)
                 activities = viewModel.getActivitiesForTrip(tripId)
-
-                showAddActivityDialog = false
-                activityToEdit = null
+                showAddActivityDialog = false; activityToEdit = null
             }
         )
     }
@@ -267,16 +230,11 @@ fun DetalleViajeScreen2(
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
-        ) {
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding).background(MaterialTheme.colorScheme.background)) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 CustomHeader(
                     backgroundImageRes = if (isEditMode) editedImageUri else imageUri,
-                    showBackButton = !isEditMode, // Ocultar flecha atrás en modo edición
+                    showBackButton = !isEditMode,
                     content = {
                         Column {
                             Box(contentAlignment = Alignment.CenterStart) {
@@ -285,9 +243,7 @@ fun DetalleViajeScreen2(
                                         value = editedTitle,
                                         onValueChange = { editedTitle = it },
                                         textStyle = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold, color = Color.White),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .offset(x = (-16).dp),
+                                        modifier = Modifier.fillMaxWidth().offset(x = (-16).dp),
                                         shape = RoundedCornerShape(12.dp),
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedBorderColor = Color.White.copy(alpha = 0.5f),
@@ -296,26 +252,17 @@ fun DetalleViajeScreen2(
                                         )
                                     )
                                 } else {
-                                    Text(
-                                        text = annotatedTitle,
-                                        style = MaterialTheme.typography.headlineMedium,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Text(text = annotatedTitle, style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.Bold)
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(if (isEditMode) 8.dp else 6.dp))
-
+                            Spacer(modifier = Modifier.height(8.dp))
                             Box(contentAlignment = Alignment.CenterStart) {
                                 if (isEditMode) {
                                     OutlinedTextField(
                                         value = editedDescription,
                                         onValueChange = { editedDescription = it },
                                         textStyle = MaterialTheme.typography.bodyMedium.copy(color = Color.White),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .offset(x = (-16).dp),
+                                        modifier = Modifier.fillMaxWidth().offset(x = (-16).dp),
                                         shape = RoundedCornerShape(12.dp),
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedBorderColor = Color.White.copy(alpha = 0.5f),
@@ -324,115 +271,55 @@ fun DetalleViajeScreen2(
                                         )
                                     )
                                 } else {
-                                    Text(
-                                        text = description,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = Color.White.copy(alpha = 0.8f)
-                                    )
+                                    Text(text = description, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.8f))
                                 }
                             }
                         }
                     }
                 )
 
-                // Botón Cambiar Portada en el lugar de la flecha atrás
+                // Botón para cambiar la foto si estamos editando
                 if (isEditMode) {
-                    IconButton(
-                        onClick = { launcher.launch("image/*") },
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(top = 40.dp, start = 8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = stringResource(id = R.string.detalle2_change_cover),
-                            tint = Color.White
-                        )
+                    IconButton(onClick = { launcher.launch("image/*") }, modifier = Modifier.align(Alignment.TopStart).padding(top = 24.dp, start = 8.dp)) {
+                        Icon(imageVector = Icons.Default.CameraAlt, contentDescription = "Cambiar foto", tint = Color.White)
                     }
                 }
 
-                // Botones Guardar y Cancelar arriba a la derecha
-                Box(modifier = Modifier.align(Alignment.TopEnd).padding(top = 40.dp, end = 8.dp)) {
+                // Botones de guardar/cancelar o menú de 3 puntos
+                Box(modifier = Modifier.align(Alignment.TopEnd).padding(top = if (isEditMode) 16.dp else 24.dp, end = 8.dp)) {
                     if (isEditMode) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextButton(
-                                onClick = {
-                                    // Restaurar valores originales y salir
-                                    editedTitle = trip?.title ?: ""
-                                    editedDescription = trip?.description ?: ""
-                                    editedImageUri = trip?.imageUri ?: ""
-                                    isEditMode = false
-                                }
-                            ) {
+                            TextButton(onClick = { 
+                                // Resetear campos al cancelar para volver al estado anterior
+                                editedTitle = trip?.title ?: ""
+                                editedDescription = trip?.description ?: ""
+                                editedImageUri = trip?.imageUri ?: ""
+                                isEditMode = false 
+                            }) {
                                 Text(stringResource(id = R.string.act_cancelar), color = Color.White, fontWeight = FontWeight.Bold)
                             }
-                            Button(
-                                onClick = {
-                                    trip?.let {
-                                        val updatedTrip = it.copy(
-                                            title = editedTitle,
-                                            description = editedDescription,
-                                            imageUri = editedImageUri
-                                        )
-                                        viewModel.updateTrip(updatedTrip)
-                                    }
-                                    isEditMode = false
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(stringResource(id = R.string.act_guardar), fontWeight = FontWeight.Bold, color = Color.White)
-                            }
+                            Button(onClick = {
+                                trip?.let { viewModel.updateTrip(it.copy(title = editedTitle, description = editedDescription, imageUri = editedImageUri)) }
+                                isEditMode = false
+                            }) { Text(stringResource(id = R.string.act_guardar), fontWeight = FontWeight.Bold) }
                         }
                     } else {
-                        IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = null, tint = Color.White)
-                        }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false },
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(id = R.string.detalle2_edit_trip)) },
-                                leadingIcon = { Icon(Icons.Default.Edit, null) },
-                                onClick = {
-                                    isEditMode = true
-                                    showMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(id = R.string.detalle2_delete_trip), color = MaterialTheme.colorScheme.error) },
-                                leadingIcon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
-                                onClick = {
-                                    showDeleteTripDialog = true
-                                    showMenu = false
-                                }
-                            )
+                        IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, contentDescription = null, tint = Color.White) }
+                        DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }, containerColor = MaterialTheme.colorScheme.surface) {
+                            DropdownMenuItem(text = { Text(stringResource(id = R.string.detalle2_edit_trip)) }, leadingIcon = { Icon(Icons.Default.Edit, null) }, onClick = { isEditMode = true; showMenu = false })
+                            DropdownMenuItem(text = { Text(stringResource(id = R.string.detalle2_delete_trip), color = MaterialTheme.colorScheme.error) }, leadingIcon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) }, onClick = { showDeleteTripDialog = true; showMenu = false })
                         }
                     }
                 }
             }
 
-            // --- RANGO DE FECHAS VISIBLE PARA EL USUARIO ---
+            // Fechas del viaje (ej: 1 Ago — 5 Ago)
             if (rangoFechas.isNotEmpty()) {
-                Text(
-                    text = rangoFechas,
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
+                Text(text = rangoFechas, modifier = Modifier.fillMaxWidth().padding(top = 16.dp), textAlign = TextAlign.Center, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            // Datos rápidos (Noches, Presupuesto, Actividades)
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 StatItem(value = nochesReales, label = if (nochesReales == "1") stringResource(id = R.string.detalle2_nights_singular) else stringResource(id = R.string.detalle2_nights), modifier = Modifier.weight(1f))
                 HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
                 StatItem(value = CurrencyConverter.convert(budget, selectedCurrency), label = stringResource(id = R.string.detalle2_budget), modifier = Modifier.weight(1f))
@@ -441,70 +328,25 @@ fun DetalleViajeScreen2(
             }
 
             if (isEditMode) {
-                Button(
-                    onClick = { showAddActivityDialog = true },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Icon(Icons.Default.Add, null)
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(id = R.string.detalle2_add_activity))
+                Button(onClick = { showAddActivityDialog = true }, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)) {
+                    Icon(Icons.Default.Add, null); Spacer(Modifier.width(8.dp)); Text(stringResource(id = R.string.detalle2_add_activity))
                 }
             }
 
-            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f), thickness = 1.dp)
+            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
 
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 80.dp)
-            ) {
+            // Lista del itinerario
+            LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 80.dp)) {
                 if (activities.isEmpty()) {
-                    item {
-                        Text(
-                            text = stringResource(id = R.string.detalle2_no_activities),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 40.dp, start = 24.dp, end = 24.dp),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                            color = Color.Gray,
-                            fontSize = 14.sp
-                        )
-                    }
+                    item { Text(text = stringResource(id = R.string.detalle2_no_activities), modifier = Modifier.fillMaxWidth().padding(top = 40.dp), textAlign = TextAlign.Center, color = Color.Gray) }
                 } else {
                     val sdfSort = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                    val sortedActivities = activities.sortedBy {
-                        try { sdfSort.parse("${it.dia} ${it.hora}")?.time ?: 0L } catch(e: Exception) { 0L }
-                    }
-
-                    val groupedActivities = sortedActivities.groupBy { it.dia }
-
-                    groupedActivities.forEach { (diaOriginal, activitiesForDay) ->
-                        item { DayHeader(formatDateHeader(diaOriginal)) }
-
-                        items(activitiesForDay) { activity ->
-                            val iconData = getIconForType(activity.tipo)
-                            val precioDouble = activity.precio.toDoubleOrNull() ?: 0.0
-
-                            TimelineEvent(
-                                time = activity.hora,
-                                icon = iconData.first,
-                                iconBg = iconData.second,
-                                iconTint = iconData.third,
-                                title = activity.nombre,
-                                subtitle = activity.descripcion,
-                                price = CurrencyConverter.convert(precioDouble, selectedCurrency),
-                                priceColor = if (precioDouble > 0) Color(0xFFE65100) else Color(0xFF2E7D32),
-                                isEditMode = isEditMode,
-                                onDelete = { activityToDelete = activity },
-                                onClick = {
-                                    if (isEditMode) {
-                                        activityToEdit = activity
-                                    }
-                                }
-                            )
+                    val sorted = activities.sortedBy { try { sdfSort.parse("${it.dia} ${it.hora}")?.time ?: 0L } catch(e: Exception) { 0L } }
+                    sorted.groupBy { it.dia }.forEach { (dia, acts) ->
+                        item { DayHeader(formatDateHeader(dia)) }
+                        items(acts) { act ->
+                            val iconData = getIconForType(act.tipo)
+                            TimelineEvent(act.hora, iconData.first, iconData.second, iconData.third, act.nombre, act.descripcion, CurrencyConverter.convert(act.precio.toDoubleOrNull() ?: 0.0, selectedCurrency), if ((act.precio.toDoubleOrNull() ?: 0.0) > 0) Color(0xFFE65100) else Color(0xFF2E7D32), isEditMode, { activityToDelete = act }, { if (isEditMode) activityToEdit = act })
                         }
                     }
                 }
@@ -513,6 +355,7 @@ fun DetalleViajeScreen2(
     }
 }
 
+// Icono y colores según sea un vuelo, hotel, restaurante...
 private fun getIconForType(type: String): Triple<ImageVector, Color, Color> {
     return when (type.lowercase()) {
         "vuelo" -> Triple(Icons.Default.Flight, Color(0xFFE3F2FD), Color(0xFF1976D2))
@@ -527,94 +370,34 @@ private fun getIconForType(type: String): Triple<ImageVector, Color, Color> {
 
 @Composable
 private fun StatItem(value: String, label: String, modifier: Modifier = Modifier) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-    ) {
-        Text(text = value, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onBackground)
-        Text(text = label, fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
+        Text(text = value, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Text(text = label, fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.SemiBold)
     }
 }
 
 @Composable
 private fun DayHeader(text: String) {
-    Surface(
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-        shape = RoundedCornerShape(50),
-        modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
-    ) {
-        Text(
-            text = text,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp,
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-            letterSpacing = 1.sp
-        )
+    Surface(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f), shape = RoundedCornerShape(50), modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
+        Text(text = text, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 12.sp, modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp))
     }
 }
 
 @Composable
-private fun TimelineEvent(
-    time: String,
-    icon: ImageVector,
-    iconBg: Color,
-    iconTint: Color,
-    title: String,
-    subtitle: String,
-    price: String,
-    priceColor: Color,
-    isEditMode: Boolean = false,
-    onDelete: () -> Unit = {},
-    onClick: () -> Unit = {}
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = isEditMode, onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Text(
-            text = time,
-            color = Color.Gray,
-            fontSize = 14.sp,
-            modifier = Modifier.width(50.dp).padding(top = 8.dp)
-        )
-
+private fun TimelineEvent(time: String, icon: ImageVector, iconBg: Color, iconTint: Color, title: String, subtitle: String, price: String, priceColor: Color, isEditMode: Boolean, onDelete: () -> Unit, onClick: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth().clickable(enabled = isEditMode, onClick = onClick).padding(horizontal = 24.dp, vertical = 12.dp), verticalAlignment = Alignment.Top) {
+        Text(text = time, color = Color.Gray, fontSize = 14.sp, modifier = Modifier.width(50.dp).padding(top = 8.dp))
         Surface(shape = CircleShape, color = iconBg, modifier = Modifier.size(42.dp)) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp))
-            }
+            Box(contentAlignment = Alignment.Center) { Icon(imageVector = icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(20.dp)) }
         }
-
         Spacer(modifier = Modifier.width(16.dp))
-
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground)
-            Spacer(modifier = Modifier.height(2.dp))
+            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
             Text(text = subtitle, fontSize = 14.sp, color = Color.Gray)
-            Spacer(modifier = Modifier.height(4.dp))
             Text(text = price, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = priceColor)
         }
-
         if (isEditMode) {
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = Icons.Rounded.Close,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            IconButton(onClick = onDelete) { Icon(imageVector = Icons.Rounded.Close, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp)) }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DetalleViajeScreen2Preview() {
-    AppTheme {
-        DetalleViajeScreen2(navController = rememberNavController(), selectedCurrency = "EUR(€)", tripId = "1")
     }
 }

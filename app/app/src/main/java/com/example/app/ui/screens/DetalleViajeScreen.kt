@@ -61,7 +61,8 @@ fun DetalleViajeScreen(
                 TextButton(onClick = { tripIdToDelete = null }) {
                     Text(stringResource(id = R.string.detalle_cancelar_btn))
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background
         )
     }
 
