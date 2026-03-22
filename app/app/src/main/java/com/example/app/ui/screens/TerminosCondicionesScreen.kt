@@ -29,10 +29,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.app.R
 import com.example.app.ui.theme.AppTheme
 
 @Composable
@@ -65,7 +67,11 @@ fun TerminosCondicionesScreen(navController: NavHostController) {
         ) {
 
             // Componente de cabecera reutilizable con título y fecha de actualización
-            CustomHeader("Términos y condiciones", "Ultima actualización 05 de marzo de 2026", true)
+            CustomHeader(
+                stringResource(id = R.string.terminos_titulo),
+                stringResource(id = R.string.terminos_actualizacion),
+                true
+            )
 
             Column(
                 modifier = Modifier
@@ -86,35 +92,14 @@ fun TerminosCondicionesScreen(navController: NavHostController) {
                     Column(modifier = Modifier.padding(16.dp)) {
 
                         Text(
-                            text = "Términos y Condiciones de Nomad",
+                            text = stringResource(id = R.string.terminos_cuerpo_titulo),
                             style = MaterialTheme.typography.titleLarge
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
 
                         Text(
-                            text = """
-Bienvenido a Nomad. Al utilizar esta aplicación aceptas los siguientes términos y condiciones.
-
-1. Uso de la aplicación
-Nomad es una herramienta diseñada para ayudar a los usuarios a planificar viajes, organizar itinerarios y descubrir lugares de interés.
-
-2. Funcionalidades
-La aplicación permite planificar rutas, buscar lugares cercanos, guardar imágenes de viajes y recibir recomendaciones basadas en inteligencia artificial.
-
-3. Responsabilidad
-Nomad proporciona información orientativa. No garantizamos la exactitud o disponibilidad de los lugares o servicios mostrados.
-
-4. Propiedad intelectual
-Todo el contenido, diseño y código de la aplicación pertenece a sus desarrolladores y no puede ser copiado o distribuido sin autorización.
-
-5. Cambios en los términos
-Los desarrolladores pueden modificar estos términos en futuras actualizaciones de la aplicación.
-
-Equipo de desarrollo:
-Oriol Alvarez Arisa
-Guillem Talayero Carrasco
-                            """.trimIndent()
+                            text = stringResource(id = R.string.terminos_cuerpo_texto)
                         )
                     }
                 }
@@ -133,7 +118,7 @@ Guillem Talayero Carrasco
                             onCheckedChange = { checkboxChecked = it }
                         )
 
-                        Text("He leído y acepto los Términos y Condiciones")
+                        Text(stringResource(id = R.string.terminos_aceptar_checkbox))
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -147,7 +132,7 @@ Guillem Talayero Carrasco
                         OutlinedButton(
                             onClick = { navController.popBackStack() }
                         ) {
-                            Text("Rechazar")
+                            Text(stringResource(id = R.string.terminos_rechazar_btn))
                         }
 
                         Button(
@@ -158,7 +143,7 @@ Guillem Talayero Carrasco
                             },
                             enabled = checkboxChecked // El botón solo es accionable si el checkbox está marcado
                         ) {
-                            Text("Aceptar")
+                            Text(stringResource(id = R.string.terminos_aceptar_btn))
                         }
                     }
 
@@ -179,14 +164,14 @@ Guillem Talayero Carrasco
                         ) {
 
                             Text(
-                                text = "✅ Términos aceptados",
+                                text = stringResource(id = R.string.terminos_aceptados_titulo),
                                 style = MaterialTheme.typography.titleLarge
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
-                                text = "Ya has aceptado los Términos y Condiciones de Nomad."
+                                text = stringResource(id = R.string.terminos_aceptados_msg)
                             )
                         }
                     }

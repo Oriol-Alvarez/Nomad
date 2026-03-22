@@ -6,10 +6,10 @@
     <string name="preferencias_idioma_titulo">Idioma</string>
     <string name="preferencias_idioma_role">Idioma de la interfície</string>
     <string name="preferencias_titulo_moneda">Moneda</string>
-    <string name="preferencias_subtitulo_moneda">Escollir moneda</string>
+    <string name="preferencias_subtitulo_moneda">Triar moneda</string>
     <string name="preferencias_titulo_seccion_apariencia">Aparença</string>
     <string name="preferencias_titulo_modo_oscuro">Mode fosc</string>
-    <string name="preferencias_role_modo_oscuro">Escollir un tema</string>
+    <string name="preferencias_role_modo_oscuro">Triar un tema</string>
     <string name="preferencias_titulo_tamaño_letra">Mida del text</string>
     <string name="preferencias_role_tamaño_letra">Accessibilitat</string>
     <string name="preferencias_titulo_seccion_notificaciones">Notificacions</string>
@@ -19,8 +19,150 @@
     <string name="preferencias_notif_resumen_role">Enviament d\'email</string>
     <string name="preferencias_seccion_mas_info">Més informació</string>
     <string name="preferencias_info_app">Info de l\'app</string>
-    <string name="preferencias_info_app_role">Un mica sobre nosaltres</string>
+    <string name="preferencias_info_app_role">Un poc sobre nosaltres</string>
     <string name="preferencias_terminos">Termes i condicions</string>
     <string name="preferencias_terminos_role">Info legal</string>
     <string name="preferencias_footer">Programat amb molt ☕</string>
+
+    <!-- Home Screen -->
+    <string name="home_hola">Hola</string>
+    <string name="home_busca_aventura">Busca la teva pròxima aventura</string>
+    <string name="home_recomendados">Recomanats per a tu</string>
+    <string name="home_mas_destacados">Més destacats</string>
+    <string name="home_ofertas_tips">Ofertes i tips</string>
+    <string name="home_explora_nomad">Explora el món amb Nomad 🌍</string>
+    <string name="home_ahorrar_roma">Com estalviar en el teu viatge a Roma</string>
+    <string name="home_guia_equipaje">Equipatge de mà: Guia definitiva</string>
+    <string name="home_terminos_dialog_titulo">Privadesa i termes</string>
+    <string name="home_terminos_dialog_msg">Per usar Nomad, has d\'acceptar els nostres </string>
+    <string name="home_terminos_dialog_link">termes i condicions</string>
+    <string name="home_aceptar">Acceptar</string>
+
+    <!-- Detalle Viaje Screen -->
+    <string name="detalle_mis_viajes">Els meus Viatges</string>
+    <string name="detalle_no_viajes">No tens viatges planejats.</string>
+    <string name="detalle_eliminar_titulo">Eliminar viatge</string>
+    <string name="detalle_eliminar_msg">Estàs segur que vols eliminar aquest viatge? Aquesta acció no es pot desfer.</string>
+    <string name="detalle_eliminar_btn">Eliminar</string>
+    <string name="detalle_cancelar_btn">Cancel·lar</string>
+
+    <!-- Detalle Viaje Screen 2 -->
+    <string name="detalle2_nights">NITS</string>
+    <string name="detalle2_budget">PRESSUPOST</string>
+    <string name="detalle2_activities">ACTIVITATS</string>
+    <string name="detalle2_no_activities">Encara no has afegit activitats a aquest viatge.</string>
+    <string name="detalle2_edit_trip">Editar viatge</string>
+    <string name="detalle2_save_changes">Guardar canvis</string>
+    <string name="detalle2_delete_trip">Eliminar viatge</string>
+    <string name="detalle2_add_activity">AFEGIR ACTIVITAT</string>
+    <string name="detalle2_delete_activity_titulo">Eliminar activitat</string>
+    <string name="detalle2_delete_activity_msg">Vols eliminar \'%1$s\' de l\'itinerari?</string>
+    <string name="detalle2_change_cover">Canviar portada</string>
+    <string name="detalle2_nights_singular">NIT</string>
+
+    <!-- Formulario Viaje -->
+    <string name="form_nuevo_viaje">Nou Viatge</string>
+    <string name="form_itinerario">Itinerari</string>
+    <string name="form_paso1">Pas 1</string>
+    <string name="form_paso2">Pas 2</string>
+    <string name="form_titulo_label">Títol del viatge</string>
+    <string name="form_destino_label">País / Ciutat</string>
+    <string name="form_ida_label">Anada</string>
+    <string name="form_vuelta_label">Tornada</string>
+    <string name="form_portada_label">Portada del viatge (Opcional)</string>
+    <string name="form_portada_selected">Imatge seleccionada</string>
+    <string name="form_desc_label">Descripció (Opcional)</string>
+    <string name="form_add_itinerary">AFEGIR ITINERARI</string>
+    <string name="form_no_itinerary">Encara no hi ha itinerari.</string>
+    <string name="form_add_btn">Afegir</string>
+    <string name="form_finalizar_btn">Finalitzar</string>
+    <string name="form_error_titulo">Títol requerit (3-50 caràcters)</string>
+    <string name="form_error_destino">Seleccioni un destí vàlid de la llista</string>
+    <string name="form_error_fechas_vacias">Has de seleccionar ambdues dates</string>
+    <string name="form_error_fechas_coherencia">La tornada no pot ser anterior a l\'anada</string>
+    <string name="form_actividades_para">Activitats per a %1$s</string>
+
+    <!-- Diálogo Actividad -->
+    <string name="act_nueva_parada">Nova Parada</string>
+    <string name="act_editar_parada">Editar Parada</string>
+    <string name="act_nombre_label">Nom de l\'activitat *</string>
+    <string name="act_dia_label">Dia *</string>
+    <string name="act_hora_label">Hora *</string>
+    <string name="act_precio_label">Preu (%1$s)</string>
+    <string name="act_notas_label">Notes / Descripció *</string>
+    <string name="act_tipo_label">Tipus</string>
+    <string name="act_guardar">Guardar</string>
+    <string name="act_cancelar">Cancel·lar</string>
+    <string name="act_error_nombre">El nom és obligatori</string>
+    <string name="act_error_dia">Selecciona un dia</string>
+    <string name="act_error_hora">Selecciona una hora</string>
+    <string name="act_error_hora_repetida">Aquesta hora ja està ocupada</string>
+    <string name="act_error_desc">La descripció és obligatòria</string>
+
+    <!-- Activity Types -->
+    <string name="act_tipo_vuelo">Vol</string>
+    <string name="act_tipo_restaurante">Restaurant</string>
+    <string name="act_tipo_hotel">Hotel</string>
+    <string name="act_tipo_museo">Museu</string>
+    <string name="act_tipo_ocio">Oci</string>
+    <string name="act_tipo_otros">Altres</string>
+
+    <!-- Navbar -->
+    <string name="nav_home">Home</string>
+    <string name="nav_viajes">Viatges</string>
+    <string name="nav_galeria">Galeria</string>
+    <string name="nav_ajustes">Ajustos</string>
+
+    <!-- Sobre Nosotros -->
+    <string name="sobre_equipo_titulo">Equip de desenvolupament</string>
+    <string name="sobre_rol_oriol">Full Stack developer · UI/UX</string>
+    <string name="sobre_rol_guillem">Full Stack developer · Data Model</string>
+    <string name="sobre_tecnica_titulo">Informació tècnica</string>
+    <string name="sobre_version">Versió</string>
+    <string name="sobre_sprint">Sprint</string>
+    <string name="sobre_build">Build</string>
+    <string name="sobre_plataforma">Plataforma</string>
+    <string name="sobre_min_sdk">Min SDK</string>
+    <string name="sobre_estado">Estat</string>
+    <string name="sobre_produccion">Producció</string>
+    <string name="sobre_api_level">API Level</string>
+    <string name="sobre_licencia">Llicència</string>
+    <string name="sobre_regresar">Tornar</string>
+
+    <!-- Galería -->
+    <string name="galeria_titulo">Galeria</string>
+    <string name="galeria_subtitulo">Explora els teus records</string>
+    <string name="galeria_buscar_placeholder">Buscar viatge...</string>
+    <string name="galeria_buscar_desc">Buscar</string>
+    <string name="galeria_anadir_foto_desc">Afegir imatge a %1$s</string>
+    <string name="galeria2_foto_desc">Foto de l\'àlbum</string>
+    <string name="galeria2_eliminar_desc">Eliminar foto</string>
+    <string name="galeria2_anadir_desc">Afegir nova imatge</string>
+
+    <!-- Términos y Condiciones -->
+    <string name="terminos_titulo">Termes i condicions</string>
+    <string name="terminos_actualizacion">Última actualització 05 de març de 2026</string>
+    <string name="terminos_cuerpo_titulo">Termes i Condicions de Nomad</string>
+    <string name="terminos_cuerpo_texto">
+        Benvingut a Nomad. En utilitzar aquesta aplicació acceptes els següents termes i condicions.\n\n
+        1. Ús de l\'aplicació\n
+        Nomad és una eina dissenyada per ajudar els usuaris a planificar viatges, organitzar itineraris i descobrir llocs d\'interès.\n\n
+        2. Funcionalitats\n
+        L\'aplicació permet planificar rutes, buscar llocs propers, guardar imatges de viatges i rebre recomanacions basades en intel·ligència artificial.\n\n
+        3. Responsabilitat\n
+        Nomad proporciona informació orientativa. No garantim l\'exactitud o disponibilitat dels llocs o serveis mostrats.\n\n
+        4. Propietat intel·lectual\n
+        Tot el contingut, disseny i codi de l\'aplicació pertany als seus desenvolupadors i no pot ser copiat o distribuït sense autorització.\n\n
+        5. Canvis en els termes\n
+        Els desenvolupadors poden modificar aquests termes en futures actualitzacions de l\'aplicació.\n\n
+        Equip de desenvolupament:\n
+        Oriol Alvarez Arisa\n
+        Guillem Talayero Carrasco
+    </string>
+    <string name="terminos_aceptar_checkbox">He llegit i accepto els Termes i Condicions</string>
+    <string name="terminos_rechazar_btn">Rebutjar</string>
+    <string name="terminos_aceptar_btn">Acceptar</string>
+    <string name="terminos_aceptados_titulo">✅ Termes acceptats</string>
+    <string name="terminos_aceptados_msg">Ja has acceptat els Termes i Condicions de Nomad.</string>
+
 </resources>

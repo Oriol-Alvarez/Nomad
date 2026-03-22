@@ -41,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -90,7 +91,7 @@ fun GaleriaViajeScreen(navController: NavHostController) {
 
             // Sección 1: Componente de cabecera principal de la galería
             item {
-                CustomHeader("Galería", "Explora tus recuerdos")
+                CustomHeader(stringResource(id = R.string.galeria_titulo), stringResource(id = R.string.galeria_subtitulo))
             }
 
             // Sección 2: Fila de controles que contiene la barra de búsqueda interactiva
@@ -131,7 +132,7 @@ fun GaleriaViajeScreen(navController: NavHostController) {
                                     // Mostramos el placeholder solo si está vacío
                                     if (searchQuery.isEmpty()) {
                                         Text(
-                                            text = "Buscar viaje...",
+                                            text = stringResource(id = R.string.galeria_buscar_placeholder),
                                             color = Color.Gray,
                                             fontSize = 16.sp
                                         )
@@ -159,7 +160,7 @@ fun GaleriaViajeScreen(navController: NavHostController) {
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Search,
-                                contentDescription = "Buscar",
+                                contentDescription = stringResource(id = R.string.galeria_buscar_desc),
                                 tint = Color.Gray
                             )
                         }
@@ -264,7 +265,7 @@ fun AlbumSection(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Añadir imagen a ${album.title}",
+                            contentDescription = stringResource(id = R.string.galeria_anadir_foto_desc, album.title),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(32.dp)
                         )
@@ -285,7 +286,7 @@ fun AlbumSection(
 
 @Preview(showBackground = true)
 @Composable
-fun GaleriaViajePreview() {
+fun GaleriaViajeScreenPreview() {
     AppTheme {
         GaleriaViajeScreen(navController = rememberNavController())
     }
@@ -293,7 +294,7 @@ fun GaleriaViajePreview() {
 
 @Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
 @Composable
-fun GaleriaViajePreviewNight() {
+fun GaleriaViajeScreenNightPreview() {
     AppTheme {
         GaleriaViajeScreen(navController = rememberNavController())
     }

@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,8 +45,8 @@ fun DetalleViajeScreen(
     if (tripIdToDelete != null) {
         AlertDialog(
             onDismissRequest = { tripIdToDelete = null },
-            title = { Text("Eliminar viaje") },
-            text = { Text("¿Estás seguro de que deseas eliminar este viaje? Esta acción no se puede deshacer.") },
+            title = { Text(stringResource(id = R.string.detalle_eliminar_titulo)) },
+            text = { Text(stringResource(id = R.string.detalle_eliminar_msg)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -53,12 +54,12 @@ fun DetalleViajeScreen(
                         tripIdToDelete = null
                     }
                 ) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(id = R.string.detalle_eliminar_btn), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { tripIdToDelete = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(id = R.string.detalle_cancelar_btn))
                 }
             }
         )
@@ -73,7 +74,7 @@ fun DetalleViajeScreen(
                 contentColor = Color.White,
                 shape = CircleShape
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Añadir")
+                Icon(Icons.Default.Add, contentDescription = null)
             }
         }
     ) { innerPadding ->
@@ -86,13 +87,13 @@ fun DetalleViajeScreen(
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
             item {
-                CustomHeader(title = "Mis Viajes")
+                CustomHeader(title = stringResource(id = R.string.detalle_mis_viajes))
             }
 
             if (tripsFromDB.isEmpty()) {
                 item {
                     Text(
-                        "No tienes viajes planeados.",
+                        stringResource(id = R.string.detalle_no_viajes),
                         modifier = Modifier.fillMaxWidth().padding(top = 50.dp),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         color = Color.Gray
@@ -133,7 +134,7 @@ fun formatShortDate(dateString: String?): String {
             val date = input.parse(dateString)
 
             if (date != null) {
-                val output = SimpleDateFormat("dd MMM", Locale("es", "ES"))
+                val output = SimpleDateFormat("dd MMM", Locale.getDefault())
                 return output.format(date).lowercase()
             }
         } catch (e: Exception) {
@@ -234,7 +235,7 @@ fun TripCardModule(
             ) {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Eliminar viaje",
+                    contentDescription = null,
                     tint = Color.White,
                     modifier = Modifier.size(18.dp)
                 )

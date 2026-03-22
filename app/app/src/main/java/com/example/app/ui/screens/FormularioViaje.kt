@@ -2,60 +2,57 @@ package com.example.app.ui.screens
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ConfirmationNumber
 import androidx.compose.material.icons.filled.Flight
 import androidx.compose.material.icons.filled.Hotel
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Museum
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.example.app.ui.theme.AppTheme
-import com.example.app.ui.viewmodels.TripListViewModel
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.filled.Accessibility
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Museum
-import androidx.compose.material.icons.rounded.Clear
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.test.isFocused
-import coil.compose.AsyncImage
+import com.example.app.R
+import com.example.app.domain.ItineraryItem
+import com.example.app.ui.theme.AppTheme
+import com.example.app.ui.viewmodels.TripListViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import androidx.compose.ui.window.PopupProperties // Para el buscador
-import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.KeyboardType
-import com.example.app.domain.ItineraryItem
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -94,7 +91,6 @@ fun FormularioViaje(
     var errorFechas by remember { mutableStateOf<String?>(null) }
 
     // --- 4. LÓGICA DE UI E ITINERARIO ---
-    // Reemplaza la línea antigua de listaItinerarios por esta:
     var listaItinerarios by remember { mutableStateOf(listOf<ItineraryItem>()) }
     var etapaActual by rememberSaveable { mutableIntStateOf(previewStep ?: 0) }
     var mostrarDialogo by rememberSaveable { mutableStateOf(false) }
@@ -151,6 +147,12 @@ fun FormularioViaje(
             }
         }
     }
+
+    val errTitleText = stringResource(id = R.string.form_error_titulo)
+    val errDestText = stringResource(id = R.string.form_error_destino)
+    val errFechasVaciasText = stringResource(id = R.string.form_error_fechas_vacias)
+    val errFechasCoherenciaText = stringResource(id = R.string.form_error_fechas_coherencia)
+
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
@@ -161,8 +163,8 @@ fun FormularioViaje(
                 .verticalScroll(rememberScrollState())
         ) {
             CustomHeader(
-                title = if (etapaActual == 0) "Nuevo Viaje" else "Itinerario",
-                subtitle = if (etapaActual == 0) "Paso 1" else "Paso 2",
+                title = if (etapaActual == 0) stringResource(id = R.string.form_nuevo_viaje) else stringResource(id = R.string.form_itinerario),
+                subtitle = if (etapaActual == 0) stringResource(id = R.string.form_paso1) else stringResource(id = R.string.form_paso2),
                 showBackButton = true
             )
 
@@ -183,7 +185,7 @@ fun FormularioViaje(
                                 title = it
                                 if (Validator.isValidTitle(it)) errorTitle = null
                             },
-                            label = { Text("Título del viaje") },
+                            label = { Text(stringResource(id = R.string.form_titulo_label)) },
                             isError = errorTitle != null,
                             supportingText = { errorTitle?.let { Text(it) } },
                             modifier = Modifier.fillMaxWidth(),
@@ -216,7 +218,7 @@ fun FormularioViaje(
                                         }
                                     }
                                 },
-                                label = { Text("País / Ciudad") },
+                                label = { Text(stringResource(id = R.string.form_destino_label)) },
                                 isError = errorCountry != null,
                                 supportingText = {
                                     if (errorCountry != null) {
@@ -325,7 +327,7 @@ fun FormularioViaje(
                             ) {
                                 // Selector de Ida
                                 SelectorFechaModular(
-                                    label = "Ida",
+                                    label = stringResource(id = R.string.form_ida_label),
                                     fechaSeleccionada = fechaIda,
                                     onFechaElegida = {
                                         fechaIda = it
@@ -339,7 +341,7 @@ fun FormularioViaje(
 
                                 // Selector de Vuelta
                                 SelectorFechaModular(
-                                    label = "Vuelta",
+                                    label = stringResource(id = R.string.form_vuelta_label),
                                     fechaSeleccionada = fechaVuelta,
                                     onFechaElegida = {
                                         fechaVuelta = it
@@ -366,7 +368,7 @@ fun FormularioViaje(
                         // Selección de Imagen Portada
                         CampoSeleccionImagen(
                             uriSeleccionada = selectedImageUri,
-                            label = "Portada del viaje (Opcional)",
+                            label = stringResource(id = R.string.form_portada_label),
                             onBorrar = { selectedImageUri = null },
                             onClick = { launcherPrincipal.launch("image/*") }
                         )
@@ -374,7 +376,7 @@ fun FormularioViaje(
                         OutlinedTextField(
                             value = description,
                             onValueChange = { description = it },
-                            label = { Text("Descripción (Opcional)") },
+                            label = { Text(stringResource(id = R.string.form_desc_label)) },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(100.dp),
@@ -399,14 +401,14 @@ fun FormularioViaje(
                                 } else false
 
                                 // 3. Asignación de mensajes de error
-                                if (!tOk) errorTitle = "Título requerido (3-50 carac.)"
+                                if (!tOk) errorTitle = errTitleText
 
-                                if (!lOk) errorCountry = "Seleccione un destino válido de la lista"
+                                if (!lOk) errorCountry = errDestText
 
                                 if (!fechasRellenas) {
-                                    errorFechas = "Debes seleccionar ambas fechas"
+                                    errorFechas = errFechasVaciasText
                                 } else if (!fechasCoherentes) {
-                                    errorFechas = "La vuelta no puede ser anterior a la ida"
+                                    errorFechas = errFechasCoherenciaText
                                 }
 
                                 // 4. Solo pasamos de página si TODO es true
@@ -423,7 +425,7 @@ fun FormularioViaje(
                             )
                         ) {
                             Text(
-                                "AÑADIR ITINERARIO",
+                                stringResource(id = R.string.form_add_itinerary),
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.inversePrimary
                             )
@@ -444,14 +446,14 @@ fun FormularioViaje(
                                 Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                             }
                             Text(
-                                "Actividades para $title",
+                                stringResource(id = R.string.form_actividades_para, title),
                                 style = MaterialTheme.typography.titleMedium
                             )
                         }
 
                         if (listaItinerarios.isEmpty()) {
                             Text(
-                                text = "No hay itinerario todavía.",
+                                text = stringResource(id = R.string.form_no_itinerary),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(32.dp),
@@ -486,7 +488,7 @@ fun FormularioViaje(
                             ) {
                                 Icon(Icons.Default.AddCircle, null)
                                 Spacer(Modifier.width(4.dp))
-                                Text("Añadir")
+                                Text(stringResource(id = R.string.form_add_btn))
                             }
 
                             Button(
@@ -514,7 +516,7 @@ fun FormularioViaje(
                                     tint = MaterialTheme.colorScheme.inversePrimary
                                 )
                                 Spacer(Modifier.width(4.dp))
-                                Text("Finalizar", color = MaterialTheme.colorScheme.inversePrimary)
+                                Text(stringResource(id = R.string.form_finalizar_btn), color = MaterialTheme.colorScheme.inversePrimary)
                             }
                         }
                     }
@@ -562,6 +564,22 @@ fun FormularioViaje(
     }
 }
 
+/**
+ * Mapea el valor interno del tipo de actividad a su traducción correspondiente.
+ */
+@Composable
+fun getTipoTraduccion(tipo: String): String {
+    return when (tipo) {
+        "Vuelo" -> stringResource(id = R.string.act_tipo_vuelo)
+        "Restaurante" -> stringResource(id = R.string.act_tipo_restaurante)
+        "Hotel" -> stringResource(id = R.string.act_tipo_hotel)
+        "Museo" -> stringResource(id = R.string.act_tipo_museo)
+        "Ocio" -> stringResource(id = R.string.act_tipo_ocio)
+        "Otros" -> stringResource(id = R.string.act_tipo_otros)
+        else -> tipo
+    }
+}
+
 // ----------------------------------------------------------------------------
 // DIÁLOGO CON VALIDACIÓN DE PRECIO Y NOMBRE
 // ----------------------------------------------------------------------------
@@ -597,7 +615,7 @@ fun DialogoNuevaActividad(
         containerColor = MaterialTheme.colorScheme.background,
         modifier = Modifier.fillMaxWidth(0.95f),
         title = {
-            Text(if (actividadAEditar == null) "Nueva Parada" else "Editar Parada")
+            Text(if (actividadAEditar == null) stringResource(id = R.string.act_nueva_parada) else stringResource(id = R.string.act_editar_parada))
         },
         text = {
             Column(
@@ -613,14 +631,14 @@ fun DialogoNuevaActividad(
                             n = it
                             errorN = false
                         },
-                        label = { Text("Nombre de la actividad *") },
+                        label = { Text(stringResource(id = R.string.act_nombre_label)) },
                         isError = errorN,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     )
                     if (errorN) {
                         Text(
-                            text = "El nombre es obligatorio",
+                            text = stringResource(id = R.string.act_error_nombre),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 12.dp, top = 4.dp)
@@ -631,7 +649,7 @@ fun DialogoNuevaActividad(
                 // --- 2. Día ---
                 Column {
                     SelectorFechaModular(
-                        label = "Día *",
+                        label = stringResource(id = R.string.act_dia_label),
                         fechaSeleccionada = d,
                         fechaMinima = fechaInicioViaje,
                         fechaMaxima = fechaFinViaje,
@@ -643,7 +661,7 @@ fun DialogoNuevaActividad(
                     )
                     if (errorD) {
                         Text(
-                            text = "Selecciona un día",
+                            text = stringResource(id = R.string.act_error_dia),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 12.dp, top = 4.dp)
@@ -654,7 +672,7 @@ fun DialogoNuevaActividad(
                 // --- 3. Hora ---
                 Column {
                     SelectorHoraModular(
-                        label = "Hora *",
+                        label = stringResource(id = R.string.act_hora_label),
                         horaSeleccionada = h,
                         onHoraElegida = {
                             h = it
@@ -665,14 +683,14 @@ fun DialogoNuevaActividad(
                     )
                     if (errorH) {
                         Text(
-                            text = "Selecciona una hora",
+                            text = stringResource(id = R.string.act_error_hora),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 12.dp, top = 4.dp)
                         )
                     } else if (errorHoraRepetida) {
                         Text(
-                            text = "Esta hora ya está ocupada",
+                            text = stringResource(id = R.string.act_error_hora_repetida),
                             color = MaterialTheme.colorScheme.error,
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(start = 12.dp, top = 4.dp)
@@ -688,7 +706,7 @@ fun DialogoNuevaActividad(
                             p = input.replace(",", ".")
                         }
                     },
-                    label = { Text("Precio ($monedaSimbolo)") },
+                    label = { Text(stringResource(id = R.string.act_precio_label, monedaSimbolo)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
@@ -701,7 +719,7 @@ fun DialogoNuevaActividad(
                         desc = it
                         errorDesc = false
                     },
-                    label = { Text("Notas / Descripción *") },
+                    label = { Text(stringResource(id = R.string.act_notas_label)) },
                     isError = errorDesc,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -709,7 +727,7 @@ fun DialogoNuevaActividad(
                     shape = RoundedCornerShape(12.dp),
                     supportingText = {
                         if (errorDesc) {
-                            Text("La descripción es obligatoria")
+                            Text(stringResource(id = R.string.act_error_desc))
                         }
                     }
                 )
@@ -717,11 +735,11 @@ fun DialogoNuevaActividad(
                 // --- 6. Tipo ---
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
-                        value = t,
+                        value = getTipoTraduccion(t),
                         onValueChange = {},
                         readOnly = true,
                         enabled = false,
-                        label = { Text("Tipo") },
+                        label = { Text(stringResource(id = R.string.act_tipo_label)) },
                         trailingIcon = {
                             IconButton(onClick = { exp = true }) {
                                 Icon(Icons.Default.KeyboardArrowDown, null)
@@ -744,17 +762,17 @@ fun DialogoNuevaActividad(
                         containerColor = MaterialTheme.colorScheme.surface
                     ) {
                         listOf(
-                            "Vuelo",
-                            "Restaurante",
-                            "Hotel",
-                            "Museo",
-                            "Ocio",
-                            "Otros"
-                        ).forEach { opcion ->
+                            stringResource(id = R.string.act_tipo_vuelo) to "Vuelo",
+                            stringResource(id = R.string.act_tipo_restaurante) to "Restaurante",
+                            stringResource(id = R.string.act_tipo_hotel) to "Hotel",
+                            stringResource(id = R.string.act_tipo_museo) to "Museo",
+                            stringResource(id = R.string.act_tipo_ocio) to "Ocio",
+                            stringResource(id = R.string.act_tipo_otros) to "Otros"
+                        ).forEach { (label, value) ->
                             DropdownMenuItem(
-                                text = { Text(opcion) },
+                                text = { Text(label) },
                                 onClick = {
-                                    t = opcion
+                                    t = value
                                     exp = false
                                 }
                             )
@@ -793,12 +811,12 @@ fun DialogoNuevaActividad(
                     }
                 }
             ) {
-                Text("Guardar")
+                Text(stringResource(id = R.string.act_guardar))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text(stringResource(id = R.string.act_cancelar))
             }
         }
     )
@@ -815,7 +833,7 @@ fun CampoSeleccionImagen(
     onClick: () -> Unit
 ) {
     OutlinedTextField(
-        value = if (uriSeleccionada != null) "Imagen seleccionada" else "",
+        value = if (uriSeleccionada != null) stringResource(id = R.string.form_portada_selected) else "",
         onValueChange = {},
         readOnly = true,
         enabled = false,
@@ -893,7 +911,7 @@ fun ItemItinerario(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${act.dia} • ${act.hora} (${act.tipo})",
+                        text = "${act.dia} • ${act.hora} (${getTipoTraduccion(act.tipo)})",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )

@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -70,25 +71,25 @@ fun SobreNosotrosScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(24.dp))
 
             // Sección: Identificación de los autores del proyecto
-            GlassCard(title = "Equipo de desarrollo") {
-                DeveloperRowModern(R.drawable.oriol, "Oriol Alvarez Arisa", "Full Stack developer · UI/UX")
+            GlassCard(title = stringResource(id = R.string.sobre_equipo_titulo)) {
+                DeveloperRowModern(R.drawable.oriol, "Oriol Alvarez Arisa", stringResource(id = R.string.sobre_rol_oriol))
                 Spacer(modifier = Modifier.height(12.dp))
-                DeveloperRowModern(R.drawable.guillem, "Guillem Talayero Carrasco", "Full Stack developer · Data Model")
+                DeveloperRowModern(R.drawable.guillem, "Guillem Talayero Carrasco", stringResource(id = R.string.sobre_rol_guillem))
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Sección: Especificaciones técnicas y metadatos del entorno de ejecución
-            GlassCard(title = "Información técnica") {
-                InfoRowModern("Versión", "1.0.0")
-                InfoRowModern("Sprint", "01")
-                InfoRowModern("Build", "100")
-                InfoRowModern("Plataforma", "Android")
-                InfoRowModern("Min SDK", "24")
-                InfoRowModern("Estado", "Producción")
+            GlassCard(title = stringResource(id = R.string.sobre_tecnica_titulo)) {
+                InfoRowModern(stringResource(id = R.string.sobre_version), "2.0.0")
+                InfoRowModern(stringResource(id = R.string.sobre_sprint), "02")
+                InfoRowModern(stringResource(id = R.string.sobre_build), "100")
+                InfoRowModern(stringResource(id = R.string.sobre_plataforma), "Android")
+                InfoRowModern(stringResource(id = R.string.sobre_min_sdk), "24")
+                InfoRowModern(stringResource(id = R.string.sobre_estado), stringResource(id = R.string.sobre_produccion))
                 InfoRowModern("Android", Build.VERSION.RELEASE)
-                InfoRowModern("API Level", Build.VERSION.SDK_INT.toString())
-                InfoRowModern("Licencia", "Apache License 2.0")
+                InfoRowModern(stringResource(id = R.string.sobre_api_level), Build.VERSION.SDK_INT.toString())
+                InfoRowModern(stringResource(id = R.string.sobre_licencia), "Apache License 2.0")
             }
         }
 
@@ -113,7 +114,7 @@ fun HeroHeader(navController: NavHostController) {
         ) {
             Icon(
                 imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Regresar",
+                contentDescription = stringResource(id = R.string.sobre_regresar),
                 tint = MaterialTheme.colorScheme.onPrimary
             )
         }
@@ -241,7 +242,7 @@ fun InfoRowModern(label: String, value: String) {
 
 @Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun SobreNosotrosPreviewDark() {
+fun SobreNosotrosScreenPreviewDark() {
     AppTheme {
         SobreNosotrosScreen(navController = rememberNavController())
     }
@@ -249,7 +250,7 @@ fun SobreNosotrosPreviewDark() {
 
 @Preview(name = "Light Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
-fun SobreNosotrosPreviewLight() {
+fun SobreNosotrosScreenPreviewLight() {
     AppTheme {
         SobreNosotrosScreen(navController = rememberNavController())
     }

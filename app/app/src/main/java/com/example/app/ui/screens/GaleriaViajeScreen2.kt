@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -89,7 +90,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                     // Visualización de la imagen con ajuste de recorte (Crop)
                     Image(
                         painter = painterResource(id = imageRes),
-                        contentDescription = "Foto del álbum",
+                        contentDescription = stringResource(id = R.string.galeria2_foto_desc),
                         modifier = Modifier
                             .fillMaxSize()
                             .clickable { /* Implementar visualización a pantalla completa */ },
@@ -112,7 +113,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Eliminar foto",
+                            contentDescription = stringResource(id = R.string.galeria2_eliminar_desc),
                             modifier = Modifier.size(14.dp),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
@@ -133,7 +134,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Añadir nueva imagen",
+                        contentDescription = stringResource(id = R.string.galeria2_anadir_desc),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(32.dp)
                     )

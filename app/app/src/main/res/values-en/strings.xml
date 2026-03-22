@@ -1,26 +1,168 @@
 <resources>
     <string name="app_name">Nomad</string>
     <string name="preferencias_titulo">Settings</string>
-    <string name="preferencias_subtitulo">Personalize the app</string>
-    <string name="preferencias_idioma_region">Language &amp; Region</string>
+    <string name="preferencias_subtitulo">Customize the app</string>
+    <string name="preferencias_idioma_region">Language and region</string>
     <string name="preferencias_idioma_titulo">Language</string>
     <string name="preferencias_idioma_role">Interface language</string>
     <string name="preferencias_titulo_moneda">Currency</string>
     <string name="preferencias_subtitulo_moneda">Choose currency</string>
     <string name="preferencias_titulo_seccion_apariencia">Appearance</string>
-    <string name="preferencias_titulo_modo_oscuro">Dark Mode</string>
+    <string name="preferencias_titulo_modo_oscuro">Dark mode</string>
     <string name="preferencias_role_modo_oscuro">Choose a theme</string>
-    <string name="preferencias_titulo_tamaño_letra">Text Size</string>
+    <string name="preferencias_titulo_tamaño_letra">Text size</string>
     <string name="preferencias_role_tamaño_letra">Accessibility</string>
     <string name="preferencias_titulo_seccion_notificaciones">Notifications</string>
-    <string name="preferencias_notif_viajes">Trip Reminders</string>
-    <string name="preferencias_notif_viajes_role">24h notice before flight</string>
+    <string name="preferencias_notif_viajes">Trip reminders</string>
+    <string name="preferencias_notif_viajes_role">Alert 24h before flight</string>
     <string name="preferencias_notif_resumen">Weekly Summary</string>
     <string name="preferencias_notif_resumen_role">Email delivery</string>
     <string name="preferencias_seccion_mas_info">More info</string>
-    <string name="preferencias_info_app">App Info</string>
+    <string name="preferencias_info_app">App info</string>
     <string name="preferencias_info_app_role">A bit about us</string>
-    <string name="preferencias_terminos">Terms &amp; Conditions</string>
+    <string name="preferencias_terminos">Terms and conditions</string>
     <string name="preferencias_terminos_role">Legal info</string>
-    <string name="preferencias_footer">Coded with lots of ☕</string>
+    <string name="preferencias_footer">Programmed with a lot of ☕</string>
+
+    <!-- Home Screen -->
+    <string name="home_hola">Hello</string>
+    <string name="home_busca_aventura">Search for your next adventure</string>
+    <string name="home_recomendados">Recommended for you</string>
+    <string name="home_mas_destacados">Most popular</string>
+    <string name="home_ofertas_tips">Offers and tips</string>
+    <string name="home_explora_nomad">Explore the world with Nomad 🌍</string>
+    <string name="home_ahorrar_roma">How to save on your trip to Rome</string>
+    <string name="home_guia_equipaje">Carry-on luggage: The ultimate guide</string>
+    <string name="home_terminos_dialog_titulo">Privacy and terms</string>
+    <string name="home_terminos_dialog_msg">To use Nomad, you must accept our </string>
+    <string name="home_terminos_dialog_link">terms and conditions</string>
+    <string name="home_aceptar">Accept</string>
+
+    <!-- Detalle Viaje Screen -->
+    <string name="detalle_mis_viajes">My Trips</string>
+    <string name="detalle_no_viajes">You have no planned trips.</string>
+    <string name="detalle_eliminar_titulo">Delete trip</string>
+    <string name="detalle_eliminar_msg">Are you sure you want to delete this trip? This action cannot be undone.</string>
+    <string name="detalle_eliminar_btn">Delete</string>
+    <string name="detalle_cancelar_btn">Cancel</string>
+
+    <!-- Detalle Viaje Screen 2 -->
+    <string name="detalle2_nights">NIGHTS</string>
+    <string name="detalle2_budget">BUDGET</string>
+    <string name="detalle2_activities">ACTIVITIES</string>
+    <string name="detalle2_no_activities">You haven\'t added any activities to this trip yet.</string>
+    <string name="detalle2_edit_trip">Edit trip</string>
+    <string name="detalle2_save_changes">Save changes</string>
+    <string name="detalle2_delete_trip">Delete trip</string>
+    <string name="detalle2_add_activity">ADD ACTIVITY</string>
+    <string name="detalle2_delete_activity_titulo">Delete activity</string>
+    <string name="detalle2_delete_activity_msg">Do you want to delete \'%1$s\' from the itinerary?</string>
+    <string name="detalle2_change_cover">Change cover</string>
+    <string name="detalle2_nights_singular">NIGHT</string>
+
+    <!-- Formulario Viaje -->
+    <string name="form_nuevo_viaje">New Trip</string>
+    <string name="form_itinerario">Itinerary</string>
+    <string name="form_paso1">Step 1</string>
+    <string name="form_paso2">Step 2</string>
+    <string name="form_titulo_label">Trip title</string>
+    <string name="form_destino_label">Country / City</string>
+    <string name="form_ida_label">Departure</string>
+    <string name="form_vuelta_label">Return</string>
+    <string name="form_portada_label">Trip cover (Optional)</string>
+    <string name="form_portada_selected">Image selected</string>
+    <string name="form_desc_label">Description (Optional)</string>
+    <string name="form_add_itinerary">ADD ITINERARY</string>
+    <string name="form_no_itinerary">No itinerary yet.</string>
+    <string name="form_add_btn">Add</string>
+    <string name="form_finalizar_btn">Finish</string>
+    <string name="form_error_titulo">Title required (3-50 chars.)</string>
+    <string name="form_error_destino">Select a valid destination from the list</string>
+    <string name="form_error_fechas_vacias">Both dates must be selected</string>
+    <string name="form_error_fechas_coherencia">Return date cannot be earlier than departure</string>
+    <string name="form_actividades_para">Activities for %1$s</string>
+
+    <!-- Dialog Activity -->
+    <string name="act_nueva_parada">New Stop</string>
+    <string name="act_editar_parada">Edit Stop</string>
+    <string name="act_nombre_label">Activity name *</string>
+    <string name="act_dia_label">Day *</string>
+    <string name="act_hora_label">Time *</string>
+    <string name="act_precio_label">Price (%1$s)</string>
+    <string name="act_notas_label">Notes / Description *</string>
+    <string name="act_tipo_label">Type</string>
+    <string name="act_guardar">Save</string>
+    <string name="act_cancelar">Cancel</string>
+    <string name="act_error_nombre">Name is required</string>
+    <string name="act_error_dia">Select a day</string>
+    <string name="act_error_hora">Select a time</string>
+    <string name="act_error_hora_repetida">This time is already taken</string>
+    <string name="act_error_desc">Description is required</string>
+
+    <!-- Activity Types -->
+    <string name="act_tipo_vuelo">Flight</string>
+    <string name="act_tipo_restaurante">Restaurant</string>
+    <string name="act_tipo_hotel">Hotel</string>
+    <string name="act_tipo_museo">Museum</string>
+    <string name="act_tipo_ocio">Leisure</string>
+    <string name="act_tipo_otros">Others</string>
+
+    <!-- Navbar -->
+    <string name="nav_home">Home</string>
+    <string name="nav_viajes">Trips</string>
+    <string name="nav_galeria">Gallery</string>
+    <string name="nav_ajustes">Settings</string>
+
+    <!-- Sobre Nosotros -->
+    <string name="sobre_equipo_titulo">Development team</string>
+    <string name="sobre_rol_oriol">Full Stack developer · UI/UX</string>
+    <string name="sobre_rol_guillem">Full Stack developer · Data Model</string>
+    <string name="sobre_tecnica_titulo">Technical information</string>
+    <string name="sobre_version">Version</string>
+    <string name="sobre_sprint">Sprint</string>
+    <string name="sobre_build">Build</string>
+    <string name="sobre_plataforma">Platform</string>
+    <string name="sobre_min_sdk">Min SDK</string>
+    <string name="sobre_estado">Status</string>
+    <string name="sobre_produccion">Production</string>
+    <string name="sobre_api_level">API Level</string>
+    <string name="sobre_licencia">License</string>
+    <string name="sobre_regresar">Back</string>
+
+    <!-- Galería -->
+    <string name="galeria_titulo">Gallery</string>
+    <string name="galeria_subtitulo">Explore your memories</string>
+    <string name="galeria_buscar_placeholder">Search trip...</string>
+    <string name="galeria_buscar_desc">Search</string>
+    <string name="galeria_anadir_foto_desc">Add image to %1$s</string>
+    <string name="galeria2_foto_desc">Album photo</string>
+    <string name="galeria2_eliminar_desc">Delete photo</string>
+    <string name="galeria2_anadir_desc">Add new image</string>
+
+    <!-- Términos y Condiciones -->
+    <string name="terminos_titulo">Terms and conditions</string>
+    <string name="terminos_actualizacion">Last updated March 05, 2026</string>
+    <string name="terminos_cuerpo_titulo">Nomad Terms and Conditions</string>
+    <string name="terminos_cuerpo_texto">
+        Welcome to Nomad. By using this application you accept the following terms and conditions.\n\n
+        1. Use of the application\n
+        Nomad is a tool designed to help users plan trips, organize itineraries and discover places of interest.\n\n
+        2. Functionalities\n
+        The application allows planning routes, searching for nearby places, saving trip images and receiving recommendations based on artificial intelligence.\n\n
+        3. Responsibility\n
+        Nomad provides indicative information. We do not guarantee the accuracy or availability of the places or services shown.\n\n
+        4. Intellectual property\n
+        All content, design and code of the application belongs to its developers and may not be copied or distributed without authorization.\n\n
+        5. Changes to terms\n
+        The developers may modify these terms in future updates of the application.\n\n
+        Development team:\n
+        Oriol Alvarez Arisa\n
+        Guillem Talayero Carrasco
+    </string>
+    <string name="terminos_aceptar_checkbox">I have read and accept the Terms and Conditions</string>
+    <string name="terminos_rechazar_btn">Reject</string>
+    <string name="terminos_aceptar_btn">Accept</string>
+    <string name="terminos_aceptados_titulo">✅ Terms accepted</string>
+    <string name="terminos_aceptados_msg">You have already accepted the Nomad Terms and Conditions.</string>
+
 </resources>

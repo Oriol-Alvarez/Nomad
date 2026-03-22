@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.example.app.R
 import com.example.app.Routes
 import com.example.app.domain.ItineraryItem
 import com.example.app.ui.theme.AppTheme
@@ -143,8 +145,8 @@ fun DetalleViajeScreen2(
         uri?.let { editedImageUri = it.toString() }
     }
 
-    val title = trip?.title ?: "Detalle del Viaje"
-    val country = trip?.country ?: "Sin destino"
+    val title = trip?.title ?: stringResource(id = R.string.app_name)
+    val country = trip?.country ?: ""
     val budget = trip?.budget ?: 0.0
     val imageUri = trip?.imageUri ?: ""
     val description = trip?.description ?: ""
@@ -166,8 +168,8 @@ fun DetalleViajeScreen2(
     if (showDeleteTripDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteTripDialog = false },
-            title = { Text("Eliminar viaje") },
-            text = { Text("¿Estás seguro de que deseas eliminar este viaje? Esta acción no se puede deshacer.") },
+            title = { Text(stringResource(id = R.string.detalle_eliminar_titulo)) },
+            text = { Text(stringResource(id = R.string.detalle_eliminar_msg)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -177,10 +179,10 @@ fun DetalleViajeScreen2(
                             popUpTo(Routes.DETALLE_VIAJE) { inclusive = true }
                         }
                     }
-                ) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
+                ) { Text(stringResource(id = R.string.detalle_eliminar_btn), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteTripDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDeleteTripDialog = false }) { Text(stringResource(id = R.string.detalle_cancelar_btn)) }
             }
         )
     }
@@ -189,8 +191,8 @@ fun DetalleViajeScreen2(
     if (activityToDelete != null) {
         AlertDialog(
             onDismissRequest = { activityToDelete = null },
-            title = { Text("Eliminar actividad") },
-            text = { Text("¿Deseas eliminar '${activityToDelete?.nombre}' del itinerario?") },
+            title = { Text(stringResource(id = R.string.detalle2_delete_activity_titulo)) },
+            text = { Text(stringResource(id = R.string.detalle2_delete_activity_msg, activityToDelete?.nombre ?: "")) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -200,10 +202,10 @@ fun DetalleViajeScreen2(
                         }
                         activityToDelete = null
                     }
-                ) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
+                ) { Text(stringResource(id = R.string.detalle_eliminar_btn), color = MaterialTheme.colorScheme.error) }
             },
             dismissButton = {
-                TextButton(onClick = { activityToDelete = null }) { Text("Cancelar") }
+                TextButton(onClick = { activityToDelete = null }) { Text(stringResource(id = R.string.detalle_cancelar_btn)) }
             }
         )
     }
@@ -343,7 +345,7 @@ fun DetalleViajeScreen2(
                     ) {
                         Icon(
                             imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Cambiar portada",
+                            contentDescription = stringResource(id = R.string.detalle2_change_cover),
                             tint = Color.White
                         )
                     }
@@ -362,7 +364,7 @@ fun DetalleViajeScreen2(
                                     isEditMode = false
                                 }
                             ) {
-                                Text("Cancelar", color = Color.White, fontWeight = FontWeight.Bold)
+                                Text(stringResource(id = R.string.act_cancelar), color = Color.White, fontWeight = FontWeight.Bold)
                             }
                             Button(
                                 onClick = {
@@ -379,12 +381,12 @@ fun DetalleViajeScreen2(
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("Guardar", fontWeight = FontWeight.Bold, color = Color.White)
+                                Text(stringResource(id = R.string.act_guardar), fontWeight = FontWeight.Bold, color = Color.White)
                             }
                         }
                     } else {
                         IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "Opciones", tint = Color.White)
+                            Icon(Icons.Default.MoreVert, contentDescription = null, tint = Color.White)
                         }
                         DropdownMenu(
                             expanded = showMenu,
@@ -392,7 +394,7 @@ fun DetalleViajeScreen2(
                             containerColor = MaterialTheme.colorScheme.surface
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Editar viaje") },
+                                text = { Text(stringResource(id = R.string.detalle2_edit_trip)) },
                                 leadingIcon = { Icon(Icons.Default.Edit, null) },
                                 onClick = {
                                     isEditMode = true
@@ -400,7 +402,7 @@ fun DetalleViajeScreen2(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Eliminar viaje", color = MaterialTheme.colorScheme.error) },
+                                text = { Text(stringResource(id = R.string.detalle2_delete_trip), color = MaterialTheme.colorScheme.error) },
                                 leadingIcon = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.error) },
                                 onClick = {
                                     showDeleteTripDialog = true
@@ -431,11 +433,11 @@ fun DetalleViajeScreen2(
                     .padding(vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatItem(value = nochesReales, label = "NIGHTS", modifier = Modifier.weight(1f))
+                StatItem(value = nochesReales, label = if (nochesReales == "1") stringResource(id = R.string.detalle2_nights_singular) else stringResource(id = R.string.detalle2_nights), modifier = Modifier.weight(1f))
                 HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
-                StatItem(value = CurrencyConverter.convert(budget, selectedCurrency), label = "BUDGET", modifier = Modifier.weight(1f))
+                StatItem(value = CurrencyConverter.convert(budget, selectedCurrency), label = stringResource(id = R.string.detalle2_budget), modifier = Modifier.weight(1f))
                 HorizontalDivider(modifier = Modifier.height(40.dp).width(1.dp), color = Color.LightGray.copy(alpha = 0.5f))
-                StatItem(value = activities.size.toString(), label = "ACTIVITIES", modifier = Modifier.weight(1f))
+                StatItem(value = activities.size.toString(), label = stringResource(id = R.string.detalle2_activities), modifier = Modifier.weight(1f))
             }
 
             if (isEditMode) {
@@ -449,7 +451,7 @@ fun DetalleViajeScreen2(
                 ) {
                     Icon(Icons.Default.Add, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("AÑADIR ACTIVIDAD")
+                    Text(stringResource(id = R.string.detalle2_add_activity))
                 }
             }
 
@@ -462,7 +464,7 @@ fun DetalleViajeScreen2(
                 if (activities.isEmpty()) {
                     item {
                         Text(
-                            text = "Aún no has añadido actividades a este viaje.",
+                            text = stringResource(id = R.string.detalle2_no_activities),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 40.dp, start = 24.dp, end = 24.dp),
@@ -600,7 +602,7 @@ private fun TimelineEvent(
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Rounded.Close,
-                    contentDescription = "Borrar actividad",
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(20.dp)
                 )

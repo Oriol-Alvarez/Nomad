@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,28 +50,28 @@ fun BottomNavigationBar(navController: NavHostController) {
             // Ítem: Pantalla principal
             BottomItem(
                 icon = painterResource(id = R.drawable.house_solid_full),
-                label = "Home",
+                label = stringResource(id = R.string.nav_home),
                 selected = currentRoute == "home"
             ) { navController.navigate("home") }
 
             // Ítem: Listado y detalles de itinerarios
             BottomItem(
                 icon = painterResource(id = R.drawable.plane_solid_full),
-                label = "Viajes",
+                label = stringResource(id = R.string.nav_viajes),
                 selected = currentRoute == "detalle_viaje"
             ) { navController.navigate("detalle_viaje") }
 
             // Ítem: Álbumes de fotos y recuerdos
             BottomItem(
                 icon = painterResource(id = R.drawable.gallery_solid_full),
-                label = "Galería",
+                label = stringResource(id = R.string.nav_galeria),
                 selected = currentRoute == "galeria_viaje"
             ) { navController.navigate("galeria_viaje") }
 
             // Ítem: Configuración y perfil de usuario
             BottomItem(
                 icon = painterResource(id = R.drawable.settings_solid_full),
-                label = "Ajustes",
+                label = stringResource(id = R.string.nav_ajustes),
                 selected = currentRoute == "preferencias"
             ) { navController.navigate("preferencias") }
         }

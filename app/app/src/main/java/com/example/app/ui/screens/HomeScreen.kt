@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -70,7 +71,7 @@ fun HomeScreen(navController: NavHostController, username: String) {
                 .verticalScroll(rememberScrollState())
         ) {
             // Sección Hero: Bienvenida al usuario y buscador
-            CustomHeader("Hola, $username", "Busca tu próxima aventura")
+            CustomHeader("${stringResource(id = R.string.home_hola)}, $username", stringResource(id = R.string.home_busca_aventura))
 
             Column(
                 modifier = Modifier
@@ -95,7 +96,7 @@ fun HomeScreen(navController: NavHostController, username: String) {
                 // Cierre de la pantalla (Footer decorativo)
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
-                    text = "Explora el mundo con Nomad 🌍",
+                    text = stringResource(id = R.string.home_explora_nomad),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Gray,
                     modifier = Modifier.fillMaxWidth(),
@@ -110,7 +111,7 @@ fun HomeScreen(navController: NavHostController, username: String) {
 @Composable
 fun RecomendadosSection(navController: NavHostController) {
     Text(
-        text = "Recomendados para ti",
+        text = stringResource(id = R.string.home_recomendados),
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(bottom = 12.dp)
@@ -137,7 +138,7 @@ fun RecomendadosSection(navController: NavHostController) {
 @Composable
 fun DestacadosSection(navController: NavHostController) {
     Text(
-        text = "Más destacados",
+        text = stringResource(id = R.string.home_mas_destacados),
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(top = 24.dp, bottom = 12.dp)
@@ -171,7 +172,7 @@ fun DestacadosSection(navController: NavHostController) {
 @Composable
 fun OfertasTipsSection(navController: NavHostController) {
     Text(
-        text = "Ofertas y tips",
+        text = stringResource(id = R.string.home_ofertas_tips),
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground,
@@ -181,13 +182,13 @@ fun OfertasTipsSection(navController: NavHostController) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         OfertaTipCard(
             image = R.drawable.roma,
-            title = "Cómo ahorrar en tu viaje a Roma",
+            title = stringResource(id = R.string.home_ahorrar_roma),
             onClick = { /* Implementar navegación a detalle de artículo */ }
         )
 
         OfertaTipCard(
             image = R.drawable.equipaje_mano,
-            title = "Equipaje de mano: Guía definitiva",
+            title = stringResource(id = R.string.home_guia_equipaje),
             onClick = { /* Implementar navegación a detalle de artículo */ }
         )
     }
@@ -320,11 +321,11 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
             onDismissRequest = { },
             containerColor = MaterialTheme.colorScheme.background,
             title = {
-                Text(text = "Privacidad y términos", fontWeight = FontWeight.Bold)
+                Text(text = stringResource(id = R.string.home_terminos_dialog_titulo), fontWeight = FontWeight.Bold)
             },
             text = {
                 val annotatedText = buildAnnotatedString {
-                    append("Para usar Nomad, debes aceptar nuestros ")
+                    append(stringResource(id = R.string.home_terminos_dialog_msg))
 
                     pushStringAnnotation(tag = "URL", annotation = "terms")
                     withStyle(style = SpanStyle(
@@ -332,7 +333,7 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
                         fontWeight = FontWeight.Bold,
                         textDecoration = TextDecoration.Underline
                     )) {
-                        append("términos y condiciones")
+                        append(stringResource(id = R.string.home_terminos_dialog_link))
                     }
                     pop()
                 }
@@ -356,7 +357,7 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Aceptar")
+                    Text(stringResource(id = R.string.home_aceptar))
                 }
             }
         )

@@ -57,7 +57,7 @@ fun SplashScreen(navController: NavHostController) {
             context.packageManager
                 .getPackageInfo(context.packageName, 0).versionName
         } catch (e: Exception) {
-            "1.0"
+            "2.0"
         }
     }
 
