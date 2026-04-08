@@ -1,14 +1,14 @@
-# Sprint 01 – Execution & Review
+# Sprint 02 – Execution & Review
 
 ## 1. Resultados obtenidos
 
-El objetivo principal de construir la estructura inicial ("skeleton") de la aplicación Nomad y configurar el entorno de trabajo se ha cumplido con éxito.
+El objetivo principal de este sprint era implementar la lógica core de la aplicación, incluyendo la gestión in-memory de viajes y actividades mediante operaciones CRUD, así como la persistencia de las preferencias del usuario. Este objetivo se ha cumplido con éxito.
 
-A nivel general, el equipo ha logrado completar la totalidad de las tareas activas del Sprint Backlog. Se inicializó correctamente el proyecto en Android Studio, se estableció el repositorio en GitHub con toda la documentación requerida y se implementó la navegación con las pantallas principales utilizando datos simulados (mocked data). 
+A nivel general, el equipo ha logrado completar todas las tareas del Sprint Backlog. La transición hacia el patrón MVVM ha permitido separar adecuadamente la lógica de la capa visual, mitigando uno de los riesgos identificados. La implementación de los DatePickers, la validación de fechas cruzadas y el soporte multi-idioma (inglés, catalán y español) ya son completamente funcionales.
 
-La principal dificultad del sprint radicó en la definición inicial del diseño, lo que provocó que el desarrollo de los layouts y la interfaz consumiera aproximadamente el triple del tiempo estimado. Sin embargo, una vez que el diseño quedó claramente definido, la implementación técnica fluyó con mucha facilidad. Como contraparte, las tareas relacionadas con la configuración inicial, repositorios y modelado de datos resultaron ser mucho más rápidas de ejecutar de lo previsto. 
+La principal dificultad de este sprint estuvo relacionada con uno de los riesgos previstos: la pérdida de estado de la interfaz al interactuar con la navegación o al reconfigurar la pantalla. Nos obligó a invertir un poco más de tiempo en asegurar el uso correcto de `rememberSaveable` y la retención de estados en el ViewModel para que la UI se mantuviera reactiva y estable. Por otro lado, la persistencia de datos mediante SharedPreferences resultó ser un proceso muy ágil y directo. 
 
-Durante la ejecución, cometimos el error de no realizar la release intermedia v0.1.0 (T2.10) al principio del sprint, tal y como estaba planificado. Al detectar el error en una fase avançadda del sprint, consideramos que su publicación ya no aportaba valor al estado actual del proyecto y tomamos la decisión de obviar la tarea. A pesar de este descuido, el balance general es altamente positivo y el proyecto cuenta ya con una base sólida y funcional para las próximas iteraciones.
+El sprint concluye con la grabación del vídeo demostrativo guardado en la ruta correcta y la publicación de la Release v2.0.0. El balance es muy positivo, demostrando un mejor control sobre los tiempos de UI tras el aprendizaje del sprint anterior.
 
 ---
 
@@ -16,59 +16,48 @@ Durante la ejecución, cometimos el error de no realizar la release intermedia v
 
 | ID    | Completada | Comentarios |
 |-------|------------|-------------|
-| T1.1  | Sí         | Sin problemas. |
-| T1.2  | Sí         | Sin problemas. |
-| T1.3  | Sí         | Estimació de tiempo exagerada.|
-| T1.4  | Sí         | Sin problemas. |
-| T1.5  | Sí         | Estimación de tiempo exagerada. |
-| T2.1  | Sí         | Estimación de timepo exagerada. |
-| T2.2  | Sí         | Sin problemas. |
-| T2.3  | Sí         | Sin problemas. |
-| T2.4  | Sí         | Sin problemas. |
-| T2.5  | Sí         | Sin problemas. |
-| T2.6  | Sí         | Sin problemas. |
-| T2.7  | Sí         | Sin problemas. |
-| T2.8  | Sí         | Estimación de timepo exagerada. |
-| T2.9  | Sí         | Sin problemas. |
-| T2.10 | Sí         | No se hizo al inicio y se tomó la decisión de obviar esta tarea. |
-| T3.1  | Sí         | Estimación de tiempo **muy** optimista. |
-| T3.2  | Sí         | Sin problema. |
-| T3.3  | Sí         | Sin problema. |
-| T3.4  | Sí         | Estimación de tiempo exagerada. |
-| T4.1  | Sí         | Sin problemas. |
-| T4.2  | Sí         | Estimación de tiempo optimista. |
-| T4.3  | Sí         | Sin problema. |
-| T4.4  | Sí | Sin problemas. |
+| T1.1  | Sí         | Implementado correctamente en memoria usando el ViewModel. |
+| T1.2  | Sí         | Operaciones CRUD de actividades funcionales y vinculadas a la lista. |
+| T1.3  | Sí         | DatePickers modulares creados. Texto libre bloqueado con éxito. |
+| T1.4  | Sí         | Lógica implementada. Requirió algo de ajuste para mostrar errores en tiempo real. |
+| T2.1  | Sí         | SharedPreferences configurado sin problemas. Los ajustes cargan al inicio. |
+| T2.2  | Sí         | Archivos `strings.xml` configurados para `en`, `ca` y `es`. |
+| T2.3  | Sí         | Las horas estimadas fueron mucho más realistas esta vez. |
+| T2.4  | Sí         | Las listas reaccionan correctamente a los cambios de estado. |
+| T3.1  | Sí         | Mensajes de error mapeados y visibles bajo los campos correspondientes en rojo. |
+| T3.2  | Sí         | Pruebas básicas superadas. |
+| T3.3  | Sí         | Logs implementados para seguimiento interno. |
+| T4.1  | Sí         | Vídeo demostrativo grabado mostrando todas las validaciones y cambios de idioma. |
+| T4.2  | Sí         | Vídeo subido correctamente a `/doc/evidence/v2.X.X`. |
 
 ---
 
 ## 3. Desviaciones
 
-* **Desarrollo de layouts y vistas (T3.1, T4.2):** La estimación inicial fue demasiado optimista. Desarrollar los layouts principales con datos mock (catalogado como *muy* optimista) y la implementación de la pantalla About consumieron más horas de las planificadas originalmente, aproximadamente triplicando las estimadas, evidenciando que las tareas de UI requieren un mayor margen de tiempo.
-* **Configuración inicial y modelado (T1.3, T1.5, T2.1, T2.8, T3.4):** Por el contrario, la estimación de tiempo para definir compatibilidades, inicializar el proyecto en Android Studio, crear repositorios/ramas y las clases del modelo de datos fue exagerada. Estas tareas resultaron ser mucho más rápidas de ejecutar de lo previsto.
-* **Primera release en GitHub v0.1.0 (T2.10):** Aunque estaba planificado crear esta release inicial en las primeras etapas del sprint, la tarea no se realizó al inicio. El equipo tomó la decisión de obviar esta tarea sobre la marcha y modificar el flujo planificado.
-
+* **Gestión de Estados en la UI (T2.4):** Tal y como se predijo en los riesgos, lidiar con la recomposición de las pantallas al validar fechas o cambiar de idioma nos llevó a tener que refactorizar ligeramente la forma en la que guardábamos los datos temporales del formulario (usando `rememberSaveable`). Consumió algo más del tiempo estimado, pero se solucionó de raíz.
+* **Validación de fechas (T1.4):** Asegurar que las validaciones no fallaran silenciosamente y dieran buen feedback visual tomó un poco más de tiempo de las 3 horas planificadas.
+* **Tiempos de UI más ajustados (T2.3):** A diferencia del Sprint 01, esta vez la estimación para desarrollar los flujos de la interfaz fue mucho más precisa (7 horas), lo que demuestra una mejora en nuestra capacidad de planificación.
 
 ---
 
 ## 4. Retrospectiva
 
 ### Qué funcionó bien
-* **Ejecución de la configuración inicial:** La gran mayoría de las tareas de creación de repositorios, documentación y configuración del proyecto en Android Studio se realizaron sin problemas y de forma mucho más rápida de lo esperado.
-* **Resolución de tareas generales:** A pesar de los desajustes de tiempo, el equipo logró completar prácticamente todo el backlog asignado al sprint con éxito.
+* **Mejora en las estimaciones:** El reajuste de horas pactado en la retrospectiva anterior dio sus frutos. Dedicar más tiempo planificado a las tareas de interfaz nos permitió trabajar sin la presión del primer sprint.
+* **Arquitectura limpia:** Respetar el patrón MVVM desde el inicio ha hecho que el código sea mucho más legible y que implementar el CRUD en memoria fuera un proceso metódico y ordenado, sin mezclar lógica en las vistas.
+* **Implementación de SharedPreferences:** Tarea ágil que funcionó a la primera, mejorando mucho la experiencia de usuario (UX) al recordar el modo oscuro y el idioma.
 
 ### Qué no funcionó
-* **Estimaciones de tiempo desequilibradas:** Hubo una gran desconexión entre el tiempo planificado y el real. Subestimamos drásticamente la complejidad y el tiempo requerido para el desarrollo de la interfaz gráfica (layouts), mientras que sobreestimamos tareas rutinarias de estructuración y modelado.
-* **Omisión y reevaluación de la release inicial (T2.10):** La creación de la release v0.1.0 no se ejecutó en la fase inicial del sprint según lo planificado. Al detectar esta desviación en una etapa posterior, el equipo reevaluó la necesidad de la tarea y determinó que su publicación ya no aportaba valor al estado actual del proyecto, por lo que se tomó la decisión formal de descartarla.
+* **Manejo de errores iniciales silenciosos:** En las primeras iteraciones de los formularios, las validaciones (como fechas incoherentes) bloqueaban el guardado pero no avisaban al usuario, cumpliéndose uno de los riesgos previstos.
+* **Testing al final del ciclo:** Dejar la escritura de los tests unitarios (T3.2) para el tramo final del sprint generó un pequeño cuello de botella. 
 
 ### Qué mejoraremos en el próximo sprint
-* **Reajuste en el cálculo de horas:** En el Sprint Planning, asignaremos un mayor peso en horas a todas las tareas que involucren diseño o implementación de UI, y reduciremos el margen de tiempo para las tareas de configuración técnica o clases de datos simples.
-
-
+* **Test-Driven / Pruebas tempranas:** Intentaremos implementar los tests unitarios al mismo tiempo que desarrollamos la lógica (CRUD), en lugar de dejarlos como una tarea de cierre.
+* **Refinar la modularización visual:** Seguir extrayendo componentes repetitivos (como diálogos o campos de texto genéricos) a funciones propias para mantener el código de las pantallas principales aún más limpio.
 
 ---
 
 ## 5. Autoevaluación del equipo (0-10)
-**Nota:** 9 
+**Nota:** 8.5 
 
-**Justificación:** La nota refleja un excelente esfuerzo grupal y la consecución exitosa de todo el Sprint Backlog, logrando asentar el "skeleton" de la aplicación. Nuestro principal obstáculo fue la definición inicial del diseño, lo que provocó un atasco importante y explica por qué la implementación de las vistas (UI) nos llevó casi el triple de tiempo del estimado. Sin embargo, una vez que logramos tener el diseño claro y definido, el resto del desarrollo y la programación fueron muy fluidos y fáciles de ejecutar. A pesar de los evidentes desajustes en nuestras estimaciones de tiempo, hemos sabido reponernos, completar las tareas y dejar una estructura sólida para el proyecto.
+**Justificación:** El equipo ha trabajado de forma constante y coordinada, corrigiendo el principal defecto del primer sprint: la mala medición de tiempos de desarrollo visual. Hemos superado el reto de mantener los estados de la aplicación vivos durante la navegación y hemos dejado una lógica sólida para cuando toque integrar una base de datos real en el futuro. Se resta un poco de nota porque dejamos la redacción de los tests unitarios para el final del ciclo, lo que generó un pequeño cuello de botella organizativo en los últimos días, aunque la capacidad del equipo para adaptarse, sacar el trabajo adelante y entregar la release a tiempo fue excelente.
