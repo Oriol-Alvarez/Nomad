@@ -9,9 +9,9 @@ El objetivo de este sprint es centrarse en la implementación de la lógica prin
 
 | ID    | Tarea                                                                                   | Responsable     | Estimación (h) | Prioridad |
 |-------|-----------------------------------------------------------------------------------------|-----------------|----------------|-----------|
-| T1.1  | Implementar operaciones CRUD en memoria para viajes (addTrip, editTrip, deleteTrip)     | Oriol           | 2              | Alta      |
-| T1.2  | Implementar operaciones CRUD en memoria para actividades (addActivity, updateActivity)  | Guillem         | 2              | Alta      |
-| T1.3  | Implementar DatePickers y bloquear texto libre en todos los campos de fecha             | Oriol           | 3.5            | Alta      |
+| T1.1  | Implementar operaciones CRUD en memoria para viajes (addTrip, editTrip, deleteTrip)     | Oriol           | 5              | Alta      |
+| T1.2  | Implementar operaciones CRUD en memoria para actividades (addActivity, updateActivity)  | Guillem         | 5              | Alta      |
+| T1.3  | Implementar DatePickers y bloquear texto libre en todos los campos de fecha             | Oriol           | 2            | Alta      |
 | T1.4  | Validar fechas (inicio antes de fin y actividades dentro del rango del viaje)           | Guillem         | 3              | Alta      |
 | T2.1  | Persistir ajustes de usuario con SharedPreferences (username, DOB, dark mode, idioma)   | Guillem         | 2              | Media     |
 | T2.2  | Implementar soporte multi-idioma (mínimo en, ca, es)                                    | Oriol           | 2              | Media     |
@@ -21,8 +21,8 @@ El objetivo de este sprint es centrarse en la implementación de la lógica prin
 | T3.2  | Escribir tests unitarios para las operaciones CRUD de viajes e itinerarios              | Guillem         | 2.5            | Media     |
 | T3.3  | Añadir mensajes de log (Logcat) aplicando buenas prácticas                              | Oriol           | 1              | Baja      |
 | T4.1  | Grabar vídeo demostrativo de las tareas implementadas                                   | Guillem         | 1              | Alta      |
-| T4.2  | Guardar el vídeo en el directorio /doc/evidence/v2.X.X                                  | Guillem         | 0.5            | Alta      |
-| T4.3  | Listar asignaciones de tareas en sprints.md y preparar la release v2.X.X                | Oriol           | 1              | Alta      |
+| T4.2  | Guardar el vídeo en el directorio /doc/evidence/v2.X.X                                  | Guillem         | 0            | Alta      |
+
 
 ---
 
@@ -39,7 +39,6 @@ El objetivo de este sprint es centrarse en la implementación de la lógica prin
 - [ ] Actualizaciones reflejadas dinámicamente en la lista principal y lista de itinerarios.
 - [ ] Tests unitarios para las operaciones CRUD escritos.
 - [ ] Logs añadidos para ser visualizados en Logcat.
-- [ ] Documento sprints.md incluye las asignaciones de cada miembro.
 - [ ] Vídeo demostrativo grabado y guardado en /doc/evidence/v2.X.X.
 - [ ] Última versión del código entregada con la release/tag v2.X.X en GitHub.
 
