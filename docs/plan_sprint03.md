@@ -9,25 +9,25 @@ El objetivo principal de este sprint es integrar la persistencia de datos median
 
 | ID    | Tarea                                                                 | Responsable        | Estimación (h) | Prioridad |
 |-------|------------------------------------------------------------------------|--------------------|----------------|-----------|
-| T1.1  | Crear clase principal de Room Database                      | Oriol              | 1.0            | Alta      |
-| T1.2  | Definir Entities (Trip e ItineraryItem con campos datetime, text e int) | Guillem            | 1.5            | Alta      |
+| T1.1  | Crear clase principal de Room Database                      | Oriol              | 0.5            | Alta      |
+| T1.2  | Definir Entities (Trip e ItineraryItem con campos datetime, text e int) | Guillem            | 1            | Alta      |
 | T1.3  | Crear Data Access Objects (DAOs) para la base de datos      | Guillem            | 1.5            | Alta      |
-| T1.4  | Implementar operaciones CRUD usando DAOs para viajes e itinerarios | Oriol              | 2.5            | Alta      |
-| T1.5  | Modificar ViewModels para usar Room en lugar de In-Memory   | Oriol y Guillem    | 3.0            | Alta      |
+| T1.4  | Implementar operaciones CRUD usando DAOs para viajes e itinerarios | Oriol              | 2            | Alta      |
+| T1.5  | Modificar ViewModels para usar Room en lugar de In-Memory   | Oriol y Guillem    | 2.5            | Alta      |
 | T2.1  | Conectar la aplicación a Firebase                           | Oriol              | 1.0            | Alta      |
-| T2.2  | Diseñar la pantalla de login en Android                     | Guillem            | 1.5            | Media     |
-| T2.3  | Implementar acciones de login con Firebase (Auth & Password)| Oriol              | 2.0            | Alta      |
+| T2.2  | Diseñar la pantalla de login en Android                     | Guillem            | 2            | Media     |
+| T2.3  | Implementar acciones de login con Firebase (Auth & Password)| Oriol              | 1.5            | Alta      |
 | T2.4  | Crear la acción para permitir al usuario cerrar sesión (logout)| Guillem         | 0.5            | Media     |
 | T3.1  | Diseñar la pantalla de registro (Register form)             | Guillem            | 1.5            | Media     |
 | T3.2  | Implementar registro con Firebase, incluyendo verificación de email | Oriol | 2.5            | Alta      |
 | T3.3  | Implementar pantalla y acción para recuperar contraseña     | Guillem            | 1.5            | Media     |
 | T4.1  | Crear tabla para persistir datos locales del usuario (mínimo: login, username, fecha nac, etc.) | Oriol | 2.0 | Alta |
 | T4.2  | Modificar tabla Trip para multiusuario y mostrar solo viajes del usuario logueado | Guillem | 2.5 | Alta |
-| T4.3  | Crear tabla para registrar de forma persistente cada inicio y cierre de sesión (acceso app) | Oriol | 1.5 | Media |
+| T4.3  | Crear tabla para registrar de forma persistente cada inicio y cierre de sesión (acceso app) | Oriol | 2 | Media |
 | T5.1  | Escribir tests unitarios para DAOs e interacciones de la BD | Guillem            | 2.5            | Alta      |
 | T5.2  | Validar datos (nombres de viaje duplicados, comprobación de fechas) | Oriol              | 1.5            | Media     |
 | T5.3  | Actualizar documentación (`design.md`) con el esquema de base de datos | Guillem            | 1.0            | Baja      |
-| T5.4  | Grabar vídeo demostrativo y guardarlo en `/docs/evidence/v3.x.x` | Oriol y Guillem | 1.0        | Alta      |
+| T5.4  | Grabar vídeo demostrativo y guardarlo en `/docs/evidence/v3.x.x` | Oriol y Guillem | 0.5        | Baja      |
 
 ---
 
