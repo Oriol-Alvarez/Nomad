@@ -9,6 +9,7 @@ import android.media.Image
 data class Trip(
     @PrimaryKey
     val id: String,
+    val userId: String,
     var title: String,
     var country: String,
     var description: String,
@@ -20,5 +21,4 @@ data class Trip(
 ) {
     @Ignore
     var images: MutableList<Image> = mutableListOf()
-
 }

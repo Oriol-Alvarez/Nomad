@@ -3,9 +3,9 @@ package com.example.app.ui.screens
 import android.content.Context
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
@@ -15,7 +15,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -31,12 +33,11 @@ import java.util.TimeZone
 
 /**
  * Clase de utilidad para manejar textos que pueden ser recursos de Android o Strings directos.
- * Permite que el ViewModel no tenga dependencias de Context.
  */
 sealed class UiText {
     data class DynamicString(val value: String) : UiText()
     class StringResource(
-        @StringRes val resId: Int,
+        @param:StringRes val resId: Int,
         vararg val args: Any
     ) : UiText()
 
@@ -56,15 +57,47 @@ sealed class UiText {
     }
 }
 
+@Composable
+fun GlassCard(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(24.dp)
+            )
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Text(
+                text = title.uppercase(Locale.getDefault()),
+                color = MaterialTheme.colorScheme.primary,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.2.sp
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+            content()
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SelectorFechaModular(
     label: String,
     fechaSeleccionada: String,
     onFechaElegida: (String) -> Unit,
+    modifier: Modifier = Modifier,
     fechaMinima: Long? = null,
     fechaMaxima: Long? = null,
-    modifier: Modifier = Modifier,
     isError: Boolean = false
 ) {
     var mostrar by remember { mutableStateOf(false) }
@@ -85,9 +118,7 @@ fun SelectorFechaModular(
                 }
                 val minDia = minActual?.let { inicioDelDia(it) }
                 val maxDia = maxActual?.let { inicioDelDia(it) }
-                val despuesDeMin = minDia == null || utcTimeMillis >= minDia
-                val antesDeMax = maxDia == null || utcTimeMillis <= maxDia
-                return despuesDeMin && antesDeMax
+                return (minDia == null || utcTimeMillis >= minDia) && (maxDia == null || utcTimeMillis <= maxDia)
             }
         }
     )
@@ -170,7 +201,7 @@ fun SelectorHoraModular(
             onDismissRequest = { mostrar = false },
             confirmButton = {
                 Button(onClick = {
-                    onHoraElegida(String.format("%02d:%02d", state.hour, state.minute))
+                    onHoraElegida(String.format(Locale.getDefault(), "%02d:%02d", state.hour, state.minute))
                     mostrar = false
                 }) { Text("Aceptar") }
             },
@@ -199,7 +230,7 @@ suspend fun buscarCiudadesOSM(consulta: String): List<String> = withContext(Disp
             }
         }
         res.distinct()
-    } catch (e: Exception) { emptyList() }
+    } catch (_: Exception) { emptyList() }
 }
 
 object CurrencyConverter {

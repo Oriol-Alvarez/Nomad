@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 
 class TripRepositoryImpl(private val tripDao: TripDao) : TripRepository {
 
-    override fun getTrips(): Flow<List<Trip>> {
-        return tripDao.getAllTrips()
+    override fun getTripsForUser(userId: String): Flow<List<Trip>> {
+        return tripDao.getTripsForUser(userId)
     }
 
     override suspend fun insertTrip(trip: Trip) {

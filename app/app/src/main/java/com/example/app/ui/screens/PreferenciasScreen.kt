@@ -4,48 +4,15 @@ import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,20 +22,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.Routes
-import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.viewmodels.AuthViewModel
-import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -77,7 +39,7 @@ import java.util.Locale
 @Composable
 fun PreferenciasScreen(
     navController: NavHostController,
-    authViewModel: AuthViewModel = viewModel(),
+    authViewModel: AuthViewModel, // Eliminado = viewModel() para evitar el crash
     isDarkMode: Boolean,
     onDarkModeChange: (Boolean) -> Unit,
     recordatorioViajes: Boolean,
@@ -88,12 +50,10 @@ fun PreferenciasScreen(
     onCurrencyChange: (String) -> Unit,
     selectedLanguage: String,
     onLanguageChange: (String) -> Unit,
-    // Nuevos campos Sprint-02
     username: String = "Viajero",
     onUsernameChange: (String) -> Unit = {},
     birthdate: String = "01/01/2000",
     onBirthdateChange: (String) -> Unit = {},
-    // Tamaño de letra
     fontSizeScale: Float = 1.0f,
     onFontSizeScaleChange: (Float) -> Unit = {}
 ) {
@@ -101,7 +61,6 @@ fun PreferenciasScreen(
     var tempUsername by remember { mutableStateOf(username) }
     val context = LocalContext.current
     
-    // DatePicker State
     var showDatePicker by remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState()
 
@@ -128,7 +87,6 @@ fun PreferenciasScreen(
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // --- PERFIL DE USUARIO ---
                 GlassCard(title = "Perfil de Usuario") {
                     CajasPreferencias(
                         image = R.drawable.user_solid_full,
@@ -151,11 +109,10 @@ fun PreferenciasScreen(
                         onClick = { showDatePicker = true }
                     )
                     
-                    // --- BOTÓN CERRAR SESIÓN ---
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
                     TextButton(
                         onClick = {
-                            authViewModel.signout()
+                            authViewModel.signOut() // Corregido: signOut con 'O' mayúscula
                             navController.navigate(Routes.AUTH) {
                                 popUpTo(0) { inclusive = true }
                             }
@@ -173,7 +130,6 @@ fun PreferenciasScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- IDIOMA Y REGIÓN ---
                 GlassCard(title = stringResource(R.string.preferencias_idioma_region)) {
                     CajasPreferencias(
                         image = R.drawable.earth_americas_solid_full,
@@ -198,7 +154,6 @@ fun PreferenciasScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- APARIENCIA ---
                 GlassCard(title = stringResource(R.string.preferencias_titulo_seccion_apariencia)) {
                     CajasPreferencias(
                         image = R.drawable.circle_half_stroke_solid_full,
@@ -210,7 +165,6 @@ fun PreferenciasScreen(
                     )
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
                     
-                    // Tamaño de letra dinámico
                     val fontSizeLabel = when(fontSizeScale) {
                         0.85f -> "Pequeño"
                         1.15f -> "Grande"
@@ -239,7 +193,6 @@ fun PreferenciasScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- NOTIFICACIONES ---
                 GlassCard(title = stringResource(R.string.preferencias_titulo_seccion_notificaciones)) {
                     CajasPreferencias(
                         image = R.drawable.bell_solid_full,
@@ -262,7 +215,6 @@ fun PreferenciasScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // --- MÁS INFORMACIÓN ---
                 GlassCard(title = stringResource(R.string.preferencias_seccion_mas_info)) {
                     CajasPreferencias(
                         image = R.drawable.circle_info_solid_full,
@@ -270,7 +222,6 @@ fun PreferenciasScreen(
                         role = stringResource(R.string.preferencias_info_app_role),
                         value = "on",
                         type = "nav",
-                        navController = navController,
                         onClick = { navController.navigate(Routes.SOBRE_NOSOTROS) }
                     )
                     Spacer(modifier = Modifier.height(6.dp))
@@ -280,7 +231,6 @@ fun PreferenciasScreen(
                         role = stringResource(R.string.preferencias_terminos_role),
                         value = "on",
                         type = "nav",
-                        navController = navController,
                         onClick = { navController.navigate(Routes.TERMINOS_CONDICIONES) }
                     )
                 }
@@ -290,7 +240,6 @@ fun PreferenciasScreen(
         }
     }
 
-    // Dialog para editar nombre de usuario
     if (showUserDialog) {
         AlertDialog(
             onDismissRequest = { showUserDialog = false },
@@ -305,7 +254,7 @@ fun PreferenciasScreen(
             },
             confirmButton = {
                 Button(onClick = {
-                    if (Validator.isNotEmpty(tempUsername)) {
+                    if (tempUsername.isNotBlank()) {
                         onUsernameChange(tempUsername)
                         showUserDialog = false
                     } else {
@@ -319,7 +268,6 @@ fun PreferenciasScreen(
         )
     }
 
-    // DatePickerDialog para fecha de nacimiento con Validación
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
@@ -328,8 +276,6 @@ fun PreferenciasScreen(
                     datePickerState.selectedDateMillis?.let {
                         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                         val formattedDate = sdf.format(Date(it))
-
-                        // VALIDACIÓN SPRINT-02: Debe ser anterior a hoy
                         if (Validator.isBirthdateValid(formattedDate)) {
                             onBirthdateChange(formattedDate)
                             showDatePicker = false

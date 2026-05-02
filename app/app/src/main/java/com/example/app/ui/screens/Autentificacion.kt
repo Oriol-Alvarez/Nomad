@@ -81,7 +81,7 @@ fun AutentificacionScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // --- CAMPOS COMUNES ---
+                        // --- EMAIL ---
                         OutlinedTextField(
                             value = vm.email,
                             onValueChange = { vm.email = it; vm.errorMessage = null },
@@ -95,6 +95,7 @@ fun AutentificacionScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
+                        // --- PASSWORD ---
                         var passwordVisibleState by remember { mutableStateOf(false) }
                         OutlinedTextField(
                             value = vm.password,
@@ -114,7 +115,7 @@ fun AutentificacionScreen(
                             singleLine = true
                         )
 
-                        // --- CAMPOS EXTRA SOLO PARA REGISTRO ---
+                        // --- CAMPOS EXTRA SOLO PARA REGISTRO (T4.1) ---
                         if (!vm.isLoginMode) {
                             Spacer(modifier = Modifier.height(16.dp))
                             OutlinedTextField(
@@ -138,6 +139,63 @@ fun AutentificacionScreen(
                                 },
                                 fechaMaxima = System.currentTimeMillis()
                             )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Dirección (T4.1)
+                            OutlinedTextField(
+                                value = vm.address,
+                                onValueChange = { vm.address = it },
+                                label = { Text("Dirección") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                leadingIcon = { Icon(Icons.Default.Home, contentDescription = null) },
+                                singleLine = true
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // País (T4.1)
+                            OutlinedTextField(
+                                value = vm.country,
+                                onValueChange = { vm.country = it },
+                                label = { Text("País") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                leadingIcon = { Icon(Icons.Default.Public, contentDescription = null) },
+                                singleLine = true
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Teléfono (T4.1)
+                            OutlinedTextField(
+                                value = vm.phoneNumber,
+                                onValueChange = { vm.phoneNumber = it },
+                                label = { Text("Teléfono") },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                singleLine = true
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Aceptar Emails (T4.1)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Checkbox(
+                                    checked = vm.acceptEmails,
+                                    onCheckedChange = { vm.acceptEmails = it }
+                                )
+                                Text(
+                                    text = "Acepto recibir correos electrónicos",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
                         } else {
                             TextButton(
                                 onClick = { showResetPasswordDialog = true },
@@ -151,7 +209,6 @@ fun AutentificacionScreen(
                             }
                         }
 
-                        // CORRECCIÓN SMART CAST: Usar variable local para el error
                         val error = vm.errorMessage
                         if (error != null) {
                             Text(

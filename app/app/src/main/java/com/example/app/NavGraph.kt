@@ -8,11 +8,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.app.ui.screens.*
 import com.example.app.ui.viewmodels.TripListViewModel
+import com.example.app.ui.viewmodels.AuthViewModel
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     tripViewModel: TripListViewModel,
+    authViewModel: AuthViewModel,
     isDarkMode: Boolean,
     onDarkModeChange: (Boolean) -> Unit,
     recordatorioViajes: Boolean,
@@ -23,12 +25,10 @@ fun NavGraph(
     onCurrencyChange: (String) -> Unit,
     selectedLanguage: String,
     onLanguageChange: (String) -> Unit,
-    // Nuevos parámetros Sprint-02
     username: String,
     onUsernameChange: (String) -> Unit,
     birthdate: String,
     onBirthdateChange: (String) -> Unit,
-    // Tamaño de letra
     fontSizeScale: Float,
     onFontSizeScaleChange: (Float) -> Unit
 ) {
@@ -41,6 +41,7 @@ fun NavGraph(
         composable(Routes.AUTH) { 
             AutentificacionScreen(
                 navController = navController,
+                vm = authViewModel,
                 onUserDataSaved = { newName, newBirth ->
                     onUsernameChange(newName)
                     onBirthdateChange(newBirth)
@@ -64,7 +65,6 @@ fun NavGraph(
             )
         }
 
-        // Ruta actualizada para recibir el tripId como String
         composable(
             route = "${Routes.DETALLE_VIAJE2}/{tripId}",
             arguments = listOf(navArgument("tripId") { type = NavType.StringType })
@@ -79,12 +79,12 @@ fun NavGraph(
         }
 
         composable(Routes.GALERIA_VIAJE) { GaleriaViajeScreen(navController) }
-
         composable(Routes.GALERIA_VIAJE_2) { GaleriaViajeScreen2(navController) }
 
         composable(Routes.PREFERENCIAS) {
             PreferenciasScreen(
                 navController = navController,
+                authViewModel = authViewModel,
                 isDarkMode = isDarkMode,
                 onDarkModeChange = onDarkModeChange,
                 recordatorioViajes = recordatorioViajes,
@@ -95,19 +95,16 @@ fun NavGraph(
                 onCurrencyChange = onCurrencyChange,
                 selectedLanguage = selectedLanguage,
                 onLanguageChange = onLanguageChange,
-                // Pasar nuevos campos
                 username = username,
                 onUsernameChange = onUsernameChange,
                 birthdate = birthdate,
                 onBirthdateChange = onBirthdateChange,
-                // Tamaño de letra
                 fontSizeScale = fontSizeScale,
                 onFontSizeScaleChange = onFontSizeScaleChange
             )
         }
 
         composable(Routes.SOBRE_NOSOTROS) { SobreNosotrosScreen(navController) }
-
         composable(Routes.TERMINOS_CONDICIONES) { TerminosCondicionesScreen(navController) }
 
         composable(

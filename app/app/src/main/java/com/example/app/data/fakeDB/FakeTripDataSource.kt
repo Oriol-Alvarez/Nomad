@@ -34,6 +34,7 @@ object FakeTripDataSource {
         trips.add(
             Trip(
                 id = "1",
+                userId = "default_user", // T4.2: Añadido userId
                 title = "Viaje a París",
                 country = "Francia",
                 description = "Visita a la torre Eiffel",

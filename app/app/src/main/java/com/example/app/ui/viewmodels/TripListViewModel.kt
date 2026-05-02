@@ -9,9 +9,12 @@ import com.example.app.domain.TripRepository
 import com.example.app.domain.ItineraryItemRepository
 import com.example.app.domain.ItineraryItem
 import com.example.app.ui.screens.Validator
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -22,8 +25,14 @@ class TripListViewModel(
 ) : ViewModel() {
 
     private val TAG = "TripListViewModel"
+    private val auth = FirebaseAuth.getInstance()
 
-    val trips: StateFlow<List<Trip>> = tripRepository.getTrips()
+    // T4.2: Solo mostramos los viajes del usuario logueado actualmente
+    val trips: StateFlow<List<Trip>> = flowOf(auth.currentUser?.uid)
+        .flatMapLatest { uid ->
+            if (uid != null) tripRepository.getTripsForUser(uid)
+            else flowOf(emptyList())
+        }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -40,6 +49,8 @@ class TripListViewModel(
         imageUri: String,
         activitiesFromForm: List<ItineraryItem>
     ) {
+        val currentUserId = auth.currentUser?.uid ?: return // T4.2: Asegurar que hay un usuario
+        
         if (!Validator.isValidTitle(title) || !Validator.isValidLocation(destination)) return
         
         val imagenFinal = imageUri.ifBlank {
@@ -51,6 +62,7 @@ class TripListViewModel(
                 val newTripId = UUID.randomUUID().toString()
                 val newTrip = Trip(
                     id = newTripId,
+                    userId = currentUserId, // Asociar con el usuario logueado
                     title = title,
                     country = destination,
                     description = desc,
@@ -94,8 +106,11 @@ class TripListViewModel(
 
     fun updateActivity(item: ItineraryItem) {
         viewModelScope.launch {
-            itineraryRepository.updateItineraryItem(item)
-            updateTripBudget(item.tripId)
+            val trip = tripRepository.getTripById(item.tripId)
+            if (trip != null && Validator.isActivityInTripRange(item.dia, trip.dataInici, trip.dataFinal)) {
+                itineraryRepository.updateItineraryItem(item)
+                updateTripBudget(item.tripId)
+            }
         }
     }
 

@@ -14,23 +14,33 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.edit
 import androidx.navigation.compose.rememberNavController
 import com.example.app.data.local.AppDatabase
+import com.example.app.data.repository.AuthRepositoryImpl
 import com.example.app.data.repository.ItineraryItemRepositoryImpl
 import com.example.app.data.repository.TripRepositoryImpl
+import com.example.app.data.repository.UserRepositoryImpl
+import com.example.app.data.repository.AccessLogRepositoryImpl
 import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.viewmodels.TripListViewModel
-import com.example.app.ui.viewmodels.TripViewModelFactory
+import com.example.app.ui.viewmodels.AuthViewModel
+import com.example.app.ui.viewmodels.AppViewModelFactory
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
-    // Inicializar el ViewModel usando la Factory para que use Room
-    private val tripViewModel: TripListViewModel by viewModels {
+    // Inicialización de la fábrica única para todos los ViewModels
+    private val appViewModelFactory: AppViewModelFactory by lazy {
         val database = AppDatabase.getDatabase(applicationContext)
-        TripViewModelFactory(
-            TripRepositoryImpl(database.tripDao()),
-            ItineraryItemRepositoryImpl(database.itineraryDao())
+        AppViewModelFactory(
+            tripRepository = TripRepositoryImpl(database.tripDao()),
+            itineraryRepository = ItineraryItemRepositoryImpl(database.itineraryDao()),
+            authRepository = AuthRepositoryImpl(),
+            userRepository = UserRepositoryImpl(database.userDao()),
+            accessLogRepository = AccessLogRepositoryImpl(database.accessLogDao())
         )
     }
+
+    private val tripViewModel: TripListViewModel by viewModels { appViewModelFactory }
+    private val authViewModel: AuthViewModel by viewModels { appViewModelFactory }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val prefs = getSharedPreferences("config_nomad", MODE_PRIVATE)
@@ -41,7 +51,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            // --- ESTADOS PERSISTENTES ---
             var darkTheme by rememberSaveable { mutableStateOf(prefs.getBoolean("dark_mode", false)) }
             var recordatorioViajes by rememberSaveable { mutableStateOf(prefs.getBoolean("pref_recordatorio", true)) }
             var resumenSemanal by rememberSaveable { mutableStateOf(prefs.getBoolean("pref_resumen", true)) }
@@ -59,6 +68,7 @@ class MainActivity : ComponentActivity() {
                 NavGraph(
                     navController = navController,
                     tripViewModel = tripViewModel,
+                    authViewModel = authViewModel,
                     isDarkMode = darkTheme,
                     onDarkModeChange = { nuevo ->
                         prefs.edit { putBoolean("dark_mode", nuevo) }
@@ -119,8 +129,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun recreateWithAnimation() {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        }
         finish()
         @Suppress("DEPRECATION")
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)

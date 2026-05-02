@@ -6,11 +6,19 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.app.domain.Trip
 import com.example.app.domain.ItineraryItem
+import com.example.app.domain.User
+import com.example.app.domain.AccessLog
 
-@Database(entities = [Trip::class, ItineraryItem::class], version = 1, exportSchema = false)
+@Database(
+    entities = [Trip::class, ItineraryItem::class, User::class, AccessLog::class],
+    version = 2,
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun tripDao(): TripDao
     abstract fun itineraryDao(): ItineraryDao
+    abstract fun userDao(): UserDao
+    abstract fun accessLogDao(): AccessLogDao
 
     companion object {
         @Volatile
@@ -22,7 +30,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "nomad_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration() // Para desarrollo, resetea la DB al cambiar versión
+                .build()
                 INSTANCE = instance
                 instance
             }

@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TripDao {
-    @Query("SELECT * FROM trips")
-    fun getAllTrips(): Flow<List<Trip>>
+    @Query("SELECT * FROM trips WHERE userId = :userId")
+    fun getTripsForUser(userId: String): Flow<List<Trip>>
 
     @Query("SELECT * FROM trips WHERE id = :id")
     suspend fun getTripById(id: String): Trip?

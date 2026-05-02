@@ -10,12 +10,16 @@ import androidx.navigation.NavHostController
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.domain.AuthRepository
-import com.example.app.data.repository.AuthRepositoryImpl
+import com.example.app.domain.UserRepository
+import com.example.app.domain.AccessLogRepository
+import com.example.app.domain.User
 import com.example.app.ui.screens.UiText
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
-    private val authRepository: AuthRepository = AuthRepositoryImpl()
+    private val authRepository: AuthRepository,
+    private val userRepository: UserRepository,
+    private val accessLogRepository: AccessLogRepository
 ) : ViewModel() {
     private val TAG = "AuthLog"
 
@@ -24,8 +28,12 @@ class AuthViewModel(
     var username by mutableStateOf("")
     var birthdate by mutableStateOf("")
     
-    var isLoginMode by mutableStateOf(true)
+    var address by mutableStateOf("")
+    var country by mutableStateOf("")
+    var phoneNumber by mutableStateOf("")
+    var acceptEmails by mutableStateOf(true)
     
+    var isLoginMode by mutableStateOf(true)
     var errorMessage by mutableStateOf<UiText?>(null)
     var isLoading by mutableStateOf(false)
 
@@ -36,15 +44,21 @@ class AuthViewModel(
         if (isLoginMode) {
             handleLogin(navController)
         } else {
-            if (email.isBlank() || password.isBlank() || username.isBlank() || birthdate.isBlank()) {
-                errorMessage = UiText.StringResource(R.string.auth_error_all_fields)
-                return
+            viewModelScope.launch {
+                if (email.isBlank() || password.isBlank() || username.isBlank() || birthdate.isBlank()) {
+                    errorMessage = UiText.StringResource(R.string.auth_error_all_fields)
+                    return@launch
+                }
+                if (!userRepository.isUsernameAvailable(username)) {
+                    errorMessage = UiText.DynamicString("El nombre de usuario ya está en uso")
+                    return@launch
+                }
+                if (password.length < 6) {
+                    errorMessage = UiText.StringResource(R.string.auth_error_password_short)
+                    return@launch
+                }
+                handleSignup(navController, onUserDataSaved)
             }
-            if (password.length < 6) {
-                errorMessage = UiText.StringResource(R.string.auth_error_password_short)
-                return
-            }
-            handleSignup(navController, onUserDataSaved)
         }
     }
 
@@ -63,21 +77,19 @@ class AuthViewModel(
             
             result.fold(
                 onSuccess = {
-                    val user = authRepository.getCurrentUser()
-                    if (user != null && authRepository.isEmailVerified()) {
-                        Log.d(TAG, "Login success")
+                    val firebaseUser = authRepository.getCurrentUser()
+                    if (firebaseUser != null && authRepository.isEmailVerified()) {
+                        accessLogRepository.logAccess(firebaseUser.uid, "LOGIN")
                         navController.navigate(Routes.HOME) {
                             popUpTo(Routes.AUTH) { inclusive = true }
                         }
                     } else {
-                        Log.w(TAG, "Email not verified")
                         errorMessage = UiText.StringResource(R.string.auth_error_verify_email)
                         authRepository.sendEmailVerification()
                         authRepository.signOut()
                     }
                 },
                 onFailure = { exception ->
-                    Log.e(TAG, "Login failed", exception)
                     val msg = exception.localizedMessage
                     errorMessage = if (msg != null) UiText.DynamicString(msg)
                                    else UiText.StringResource(R.string.auth_error_unknown)
@@ -96,23 +108,29 @@ class AuthViewModel(
         viewModelScope.launch {
             val result = authRepository.signup(email, password)
             if (result.isSuccess) {
-                Log.d(TAG, "Signup success")
-                authRepository.sendEmailVerification()
-                
-                // Guardar datos localmente
-                onUserDataSaved(username, birthdate)
-                
-                isLoading = false
-                errorMessage = UiText.StringResource(R.string.auth_signup_success)
-                
-                // Resetear para volver al login tras verificar
-                isLoginMode = true
-                password = "" 
+                val firebaseUser = authRepository.getCurrentUser()
+                if (firebaseUser != null) {
+                    val newUser = User(
+                        id = firebaseUser.uid,
+                        email = email,
+                        username = username,
+                        birthdate = birthdate,
+                        address = address,
+                        country = country,
+                        phoneNumber = phoneNumber,
+                        acceptEmails = acceptEmails
+                    )
+                    userRepository.insertUser(newUser)
+                    authRepository.sendEmailVerification()
+                    onUserDataSaved(username, birthdate)
+                    isLoading = false
+                    errorMessage = UiText.StringResource(R.string.auth_signup_success)
+                    isLoginMode = true
+                    password = "" 
+                }
             } else {
                 isLoading = false
-                val exception = result.exceptionOrNull()
-                Log.e(TAG, "Signup failed", exception)
-                val msg = exception?.localizedMessage
+                val msg = result.exceptionOrNull()?.localizedMessage
                 errorMessage = if (msg != null) UiText.DynamicString(msg)
                                else UiText.StringResource(R.string.auth_error_unknown)
             }
@@ -124,7 +142,6 @@ class AuthViewModel(
             onError(UiText.StringResource(R.string.auth_error_reset_email))
             return
         }
-        
         viewModelScope.launch {
             val result = authRepository.resetPassword(email)
             result.fold(
@@ -138,7 +155,13 @@ class AuthViewModel(
         }
     }
 
-    fun signout() {
-        authRepository.signOut()
+    fun signOut() {
+        viewModelScope.launch {
+            val uid = authRepository.getCurrentUser()?.uid
+            if (uid != null) {
+                accessLogRepository.logAccess(uid, "LOGOUT")
+            }
+            authRepository.signOut()
+        }
     }
 }
