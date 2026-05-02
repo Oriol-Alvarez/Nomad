@@ -1,4 +1,5 @@
 package com.example.app.ui.screens
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.material3.SelectableDates
 import androidx.compose.foundation.clickable
@@ -34,6 +35,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -48,7 +51,32 @@ import java.util.Date
 import java.util.Locale
 import java.util.Calendar
 
+/**
+ * Clase de utilidad para manejar textos que pueden ser recursos de Android o Strings directos.
+ * Permite que el ViewModel no tenga dependencias de Context.
+ */
+sealed class UiText {
+    data class DynamicString(val value: String) : UiText()
+    class StringResource(
+        @StringRes val resId: Int,
+        vararg val args: Any
+    ) : UiText()
 
+    @Composable
+    fun asString(): String {
+        return when (this) {
+            is DynamicString -> value
+            is StringResource -> stringResource(resId, *args)
+        }
+    }
+
+    fun asString(context: android.content.Context): String {
+        return when (this) {
+            is DynamicString -> value
+            is StringResource -> context.getString(resId, *args)
+        }
+    }
+}
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -269,4 +297,3 @@ object CurrencyConverter {
         return "$formattedNumber $symbol"
     }
 }
-

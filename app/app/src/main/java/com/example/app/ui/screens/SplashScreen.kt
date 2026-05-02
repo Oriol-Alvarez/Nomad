@@ -38,6 +38,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
 @Composable
@@ -75,10 +76,17 @@ fun SplashScreen(navController: NavHostController) {
         }
     }
 
-    // Gestión de la transición a la pantalla principal al completar el progreso
+    // Gestión de la transición a la pantalla de login o home al completar el progreso
     if (progress >= 1f) {
         LaunchedEffect(Unit) {
-            navController.navigate(Routes.HOME) {
+            val auth = FirebaseAuth.getInstance()
+            val destination = if (auth.currentUser != null && auth.currentUser?.isEmailVerified == true) {
+                Routes.HOME
+            } else {
+                Routes.AUTH
+            }
+            
+            navController.navigate(destination) {
                 // Eliminación de la Splash de la pila de retroceso para evitar re-entradas
                 popUpTo(Routes.SPLASH) { inclusive = true }
             }

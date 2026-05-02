@@ -2,6 +2,7 @@ package com.example.app
 
 object Routes {
     const val SPLASH = "splash"
+    const val AUTH = "autentificacion"
     const val HOME = "home"
     const val DETALLE_VIAJE = "detalle_viaje"
 
