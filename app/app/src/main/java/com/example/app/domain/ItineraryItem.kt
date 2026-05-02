@@ -1,6 +1,11 @@
 package com.example.app.domain
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "itinerary_items")
 data class ItineraryItem(
+    @PrimaryKey
     val id: String,
     val tripId: String,
     val nombre: String,

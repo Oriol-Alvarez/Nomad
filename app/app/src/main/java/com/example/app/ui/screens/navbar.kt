@@ -27,18 +27,20 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.app.R
 
+/**
+ * Menú de navegación de la parte de abajo de la pantalla.
+ */
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
 
-    // Observador del estado de la pila de navegación para identificar la ruta activa
+    // Miramos en qué pantalla estamos para saber qué botón iluminar
     val currentRoute =
         navController.currentBackStackEntryAsState().value?.destination?.route ?: "home"
 
-    // Contenedor de la barra con el color de superficie definido en el tema
     Surface(
         modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)
     ) {
-        // Disposición horizontal de los destinos de navegación
+        // Ponemos los 4 botones repartidos por el ancho de la pantalla
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -47,28 +49,28 @@ fun BottomNavigationBar(navController: NavHostController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // Ítem: Pantalla principal
+            // Botón de Inicio
             BottomItem(
                 icon = painterResource(id = R.drawable.house_solid_full),
                 label = stringResource(id = R.string.nav_home),
                 selected = currentRoute == "home"
             ) { navController.navigate("home") }
 
-            // Ítem: Listado y detalles de itinerarios
+            // Botón de Mis Viajes
             BottomItem(
                 icon = painterResource(id = R.drawable.plane_solid_full),
                 label = stringResource(id = R.string.nav_viajes),
                 selected = currentRoute == "detalle_viaje"
             ) { navController.navigate("detalle_viaje") }
 
-            // Ítem: Álbumes de fotos y recuerdos
+            // Botón de Galería
             BottomItem(
                 icon = painterResource(id = R.drawable.gallery_solid_full),
                 label = stringResource(id = R.string.nav_galeria),
                 selected = currentRoute == "galeria_viaje"
             ) { navController.navigate("galeria_viaje") }
 
-            // Ítem: Configuración y perfil de usuario
+            // Botón de Ajustes
             BottomItem(
                 icon = painterResource(id = R.drawable.settings_solid_full),
                 label = stringResource(id = R.string.nav_ajustes),
@@ -78,6 +80,9 @@ fun BottomNavigationBar(navController: NavHostController) {
     }
 }
 
+/**
+ * Diseño de cada botón individual del menú de abajo.
+ */
 @Composable
 fun BottomItem(
     icon: Painter,
@@ -85,7 +90,6 @@ fun BottomItem(
     selected: Boolean,
     onClick: () -> Unit
 ) {
-    // Celda individual con estados visuales (color primario para activo, variante para inactivo)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -94,7 +98,7 @@ fun BottomItem(
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
 
-        // Representación gráfica del destino
+        // Dibujamos el icono (se pinta de color azul si está seleccionado)
         Icon(
             painter = icon,
             contentDescription = label,
@@ -105,7 +109,7 @@ fun BottomItem(
             modifier = Modifier.size(24.dp)
         )
 
-        // Etiqueta descriptiva inferior
+        // El texto debajo del icono
         Text(
             text = label,
             fontSize = 11.sp,

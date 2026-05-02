@@ -1,29 +1,29 @@
 package com.example.app.data.repository
 
-import com.example.app.data.fakeDB.FakeTripDataSource
+import com.example.app.data.local.TripDao
 import com.example.app.domain.Trip
 import com.example.app.domain.TripRepository
+import kotlinx.coroutines.flow.Flow
 
-class TripRepositoryImpl : TripRepository {
-    private val dataSource = FakeTripDataSource
+class TripRepositoryImpl(private val tripDao: TripDao) : TripRepository {
 
-    override fun getTrips(): List<Trip> {
-        return dataSource.getTrips()
+    override fun getTrips(): Flow<List<Trip>> {
+        return tripDao.getAllTrips()
     }
 
-    override fun insertTrip(trip: Trip) {
-        dataSource.addTrip(trip)
+    override suspend fun insertTrip(trip: Trip) {
+        tripDao.insertTrip(trip)
     }
 
-    override fun getTripById(id: String): Trip? {
-        return dataSource.getTrips().find { it.id == id }
+    override suspend fun getTripById(id: String): Trip? {
+        return tripDao.getTripById(id)
     }
 
-    override fun deleteTrip(id: String) {
-        dataSource.deleteTrip(id)
+    override suspend fun deleteTrip(id: String) {
+        tripDao.deleteTripById(id)
     }
 
-    override fun updateTrip(trip: Trip) {
-        dataSource.updateTrip(trip)
+    override suspend fun updateTrip(trip: Trip) {
+        tripDao.updateTrip(trip)
     }
 }

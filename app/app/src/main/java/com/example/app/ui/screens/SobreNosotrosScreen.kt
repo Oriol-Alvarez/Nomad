@@ -157,7 +157,7 @@ fun HeroHeader(navController: NavHostController) {
             )
 
             Text(
-                text = "v1.0.0 · Sprint 01",
+                text = "v2.0.0 · Sprint 02",
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
                 fontSize = 13.sp

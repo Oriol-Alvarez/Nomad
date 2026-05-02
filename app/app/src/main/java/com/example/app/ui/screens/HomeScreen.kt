@@ -54,11 +54,15 @@ import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
+import com.example.app.ui.viewmodels.TripListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController, username: String) {
-    // Validación de estado de aceptación de términos legales al iniciar la pantalla
+fun HomeScreen(
+    navController: NavHostController, 
+    username: String,
+    viewModel: TripListViewModel
+) {
     TermsAndConditionsDialog(navController = navController)
 
     Scaffold(
@@ -70,7 +74,6 @@ fun HomeScreen(navController: NavHostController, username: String) {
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Sección Hero: Bienvenida al usuario y buscador
             CustomHeader("${stringResource(id = R.string.home_hola)}, $username", stringResource(id = R.string.home_busca_aventura))
 
             Column(
@@ -80,20 +83,16 @@ fun HomeScreen(navController: NavHostController, username: String) {
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Módulo de destinos recomendados con scroll horizontal
                 RecomendadosSection(navController)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Módulo de destinos destacados con tarjetas de menor escala
                 DestacadosSection(navController)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Módulo de contenido editorial y promociones
                 OfertasTipsSection(navController)
 
-                // Cierre de la pantalla (Footer decorativo)
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
                     text = stringResource(id = R.string.home_explora_nomad),
@@ -183,30 +182,23 @@ fun OfertasTipsSection(navController: NavHostController) {
         OfertaTipCard(
             image = R.drawable.roma,
             title = stringResource(id = R.string.home_ahorrar_roma),
-            onClick = { /* Implementar navegación a detalle de artículo */ }
+            onClick = { /* Aquí iría la noticia completa */ }
         )
 
         OfertaTipCard(
             image = R.drawable.equipaje_mano,
             title = stringResource(id = R.string.home_guia_equipaje),
-            onClick = { /* Implementar navegación a detalle de artículo */ }
+            onClick = { /* Aquí iría la noticia completa */ }
         )
     }
 }
 
 @Composable
-fun OfertaTipCard(
-    image: Int,
-    title: String,
-    onClick: () -> Unit
-) {
+fun OfertaTipCard(image: Int, title: String, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(90.dp)
-            .clickable { onClick() },
+        modifier = Modifier.fillMaxWidth().height(90.dp).clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -214,9 +206,7 @@ fun OfertaTipCard(
                 painter = painterResource(id = image),
                 contentDescription = title,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .width(100.dp)
-                    .fillMaxHeight()
+                modifier = Modifier.width(100.dp).fillMaxHeight()
             )
             Text(
                 text = title,
@@ -229,15 +219,9 @@ fun OfertaTipCard(
 }
 
 @Composable
-fun RecomendadoCard(
-    image: Int,
-    name: String,
-    onClick: () -> Unit
-) {
+fun RecomendadoCard(image: Int, name: String, onClick: () -> Unit) {
     Card(
-        modifier = Modifier
-            .width(260.dp)
-            .clickable { onClick() },
+        modifier = Modifier.width(260.dp).clickable { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -247,33 +231,19 @@ fun RecomendadoCard(
                 painter = painterResource(id = image),
                 contentDescription = name,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(160.dp)
+                modifier = Modifier.fillMaxWidth().height(160.dp)
             )
-
             Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Text(text = name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             }
         }
     }
 }
 
 @Composable
-fun DestacadoCard(
-    image: Int,
-    name: String,
-    onClick: () -> Unit
-) {
+fun DestacadoCard(image: Int, name: String, onClick: () -> Unit) {
     Card(
-        modifier = Modifier
-            .width(180.dp)
-            .clickable { onClick() },
+        modifier = Modifier.width(180.dp).clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -283,19 +253,10 @@ fun DestacadoCard(
                 painter = painterResource(id = image),
                 contentDescription = name,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp)
+                modifier = Modifier.fillMaxWidth().height(110.dp)
             )
-
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp, horizontal = 12.dp)) {
-                Text(
-                    text = name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1
-                )
+            Column(modifier = Modifier.fillMaxWidth().padding(12.dp)) {
+                Text(text = name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, maxLines = 1)
             }
         }
     }
@@ -312,10 +273,6 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
         mutableStateOf(sharedPreferences.getBoolean("terms_accepted", false))
     }
 
-    LaunchedEffect(Unit) {
-        hasAccepted = sharedPreferences.getBoolean("terms_accepted", false)
-    }
-
     if (!hasAccepted) {
         AlertDialog(
             onDismissRequest = { },
@@ -326,7 +283,6 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
             text = {
                 val annotatedText = buildAnnotatedString {
                     append(stringResource(id = R.string.home_terminos_dialog_msg))
-
                     pushStringAnnotation(tag = "URL", annotation = "terms")
                     withStyle(style = SpanStyle(
                         color = MaterialTheme.colorScheme.primary,
@@ -354,8 +310,7 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
                     onClick = {
                         hasAccepted = true
                         sharedPreferences.edit().putBoolean("terms_accepted", true).apply()
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    }
                 ) {
                     Text(stringResource(id = R.string.home_aceptar))
                 }

@@ -27,17 +27,23 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.app.R
 
+/**
+ * Esta es la cabecera que usamos en casi todas las pantallas.
+ * Puede tener una imagen de fondo o un degradado de colores.
+ */
 @Composable
 fun CustomHeader(
     title: String? = null,
     subtitle: String? = null,
     showBackButton: Boolean = false,
-    backgroundImageRes: String? = null,
-    content: (@Composable ColumnScope.() -> Unit)? = null // Nuevo slot opcional
+    backgroundImageRes: Any? = null, // Cambiado a Any? para aceptar String o Int (R.drawable)
+    content: (@Composable ColumnScope.() -> Unit)? = null 
 ) {
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
+    // Colores por defecto si no hay imagen ni recurso
     val defaultGradientBrush = Brush.linearGradient(
         colors = listOf(
             MaterialTheme.colorScheme.surfaceVariant,
@@ -51,14 +57,15 @@ fun CustomHeader(
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
 
-            // Capa 1: Fondo
-            if (!backgroundImageRes.isNullOrEmpty()) {
+            // Ponemos el fondo: imagen si hay una, recurso si hay uno, o el degradado si no
+            if (backgroundImageRes != null && (backgroundImageRes !is String || backgroundImageRes.isNotEmpty())) {
                 AsyncImage(
                     model = backgroundImageRes,
-                    contentDescription = "Fondo de cabecera",
+                    contentDescription = "Imagen de fondo",
                     modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.Crop
                 )
+                // Oscurecemos un poco la imagen para que el texto se lea bien
                 Box(
                     modifier = Modifier
                         .matchParentSize()
@@ -79,7 +86,7 @@ fun CustomHeader(
                 )
             }
 
-            // Capa 2: Contenido
+            // Aquí va el texto y el botón de volver
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -102,7 +109,7 @@ fun CustomHeader(
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Regresar",
+                                contentDescription = "Volver atrás",
                                 tint = Color.White,
                             )
                         }
@@ -111,6 +118,7 @@ fun CustomHeader(
                     Spacer(modifier = Modifier.height(48.dp))
                 }
 
+                // Si pasamos contenido personalizado lo usamos, si no, mostramos título y subtítulo normales
                 if (content != null) {
                     content()
                 } else {

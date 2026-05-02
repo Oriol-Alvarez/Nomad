@@ -1,10 +1,12 @@
 package com.example.app.domain
 
+import kotlinx.coroutines.flow.Flow
+
 interface ItineraryItemRepository {
-    fun insertItineraryItem(item: ItineraryItem)
-    fun updateItineraryItem(item: ItineraryItem)
-    fun deleteItineraryItem(item: ItineraryItem)
-    fun deleteItineraryItemsByTripId(tripId: String)
-    fun getItineraryItemsForTrip(tripId: String): List<ItineraryItem>
-    fun getItineraryItemById(id: String): ItineraryItem?
+    suspend fun insertItineraryItem(item: ItineraryItem)
+    suspend fun updateItineraryItem(item: ItineraryItem)
+    suspend fun deleteItineraryItem(item: ItineraryItem)
+    suspend fun deleteItineraryItemsByTripId(tripId: String)
+    fun getItineraryItemsForTrip(tripId: String): Flow<List<ItineraryItem>>
+    suspend fun getItineraryItemById(id: String): ItineraryItem?
 }

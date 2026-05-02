@@ -2,6 +2,7 @@ package com.example.app.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,7 +34,6 @@ fun AutentificacionScreen(
     vm: AuthViewModel = viewModel(),
     onUserDataSaved: (String, String) -> Unit
 ) {
-    var passwordVisible by remember { mutableStateOf(false) }
     var showResetPasswordDialog by remember { mutableStateOf(false) }
     var resetEmail by remember { mutableStateOf("") }
     val context = LocalContext.current
@@ -95,7 +95,7 @@ fun AutentificacionScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        val (passwordVisibleState, setPasswordVisible) = remember { mutableStateOf(false) }
+                        var passwordVisibleState by remember { mutableStateOf(false) }
                         OutlinedTextField(
                             value = vm.password,
                             onValueChange = { vm.password = it; vm.errorMessage = null },
@@ -106,7 +106,7 @@ fun AutentificacionScreen(
                             visualTransformation = if (passwordVisibleState) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 val image = if (passwordVisibleState) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                                IconButton(onClick = { setPasswordVisible(!passwordVisibleState) }) {
+                                IconButton(onClick = { passwordVisibleState = !passwordVisibleState }) {
                                     Icon(image, contentDescription = null)
                                 }
                             },
@@ -114,7 +114,7 @@ fun AutentificacionScreen(
                             singleLine = true
                         )
 
-                        // --- CAMPOS EXTRA SOLO PARA REGISTRO (FORMULARIO COMPLETO) ---
+                        // --- CAMPOS EXTRA SOLO PARA REGISTRO ---
                         if (!vm.isLoginMode) {
                             Spacer(modifier = Modifier.height(16.dp))
                             OutlinedTextField(
@@ -129,7 +129,6 @@ fun AutentificacionScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
                             
-                            // Sustitución por SelectorFechaModular igual que en FormularioViaje
                             SelectorFechaModular(
                                 label = stringResource(id = R.string.auth_birthdate),
                                 fechaSeleccionada = vm.birthdate,
@@ -140,7 +139,6 @@ fun AutentificacionScreen(
                                 fechaMaxima = System.currentTimeMillis()
                             )
                         } else {
-                            // Link de recuperación de contraseña solo en Login
                             TextButton(
                                 onClick = { showResetPasswordDialog = true },
                                 modifier = Modifier.align(Alignment.End)
@@ -153,9 +151,11 @@ fun AutentificacionScreen(
                             }
                         }
 
-                        if (vm.errorMessage != null) {
+                        // CORRECCIÓN SMART CAST: Usar variable local para el error
+                        val error = vm.errorMessage
+                        if (error != null) {
                             Text(
-                                text = vm.errorMessage!!.asString(),
+                                text = error.asString(),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall,
                                 modifier = Modifier.padding(top = 8.dp)
@@ -164,15 +164,12 @@ fun AutentificacionScreen(
 
                         Spacer(modifier = Modifier.height(32.dp))
 
-                        // Botón de Acción Principal (Login o Registrarse)
                         if (vm.isLoading) {
                             CircularProgressIndicator(modifier = Modifier.size(40.dp))
                         } else {
                             Button(
                                 onClick = { vm.onAuthAction(navController, onUserDataSaved) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
+                                modifier = Modifier.fillMaxWidth().height(56.dp),
                                 shape = RoundedCornerShape(16.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
@@ -180,51 +177,33 @@ fun AutentificacionScreen(
                                 Text(
                                     text = if (vm.isLoginMode) stringResource(id = R.string.auth_login).uppercase() 
                                            else stringResource(id = R.string.auth_signup).uppercase(),
-                                    fontWeight = FontWeight.Bold,
-                                    style = MaterialTheme.typography.titleMedium
-                                    
+                                    fontWeight = FontWeight.Bold
                                 )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Botón para CAMBIAR de modo (Estilo botón para que sea más clicable)
                         OutlinedButton(
                             onClick = { 
                                 vm.isLoginMode = !vm.isLoginMode 
                                 vm.errorMessage = null
                             },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
+                            modifier = Modifier.fillMaxWidth().height(56.dp),
                             shape = RoundedCornerShape(16.dp),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
                         ) {
                             Text(
                                 text = if (vm.isLoginMode) stringResource(id = R.string.auth_no_account).uppercase() 
-                                       else stringResource(id = R.string.auth_have_account).uppercase(),
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold
+                                       else stringResource(id = R.string.auth_have_account).uppercase()
                             )
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(48.dp))
-
-                Text(
-                    text = stringResource(id = R.string.home_explora_nomad),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                )
             }
         }
     }
 
-    // Diálogo de recuperación de contraseña
     if (showResetPasswordDialog) {
         AlertDialog(
             onDismissRequest = { showResetPasswordDialog = false },
@@ -253,13 +232,12 @@ fun AutentificacionScreen(
                                 showResetPasswordDialog = false
                             },
                             onError = { errorText ->
-                                Toast.makeText(context, errorText.asString(context), Toast.LENGTH_LONG).show()
+                                val msg = errorText.asString(context)
+                                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                             }
                         )
                     }
-                ) {
-                    Text(stringResource(id = R.string.auth_recuperar_btn))
-                }
+                ) { Text(stringResource(id = R.string.auth_recuperar_btn)) }
             },
             dismissButton = {
                 TextButton(onClick = { showResetPasswordDialog = false }) {

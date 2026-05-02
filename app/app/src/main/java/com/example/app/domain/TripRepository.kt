@@ -1,9 +1,11 @@
 package com.example.app.domain
 
+import kotlinx.coroutines.flow.Flow
+
 interface TripRepository {
-    fun getTrips(): List<Trip>
-    fun getTripById(id: String): Trip?
-    fun insertTrip(trip: Trip)
-    fun deleteTrip(id: String)
-    fun updateTrip(trip: Trip)
+    fun getTrips(): Flow<List<Trip>>
+    suspend fun getTripById(id: String): Trip?
+    suspend fun insertTrip(trip: Trip)
+    suspend fun deleteTrip(id: String)
+    suspend fun updateTrip(trip: Trip)
 }

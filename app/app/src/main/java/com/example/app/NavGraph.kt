@@ -5,13 +5,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.app.ui.screens.*
+import com.example.app.ui.viewmodels.TripListViewModel
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
+    tripViewModel: TripListViewModel,
     isDarkMode: Boolean,
     onDarkModeChange: (Boolean) -> Unit,
     recordatorioViajes: Boolean,
@@ -47,15 +48,23 @@ fun NavGraph(
             ) 
         }
 
-        composable(Routes.HOME) { HomeScreen(navController, username) }
+        composable(Routes.HOME) { 
+            HomeScreen(
+                navController = navController, 
+                username = username,
+                viewModel = tripViewModel
+            ) 
+        }
 
         composable(Routes.DETALLE_VIAJE) {
             DetalleViajeScreen(
                 navController = navController,
-                selectedCurrency = selectedCurrency
+                selectedCurrency = selectedCurrency,
+                viewModel = tripViewModel
             )
         }
 
+        // Ruta actualizada para recibir el tripId como String
         composable(
             route = "${Routes.DETALLE_VIAJE2}/{tripId}",
             arguments = listOf(navArgument("tripId") { type = NavType.StringType })
@@ -64,7 +73,8 @@ fun NavGraph(
             DetalleViajeScreen2(
                 navController = navController,
                 selectedCurrency = selectedCurrency,
-                tripId = tripId
+                tripId = tripId,
+                viewModel = tripViewModel
             )
         }
 
@@ -85,10 +95,12 @@ fun NavGraph(
                 onCurrencyChange = onCurrencyChange,
                 selectedLanguage = selectedLanguage,
                 onLanguageChange = onLanguageChange,
+                // Pasar nuevos campos
                 username = username,
                 onUsernameChange = onUsernameChange,
                 birthdate = birthdate,
                 onBirthdateChange = onBirthdateChange,
+                // Tamaño de letra
                 fontSizeScale = fontSizeScale,
                 onFontSizeScaleChange = onFontSizeScaleChange
             )
@@ -103,7 +115,11 @@ fun NavGraph(
             arguments = listOf(navArgument("ciudad") { defaultValue = "" })
         ) { backStackEntry ->
             val ciudadReal = backStackEntry.arguments?.getString("ciudad") ?: ""
-            FormularioViaje(navController = navController, ciudadDestino = ciudadReal)
+            FormularioViaje(
+                navController = navController, 
+                ciudadDestino = ciudadReal,
+                viewModel = tripViewModel
+            )
         }
     }
 }
