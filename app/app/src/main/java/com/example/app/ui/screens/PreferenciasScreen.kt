@@ -347,3 +347,131 @@ fun PreferenciasScreen(
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CajasPreferencias(
+    image: Int,
+    name: String,
+    role: String,
+    value: String,
+    options: List<String> = emptyList(),
+    type: String,
+    navController: NavHostController = rememberNavController(),
+    onClick: () -> Unit = {},
+    onCheckedChange: (Boolean) -> Unit = {},
+    onCurrencySelect: (String) -> Unit = {}
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .then(if (type == "nav") Modifier.clickable { onClick() } else Modifier)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.background)
+                .padding(2.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                painter = painterResource(id = image),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = name,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                text = role,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 13.sp
+            )
+        }
+
+        when (type) {
+            "slider" -> {
+                Switch(
+                    checked = value == "on",
+                    onCheckedChange = onCheckedChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = Color.White,
+                        uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
+                    )
+                )
+            }
+            "select" -> {
+                var expanded by remember { mutableStateOf(false) }
+
+                Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f))
+                            .clickable { expanded = true }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                            .widthIn(min = 60.dp)
+                    ) {
+                        Text(
+                            text = value,
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.rotate(if (expanded) 180f else 0f)
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        offset = DpOffset(x = 0.dp, y = 4.dp),
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                    ) {
+                        if (options.isEmpty()) {
+                            DropdownMenuItem(text = { Text("No hay opciones") }, onClick = { expanded = false })
+                        } else {
+                            options.forEach { opcion ->
+                                DropdownMenuItem(
+                                    text = { Text(text = opcion) },
+                                    onClick = {
+                                        expanded = false
+                                        onCurrencySelect(opcion)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            else -> {
+                IconButton(onClick = onClick) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                        contentDescription = "Acceder",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
