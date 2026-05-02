@@ -20,14 +20,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.app.R
 import com.example.app.Routes
-import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.viewmodels.TripListViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -37,9 +34,10 @@ import java.util.Locale
 fun DetalleViajeScreen(
     navController: NavHostController,
     selectedCurrency: String,
-    viewModel: TripListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    viewModel: TripListViewModel
 ) {
-    val tripsFromDB = viewModel.trips
+    // T1.6: Observamos los cambios en la base de datos a través del StateFlow del ViewModel
+    val tripsFromDB by viewModel.trips.collectAsState()
     var tripIdToDelete by remember { mutableStateOf<String?>(null) }
 
     if (tripIdToDelete != null) {
@@ -124,7 +122,6 @@ fun DetalleViajeScreen(
 fun formatShortDate(dateString: String?): String {
     if (dateString.isNullOrEmpty()) return ""
 
-    // Lista con los formatos más habituales. El código probará uno a uno hasta acertar.
     val formatosPosibles = listOf("yyyy-MM-dd", "yyyy/MM/dd", "dd/MM/yyyy", "dd-MM-yyyy")
 
     for (patron in formatosPosibles) {
@@ -139,12 +136,10 @@ fun formatShortDate(dateString: String?): String {
                 return output.format(date).lowercase()
             }
         } catch (e: Exception) {
-            // Si el patrón no coincide, ignoramos el error y pasamos al siguiente
             continue
         }
     }
 
-    // Si la fecha viniera con un texto rarísimo que no encaja en nada, devolvemos el original
     return dateString
 }
 
@@ -225,7 +220,6 @@ fun TripCardModule(
                 }
             }
 
-            // Botón de eliminar arriba a la derecha
             IconButton(
                 onClick = onDelete,
                 modifier = Modifier

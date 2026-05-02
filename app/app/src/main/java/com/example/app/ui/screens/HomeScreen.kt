@@ -54,15 +54,15 @@ import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
+import com.example.app.ui.viewmodels.TripListViewModel
 
-/**
- * Pantalla principal de la app. 
- * Aquí el usuario ve sugerencias de viajes y ofertas.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController, username: String) {
-    // Si es la primera vez, le pedimos que acepte los términos
+fun HomeScreen(
+    navController: NavHostController, 
+    username: String,
+    viewModel: TripListViewModel
+) {
     TermsAndConditionsDialog(navController = navController)
 
     Scaffold(
@@ -74,7 +74,6 @@ fun HomeScreen(navController: NavHostController, username: String) {
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Cabecera con saludo personalizado
             CustomHeader("${stringResource(id = R.string.home_hola)}, $username", stringResource(id = R.string.home_busca_aventura))
 
             Column(
@@ -84,20 +83,16 @@ fun HomeScreen(navController: NavHostController, username: String) {
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Fila de sitios recomendados
                 RecomendadosSection(navController)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Fila de sitios destacados
                 DestacadosSection(navController)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Lista de trucos y ofertas
                 OfertasTipsSection(navController)
 
-                // Mensaje final del pie de página
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
                     text = stringResource(id = R.string.home_explora_nomad),
@@ -112,9 +107,6 @@ fun HomeScreen(navController: NavHostController, username: String) {
     }
 }
 
-/**
- * Sección con tarjetas grandes de sitios recomendados.
- */
 @Composable
 fun RecomendadosSection(navController: NavHostController) {
     Text(
@@ -142,9 +134,6 @@ fun RecomendadosSection(navController: NavHostController) {
     }
 }
 
-/**
- * Sección con tarjetas medianas de sitios destacados.
- */
 @Composable
 fun DestacadosSection(navController: NavHostController) {
     Text(
@@ -179,9 +168,6 @@ fun DestacadosSection(navController: NavHostController) {
     }
 }
 
-/**
- * Sección de trucos para viajar y ofertas especiales.
- */
 @Composable
 fun OfertasTipsSection(navController: NavHostController) {
     Text(
@@ -276,9 +262,6 @@ fun DestacadoCard(image: Int, name: String, onClick: () -> Unit) {
     }
 }
 
-/**
- * Diálogo que aparece al principio para aceptar las reglas de la app.
- */
 @Composable
 fun TermsAndConditionsDialog(navController: NavHostController) {
     val context = LocalContext.current
@@ -290,7 +273,6 @@ fun TermsAndConditionsDialog(navController: NavHostController) {
         mutableStateOf(sharedPreferences.getBoolean("terms_accepted", false))
     }
 
-    // Si ya aceptó antes, no mostramos nada
     if (!hasAccepted) {
         AlertDialog(
             onDismissRequest = { },

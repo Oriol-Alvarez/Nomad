@@ -16,10 +16,12 @@ import com.example.app.ui.screens.SobreNosotrosScreen
 import com.example.app.ui.screens.SplashScreen
 import com.example.app.ui.screens.TerminosCondicionesScreen
 import com.example.app.ui.screens.FormularioViaje
+import com.example.app.ui.viewmodels.TripListViewModel
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
+    tripViewModel: TripListViewModel,
     isDarkMode: Boolean,
     onDarkModeChange: (Boolean) -> Unit,
     recordatorioViajes: Boolean,
@@ -45,12 +47,19 @@ fun NavGraph(
     ) {
         composable(Routes.SPLASH) { SplashScreen(navController) }
 
-        composable(Routes.HOME) { HomeScreen(navController, username) }
+        composable(Routes.HOME) { 
+            HomeScreen(
+                navController = navController, 
+                username = username,
+                viewModel = tripViewModel
+            ) 
+        }
 
         composable(Routes.DETALLE_VIAJE) {
             DetalleViajeScreen(
                 navController = navController,
-                selectedCurrency = selectedCurrency
+                selectedCurrency = selectedCurrency,
+                viewModel = tripViewModel
             )
         }
 
@@ -63,7 +72,8 @@ fun NavGraph(
             DetalleViajeScreen2(
                 navController = navController,
                 selectedCurrency = selectedCurrency,
-                tripId = tripId
+                tripId = tripId,
+                viewModel = tripViewModel
             )
         }
 
@@ -104,7 +114,11 @@ fun NavGraph(
             arguments = listOf(navArgument("ciudad") { defaultValue = "" })
         ) { backStackEntry ->
             val ciudadReal = backStackEntry.arguments?.getString("ciudad") ?: ""
-            FormularioViaje(navController = navController, ciudadDestino = ciudadReal)
+            FormularioViaje(
+                navController = navController, 
+                ciudadDestino = ciudadReal,
+                viewModel = tripViewModel
+            )
         }
     }
 }
