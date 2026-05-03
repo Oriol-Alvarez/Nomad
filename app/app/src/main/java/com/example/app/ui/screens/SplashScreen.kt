@@ -38,10 +38,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
+import com.example.app.ui.viewmodels.AuthViewModel
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(navController: NavHostController) {
+fun SplashScreen(navController: NavHostController, authViewModel: AuthViewModel) {
 
     // Estado del progreso de carga (rango 0.0 a 1.0)
     var progress by remember { mutableStateOf(0f) }
@@ -75,10 +76,12 @@ fun SplashScreen(navController: NavHostController) {
         }
     }
 
-    // Gestión de la transición a la pantalla principal al completar el progreso
+    // Gestión de la transición a la pantalla principal o login al completar el progreso
     if (progress >= 1f) {
         LaunchedEffect(Unit) {
-            navController.navigate(Routes.HOME) {
+            // Comprobamos si el usuario está logueado para decidir el destino
+            val destination = if (authViewModel.isUserLoggedIn()) Routes.HOME else Routes.AUTH
+            navController.navigate(destination) {
                 // Eliminación de la Splash de la pila de retroceso para evitar re-entradas
                 popUpTo(Routes.SPLASH) { inclusive = true }
             }
@@ -154,21 +157,5 @@ fun SplashScreen(navController: NavHostController) {
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 24.dp)
         )
-    }
-}
-
-@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun SplashScreenPreviewDark() {
-    AppTheme {
-        SplashScreen(navController = rememberNavController())
-    }
-}
-
-@Preview(name = "Light Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_NO)
-@Composable
-fun SplashScreenPreviewLight() {
-    AppTheme {
-        SplashScreen(navController = rememberNavController())
     }
 }

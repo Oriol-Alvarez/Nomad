@@ -8,7 +8,10 @@ import com.example.app.domain.Trip
 import com.example.app.domain.TripRepository
 import com.example.app.domain.ItineraryItemRepository
 import com.example.app.domain.ItineraryItem
+import com.example.app.domain.AuthRepository
 import com.example.app.ui.screens.Validator
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -20,10 +23,13 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
+import javax.inject.Inject
 
-class TripListViewModel(
+@HiltViewModel
+class TripListViewModel @Inject constructor(
     private val tripRepository: TripRepository,
-    private val itineraryRepository: ItineraryItemRepository
+    private val itineraryRepository: ItineraryItemRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val TAG_DB = "DatabaseLog"
@@ -45,10 +51,6 @@ class TripListViewModel(
             initialValue = emptyList()
         )
 
-    /**
-     * T5.2: Guarda un viaje validando los datos.
-     * Devuelve true si la validación inicial es correcta.
-     */
     fun saveTrip(
         title: String,
         destination: String,
@@ -60,7 +62,9 @@ class TripListViewModel(
         activitiesFromForm: List<ItineraryItem>
     ): Boolean {
         val currentUserId = auth.currentUser?.uid ?: return false
-        
+
+        val currentUserId = authRepository.getCurrentUser()?.uid ?: return
+
         // Validaciones Síncronas
         if (!Validator.isValidTitle(title)) {
             Log.e(TAG_VAL, "Título inválido: $title")
@@ -115,7 +119,6 @@ class TripListViewModel(
                 _uiEvents.emit("Error al guardar el viaje")
             }
         }
-        return true
     }
 
     fun deleteTrip(id: String) {

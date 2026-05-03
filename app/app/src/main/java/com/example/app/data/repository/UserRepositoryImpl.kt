@@ -3,8 +3,11 @@ package com.example.app.data.repository
 import com.example.app.data.local.UserDao
 import com.example.app.domain.User
 import com.example.app.domain.UserRepository
+import javax.inject.Inject
 
-class UserRepositoryImpl(private val userDao: UserDao) : UserRepository {
+class UserRepositoryImpl @Inject constructor(
+    private val userDao: UserDao
+) : UserRepository {
     override suspend fun getUserById(id: String): User? = userDao.getUserById(id)
     
     override suspend fun getUserByUsername(username: String): User? = userDao.getUserByUsername(username)

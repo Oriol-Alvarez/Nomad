@@ -18,9 +18,11 @@ class AppViewModelFactory(
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         return when {
             modelClass.isAssignableFrom(TripListViewModel::class.java) -> {
-                TripListViewModel(tripRepository!!, itineraryRepository!!) as T
+                @Suppress("UNCHECKED_CAST")
+                TripListViewModel(tripRepository!!, itineraryRepository!!, authRepository!!) as T
             }
             modelClass.isAssignableFrom(AuthViewModel::class.java) -> {
+                @Suppress("UNCHECKED_CAST")
                 AuthViewModel(authRepository!!, userRepository!!, accessLogRepository!!) as T
             }
             else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

@@ -63,8 +63,6 @@ fun HomeScreen(
     username: String,
     viewModel: TripListViewModel
 ) {
-    TermsAndConditionsDialog(navController = navController)
-
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
@@ -259,62 +257,5 @@ fun DestacadoCard(image: Int, name: String, onClick: () -> Unit) {
                 Text(text = name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, maxLines = 1)
             }
         }
-    }
-}
-
-@Composable
-fun TermsAndConditionsDialog(navController: NavHostController) {
-    val context = LocalContext.current
-    val sharedPreferences = remember {
-        context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
-    }
-
-    var hasAccepted by remember {
-        mutableStateOf(sharedPreferences.getBoolean("terms_accepted", false))
-    }
-
-    if (!hasAccepted) {
-        AlertDialog(
-            onDismissRequest = { },
-            containerColor = MaterialTheme.colorScheme.background,
-            title = {
-                Text(text = stringResource(id = R.string.home_terminos_dialog_titulo), fontWeight = FontWeight.Bold)
-            },
-            text = {
-                val annotatedText = buildAnnotatedString {
-                    append(stringResource(id = R.string.home_terminos_dialog_msg))
-                    pushStringAnnotation(tag = "URL", annotation = "terms")
-                    withStyle(style = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        textDecoration = TextDecoration.Underline
-                    )) {
-                        append(stringResource(id = R.string.home_terminos_dialog_link))
-                    }
-                    pop()
-                }
-
-                ClickableText(
-                    text = annotatedText,
-                    onClick = { offset ->
-                        annotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
-                            .firstOrNull()?.let {
-                                navController.navigate(Routes.TERMINOS_CONDICIONES)
-                            }
-                    },
-                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground)
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        hasAccepted = true
-                        sharedPreferences.edit().putBoolean("terms_accepted", true).apply()
-                    }
-                ) {
-                    Text(stringResource(id = R.string.home_aceptar))
-                }
-            }
-        )
     }
 }

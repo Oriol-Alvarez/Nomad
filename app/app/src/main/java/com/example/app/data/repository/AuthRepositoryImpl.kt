@@ -4,9 +4,10 @@ import com.example.app.domain.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class AuthRepositoryImpl(
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+class AuthRepositoryImpl @Inject constructor(
+    private val auth: FirebaseAuth
 ) : AuthRepository {
 
     override fun getCurrentUser(): FirebaseUser? = auth.currentUser
