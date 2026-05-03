@@ -1,6 +1,7 @@
 package com.example.app
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -13,8 +14,8 @@ import com.example.app.ui.viewmodels.AuthViewModel
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    tripViewModel: TripListViewModel,
-    authViewModel: AuthViewModel,
+    tripViewModel: TripListViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel(),
     isDarkMode: Boolean,
     onDarkModeChange: (Boolean) -> Unit,
     recordatorioViajes: Boolean,
@@ -36,7 +37,7 @@ fun NavGraph(
         navController = navController,
         startDestination = Routes.SPLASH
     ) {
-        composable(Routes.SPLASH) { SplashScreen(navController) }
+        composable(Routes.SPLASH) { SplashScreen(navController, authViewModel) }
 
         composable(Routes.AUTH) { 
             AutentificacionScreen(

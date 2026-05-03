@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -17,14 +18,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.app.R
+import com.example.app.Routes
 import com.example.app.ui.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -194,6 +200,35 @@ fun AutentificacionScreen(
                                 Text(
                                     text = "Acepto recibir correos electrónicos",
                                     style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+
+                            // --- TÉRMINOS Y CONDICIONES ---
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Checkbox(
+                                    checked = vm.acceptTerms,
+                                    onCheckedChange = { vm.acceptTerms = it }
+                                )
+                                val annotatedString = buildAnnotatedString {
+                                    append("Acepto los ")
+                                    pushStringAnnotation(tag = "terms", annotation = "terms")
+                                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)) {
+                                        append("términos y condiciones")
+                                    }
+                                    pop()
+                                }
+                                ClickableText(
+                                    text = annotatedString,
+                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface),
+                                    onClick = { offset ->
+                                        annotatedString.getStringAnnotations(tag = "terms", start = offset, end = offset)
+                                            .firstOrNull()?.let {
+                                                navController.navigate(Routes.TERMINOS_CONDICIONES)
+                                            }
+                                    }
                                 )
                             }
                         } else {

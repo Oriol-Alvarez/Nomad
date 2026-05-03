@@ -4,8 +4,11 @@ import com.example.app.data.local.ItineraryDao
 import com.example.app.domain.ItineraryItem
 import com.example.app.domain.ItineraryItemRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class ItineraryItemRepositoryImpl(private val itineraryDao: ItineraryDao) : ItineraryItemRepository {
+class ItineraryItemRepositoryImpl @Inject constructor(
+    private val itineraryDao: ItineraryDao
+) : ItineraryItemRepository {
 
     override suspend fun insertItineraryItem(item: ItineraryItem) {
         itineraryDao.insertItem(item)

@@ -14,9 +14,12 @@ import com.example.app.domain.UserRepository
 import com.example.app.domain.AccessLogRepository
 import com.example.app.domain.User
 import com.example.app.ui.screens.UiText
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AuthViewModel(
+@HiltViewModel
+class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
     private val accessLogRepository: AccessLogRepository
@@ -32,10 +35,15 @@ class AuthViewModel(
     var country by mutableStateOf("")
     var phoneNumber by mutableStateOf("")
     var acceptEmails by mutableStateOf(true)
+    var acceptTerms by mutableStateOf(false)
     
     var isLoginMode by mutableStateOf(true)
     var errorMessage by mutableStateOf<UiText?>(null)
     var isLoading by mutableStateOf(false)
+
+    fun isUserLoggedIn(): Boolean {
+        return authRepository.getCurrentUser() != null
+    }
 
     fun onAuthAction(
         navController: NavHostController,
@@ -47,6 +55,10 @@ class AuthViewModel(
             viewModelScope.launch {
                 if (email.isBlank() || password.isBlank() || username.isBlank() || birthdate.isBlank()) {
                     errorMessage = UiText.StringResource(R.string.auth_error_all_fields)
+                    return@launch
+                }
+                if (!acceptTerms) {
+                    errorMessage = UiText.DynamicString("Debes aceptar los términos y condiciones")
                     return@launch
                 }
                 if (!userRepository.isUsernameAvailable(username)) {

@@ -8,8 +8,10 @@ import com.example.app.domain.Trip
 import com.example.app.domain.TripRepository
 import com.example.app.domain.ItineraryItemRepository
 import com.example.app.domain.ItineraryItem
+import com.example.app.domain.AuthRepository
 import com.example.app.ui.screens.Validator
-import com.google.firebase.auth.FirebaseAuth
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -18,17 +20,19 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
+import javax.inject.Inject
 
-class TripListViewModel(
+@HiltViewModel
+class TripListViewModel @Inject constructor(
     private val tripRepository: TripRepository,
-    private val itineraryRepository: ItineraryItemRepository
+    private val itineraryRepository: ItineraryItemRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val TAG = "TripListViewModel"
-    private val auth = FirebaseAuth.getInstance()
 
-    // T4.2: Solo mostramos los viajes del usuario logueado actualmente
-    val trips: StateFlow<List<Trip>> = flowOf(auth.currentUser?.uid)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val trips: StateFlow<List<Trip>> = flowOf(authRepository.getCurrentUser()?.uid)
         .flatMapLatest { uid ->
             if (uid != null) tripRepository.getTripsForUser(uid)
             else flowOf(emptyList())
@@ -49,7 +53,7 @@ class TripListViewModel(
         imageUri: String,
         activitiesFromForm: List<ItineraryItem>
     ) {
-        val currentUserId = auth.currentUser?.uid ?: return // T4.2: Asegurar que hay un usuario
+        val currentUserId = authRepository.getCurrentUser()?.uid ?: return
         
         if (!Validator.isValidTitle(title) || !Validator.isValidLocation(destination)) return
         
@@ -62,7 +66,7 @@ class TripListViewModel(
                 val newTripId = UUID.randomUUID().toString()
                 val newTrip = Trip(
                     id = newTripId,
-                    userId = currentUserId, // Asociar con el usuario logueado
+                    userId = currentUserId,
                     title = title,
                     country = destination,
                     description = desc,

@@ -112,7 +112,7 @@ fun PreferenciasScreen(
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
                     TextButton(
                         onClick = {
-                            authViewModel.signOut() // Corregido: signOut con 'O' mayúscula
+                            authViewModel.signOut()
                             navController.navigate(Routes.AUTH) {
                                 popUpTo(0) { inclusive = true }
                             }

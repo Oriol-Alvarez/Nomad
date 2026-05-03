@@ -13,34 +13,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.core.content.edit
 import androidx.navigation.compose.rememberNavController
-import com.example.app.data.local.AppDatabase
-import com.example.app.data.repository.AuthRepositoryImpl
-import com.example.app.data.repository.ItineraryItemRepositoryImpl
-import com.example.app.data.repository.TripRepositoryImpl
-import com.example.app.data.repository.UserRepositoryImpl
-import com.example.app.data.repository.AccessLogRepositoryImpl
 import com.example.app.ui.theme.AppTheme
 import com.example.app.ui.viewmodels.TripListViewModel
 import com.example.app.ui.viewmodels.AuthViewModel
-import com.example.app.ui.viewmodels.AppViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    // Inicialización de la fábrica única para todos los ViewModels
-    private val appViewModelFactory: AppViewModelFactory by lazy {
-        val database = AppDatabase.getDatabase(applicationContext)
-        AppViewModelFactory(
-            tripRepository = TripRepositoryImpl(database.tripDao()),
-            itineraryRepository = ItineraryItemRepositoryImpl(database.itineraryDao()),
-            authRepository = AuthRepositoryImpl(),
-            userRepository = UserRepositoryImpl(database.userDao()),
-            accessLogRepository = AccessLogRepositoryImpl(database.accessLogDao())
-        )
-    }
-
-    private val tripViewModel: TripListViewModel by viewModels { appViewModelFactory }
-    private val authViewModel: AuthViewModel by viewModels { appViewModelFactory }
+    private val tripViewModel: TripListViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val prefs = getSharedPreferences("config_nomad", MODE_PRIVATE)

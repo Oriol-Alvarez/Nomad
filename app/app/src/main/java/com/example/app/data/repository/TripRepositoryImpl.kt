@@ -4,8 +4,11 @@ import com.example.app.data.local.TripDao
 import com.example.app.domain.Trip
 import com.example.app.domain.TripRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class TripRepositoryImpl(private val tripDao: TripDao) : TripRepository {
+class TripRepositoryImpl @Inject constructor(
+    private val tripDao: TripDao
+) : TripRepository {
 
     override fun getTripsForUser(userId: String): Flow<List<Trip>> {
         return tripDao.getTripsForUser(userId)
