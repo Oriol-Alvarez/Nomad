@@ -19,6 +19,26 @@ El dominio de la aplicación se divide en módulos lógicos interconectados que 
 
 ---
 
+## 🗄️ Persistencia de Datos (Database Schema)
+
+Nomad utiliza **Room** para la persistencia local, lo que permite el funcionamiento offline y una gestión eficiente de los datos del usuario. La base de datos se denomina `nomad_database` (versión 2).
+
+### Esquema de Tablas
+
+| Tabla | Clave Primaria | Descripción |
+| :--- | :--- | :--- |
+| **`users`** | `id` (Firebase UID) | Perfil completo del usuario (email, username, birthdate, etc.). |
+| **`trips`** | `id` (UUID) | Información general del viaje (destino, fechas, presupuesto). |
+| **`itinerary_items`** | `id` (UUID) | Actividades específicas de un viaje (vuelos, hoteles, eventos). |
+| **`access_logs`** | `id` (Auto-inc) | Historial de inicios y cierres de sesión (seguridad y auditoría). |
+
+### Implementación y Acceso
+* **DAOs**: Se definen interfaces para operaciones CRUD. `TripDao` e `ItineraryDao` devuelven `Flow<List<T>>` para permitir una UI reactiva que se actualiza automáticamente ante cambios en la DB.
+* **Migrations**: Se utiliza `fallbackToDestructiveMigration()` durante la fase de desarrollo para simplificar cambios en el esquema.
+* **Repositorios**: Actúan como una capa de abstracción entre los DAOs y los ViewModels, facilitando la posible integración futura con fuentes de datos remotas.
+
+---
+
 ## 🎨 UI & Screens (Capa de Presentación)
 
 ### 1. Formulario de Viaje (`FormularioViaje`)
@@ -42,7 +62,8 @@ Componente modal que permite la entrada de datos para nuevas paradas.
 | **Framework UI** | Jetpack Compose (Declarativo) |
 | **Diseño** | Material Design 3 (M3) |
 | **Navegación** | Compose Navigation Recomended |
-| **Persistencia de Configuración** | SharedPreferences (para `terms_accepted`) |
+| **Persistencia Local** | Room Database |
+| **Configuración** | SharedPreferences (para `terms_accepted`) |
 | **Gestión de Estado** | `mutableStateOf` con `rememberSaveable` |
 
 
