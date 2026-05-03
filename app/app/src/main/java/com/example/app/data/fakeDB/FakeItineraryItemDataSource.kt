@@ -17,7 +17,7 @@ object FakeItineraryItemDataSource {
                     nombre = "Llegada y Check-in Hotel",
                     dia = "01/08/2026",
                     hora = "14:00",
-                    precio = "0",
+                    precio = 0,
                     tipo = "Hotel",
                     descripcion = "Registro en el hotel cerca del centro."
                 ),
@@ -27,7 +27,7 @@ object FakeItineraryItemDataSource {
                     nombre = "Cena en Le Marais",
                     dia = "01/08/2026",
                     hora = "20:30",
-                    precio = "45",
+                    precio = 45,
                     tipo = "Restaurante",
                     descripcion = "Cena tradicional francesa en un barrio histórico."
                 ),
@@ -37,7 +37,7 @@ object FakeItineraryItemDataSource {
                     nombre = "Museo del Louvre",
                     dia = "02/08/2026",
                     hora = "10:00",
-                    precio = "22",
+                    precio = 22,
                     tipo = "Museo",
                     descripcion = "Visita guiada para ver la Mona Lisa y más."
                 ),
@@ -47,7 +47,7 @@ object FakeItineraryItemDataSource {
                     nombre = "Subida a la Torre Eiffel",
                     dia = "02/08/2026",
                     hora = "18:00",
-                    precio = "28",
+                    precio = 28,
                     tipo = "Ocio",
                     descripcion = "Vistas panorámicas de toda la ciudad al atardecer."
                 ),
@@ -57,7 +57,7 @@ object FakeItineraryItemDataSource {
                     nombre = "Crucero por el Sena",
                     dia = "03/08/2026",
                     hora = "21:00",
-                    precio = "15",
+                    precio = 15,
                     tipo = "Ocio",
                     descripcion = "Paseo nocturno en barco por el río."
                 ),
@@ -67,7 +67,7 @@ object FakeItineraryItemDataSource {
                     nombre = "Excursión a Versalles",
                     dia = "04/08/2026",
                     hora = "09:30",
-                    precio = "20",
+                    precio = 20,
                     tipo = "Museo",
                     descripcion = "Visita a los jardines y palacio real."
                 )

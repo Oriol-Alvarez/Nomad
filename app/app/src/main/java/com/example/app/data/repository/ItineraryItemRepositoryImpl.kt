@@ -1,43 +1,36 @@
 package com.example.app.data.repository
 
-import com.example.app.data.fakeDB.FakeItineraryItemDataSource
+import com.example.app.data.local.ItineraryDao
 import com.example.app.domain.ItineraryItem
 import com.example.app.domain.ItineraryItemRepository
+import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
 
-class ItineraryItemRepositoryImpl : ItineraryItemRepository {
+class ItineraryItemRepositoryImpl @Inject constructor(
+    private val itineraryDao: ItineraryDao
+) : ItineraryItemRepository {
 
-    // Nos conectamos a tus datos falsos en memoria
-    private val dataSource = FakeItineraryItemDataSource
-
-    // ------------------------------------------------------------------------
-    // MÉTODOS DE ESCRITURA
-    // ------------------------------------------------------------------------
-
-    override fun insertItineraryItem(item: ItineraryItem) {
-        dataSource.addItem(item)
+    override suspend fun insertItineraryItem(item: ItineraryItem) {
+        itineraryDao.insertItem(item)
     }
 
-    override fun updateItineraryItem(item: ItineraryItem) {
-        dataSource.updateItem(item)
+    override suspend fun updateItineraryItem(item: ItineraryItem) {
+        itineraryDao.updateItem(item)
     }
 
-    override fun deleteItineraryItem(item: ItineraryItem) {
-        dataSource.deleteItem(item)
+    override suspend fun deleteItineraryItem(item: ItineraryItem) {
+        itineraryDao.deleteItem(item)
     }
 
-    override fun deleteItineraryItemsByTripId(tripId: String) {
-        dataSource.deleteItemsByTripId(tripId)
+    override suspend fun deleteItineraryItemsByTripId(tripId: String) {
+        itineraryDao.deleteItemsByTripId(tripId)
     }
 
-    // ------------------------------------------------------------------------
-    // MÉTODOS DE LECTURA
-    // ------------------------------------------------------------------------
-
-    override fun getItineraryItemsForTrip(tripId: String): List<ItineraryItem> {
-        return dataSource.getItemsForTrip(tripId)
+    override fun getItineraryItemsForTrip(tripId: String): Flow<List<ItineraryItem>> {
+        return itineraryDao.getItemsForTrip(tripId)
     }
 
-    override fun getItineraryItemById(id: String): ItineraryItem? {
-        return dataSource.getItemById(id)
+    override suspend fun getItineraryItemById(id: String): ItineraryItem? {
+        return itineraryDao.getItemById(id)
     }
 }

@@ -38,40 +38,37 @@ import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
+import com.example.app.ui.viewmodels.AuthViewModel
 import kotlinx.coroutines.delay
 
-/**
- * Pantalla de carga inicial (Splash).
- * Muestra el logo y una barrita de progreso antes de entrar a la app.
- */
 @Composable
-fun SplashScreen(navController: NavHostController) {
+fun SplashScreen(navController: NavHostController, authViewModel: AuthViewModel) {
 
-    // Controlamos cuánto lleva la barra de carga (de 0 a 100%)
+    // Estado del progreso de carga (rango 0.0 a 1.0)
     var progress by remember { mutableStateOf(0f) }
 
-    // Para que el logo aparezca poco a poco con una animación
+    // Control de visibilidad para la animación de entrada del logotipo
     var visible by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
-    // Intentamos sacar la versión de la app para ponerla abajo
+    // Obtención de la versión del paquete definida en el manifiesto
     val versionName = remember {
         try {
             context.packageManager
                 .getPackageInfo(context.packageName, 0).versionName
         } catch (e: Exception) {
-            "2.0" // Por si falla, ponemos una por defecto
+            "2.0"
         }
     }
 
-    // Al arrancar, esperamos un pelín y mostramos el logo
+    // Disparador de la animación de entrada tras el inflado inicial
     LaunchedEffect(Unit) {
         delay(100)
         visible = true
     }
 
-    // Simulamos que la app está cargando algo
+    // Lógica de simulación de carga asíncrona
     LaunchedEffect(Unit) {
         while (progress < 1f) {
             delay(50L)
@@ -79,22 +76,26 @@ fun SplashScreen(navController: NavHostController) {
         }
     }
 
-    // Cuando la barra llega al final, nos vamos a la pantalla de inicio
+    // Gestión de la transición a la pantalla principal o login al completar el progreso
     if (progress >= 1f) {
         LaunchedEffect(Unit) {
-            navController.navigate(Routes.HOME) {
-                // Borramos esta pantalla del historial para que no se pueda volver atrás
+            // Comprobamos si el usuario está logueado para decidir el destino
+            val destination = if (authViewModel.isUserLoggedIn()) Routes.HOME else Routes.AUTH
+            navController.navigate(destination) {
+                // Eliminación de la Splash de la pila de retroceso para evitar re-entradas
                 popUpTo(Routes.SPLASH) { inclusive = true }
             }
         }
     }
 
+    // Interfaz de usuario de la pantalla de bienvenida
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
 
+        // Contenedor central: Branding y progreso
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -103,7 +104,7 @@ fun SplashScreen(navController: NavHostController) {
             verticalArrangement = Arrangement.Center
         ) {
 
-            // El logo de Nomad
+            // Logotipo con transición de opacidad suave
             AnimatedVisibility(
                 visible = visible,
                 enter = fadeIn()
@@ -124,7 +125,7 @@ fun SplashScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // La barrita azul que se va rellenando
+            // Indicador de progreso lineal personalizado
             LinearProgressIndicator(
                 progress = progress,
                 modifier = Modifier
@@ -137,7 +138,7 @@ fun SplashScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // El texto que dice el porcentaje (ej: 50%)
+            // Etiqueta de porcentaje de carga
             Text(
                 text = "${(progress * 100).toInt()}%",
                 fontSize = 14.sp,
@@ -146,7 +147,7 @@ fun SplashScreen(navController: NavHostController) {
             )
         }
 
-        // La versión de la app abajo del todo
+        // Información de versión anclada en la parte inferior
         Text(
             text = "v $versionName",
             fontSize = 15.sp,

@@ -1,22 +1,31 @@
 package com.example.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.content.PermissionChecker
+import androidx.core.content.edit
 import androidx.navigation.compose.rememberNavController
 import com.example.app.ui.theme.AppTheme
+import com.example.app.ui.viewmodels.TripListViewModel
+import com.example.app.ui.viewmodels.AuthViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import java.util.Locale
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private val tripViewModel: TripListViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 1. LEER IDIOMA ANTES DE SUPER.ONCREATE
         val prefs = getSharedPreferences("config_nomad", MODE_PRIVATE)
         val savedLang = prefs.getString("user_lang", "Es Español") ?: "Es Español"
         updateResourceLocale(savedLang)
@@ -25,64 +34,63 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            // --- ESTADOS PERSISTENTES ---
             var darkTheme by rememberSaveable { mutableStateOf(prefs.getBoolean("dark_mode", false)) }
             var recordatorioViajes by rememberSaveable { mutableStateOf(prefs.getBoolean("pref_recordatorio", true)) }
             var resumenSemanal by rememberSaveable { mutableStateOf(prefs.getBoolean("pref_resumen", true)) }
             var selectedCurrency by rememberSaveable { mutableStateOf(prefs.getString("user_currency", "EUR(€)") ?: "EUR(€)") }
             var selectedLanguage by rememberSaveable { mutableStateOf(savedLang) }
             
-            // NUEVOS CAMPOS SPRINT-02
             var username by rememberSaveable { mutableStateOf(prefs.getString("username", "Viajero") ?: "Viajero") }
             var birthdate by rememberSaveable { mutableStateOf(prefs.getString("birthdate", "01/01/2000") ?: "01/01/2000") }
             
-            // TAMAÑO DE LETRA
-            var fontSizeScale by rememberSaveable { mutableStateOf(prefs.getFloat("font_size_scale", 1.0f)) }
+            var fontSizeScale by rememberSaveable { mutableFloatStateOf(prefs.getFloat("font_size_scale", 1.0f)) }
 
             AppTheme(useDarkTheme = darkTheme, fontScale = fontSizeScale) {
                 val navController = rememberNavController()
 
                 NavGraph(
                     navController = navController,
+                    tripViewModel = tripViewModel,
+                    authViewModel = authViewModel,
                     isDarkMode = darkTheme,
                     onDarkModeChange = { nuevo ->
-                        prefs.edit().putBoolean("dark_mode", nuevo).apply()
+                        prefs.edit { putBoolean("dark_mode", nuevo) }
                         darkTheme = nuevo
                     },
                     recordatorioViajes = recordatorioViajes,
                     onRecordatorioChange = { nuevo ->
-                        prefs.edit().putBoolean("pref_recordatorio", nuevo).apply()
+                        prefs.edit { putBoolean("pref_recordatorio", nuevo) }
                         recordatorioViajes = nuevo
                     },
                     resumenSemanal = resumenSemanal,
                     onResumenChange = { nuevo ->
-                        prefs.edit().putBoolean("pref_resumen", nuevo).apply()
+                        prefs.edit { putBoolean("pref_resumen", nuevo) }
                         resumenSemanal = nuevo
                     },
                     selectedCurrency = selectedCurrency,
                     onCurrencyChange = { nuevaMoneda ->
-                        prefs.edit().putString("user_currency", nuevaMoneda).apply()
+                        prefs.edit { putString("user_currency", nuevaMoneda) }
                         selectedCurrency = nuevaMoneda
                     },
                     selectedLanguage = selectedLanguage,
                     onLanguageChange = { nuevo ->
-                        prefs.edit().putString("user_lang", nuevo).apply()
+                        prefs.edit { putString("user_lang", nuevo) }
                         selectedLanguage = nuevo
                         recreateWithAnimation()
                     },
                     username = username,
                     onUsernameChange = { nuevo ->
-                        prefs.edit().putString("username", nuevo).apply()
+                        prefs.edit { putString("username", nuevo) }
                         username = nuevo
                     },
                     birthdate = birthdate,
                     onBirthdateChange = { nueva ->
-                        prefs.edit().putString("birthdate", nueva).apply()
+                        prefs.edit { putString("birthdate", nueva) }
                         birthdate = nueva
                     },
                     fontSizeScale = fontSizeScale,
                     onFontSizeScaleChange = { nuevaEscala ->
-                        prefs.edit().putFloat("font_size_scale", nuevaEscala).apply()
+                        prefs.edit { putFloat("font_size_scale", nuevaEscala) }
                         fontSizeScale = nuevaEscala
                     }
                 )
@@ -92,18 +100,23 @@ class MainActivity : ComponentActivity() {
 
     private fun updateResourceLocale(language: String) {
         val locale = when (language) {
-            "En English" -> java.util.Locale.ENGLISH
-            "Ca Català" -> java.util.Locale("ca")
-            else -> java.util.Locale("es")
+            "En English" -> Locale.ENGLISH
+            "Ca Català" -> Locale("ca")
+            else -> Locale("es")
         }
-        java.util.Locale.setDefault(locale)
+        Locale.setDefault(locale)
         val config = resources.configuration
         config.setLocale(locale)
+        @Suppress("DEPRECATION")
         baseContext.resources.updateConfiguration(config, baseContext.resources.displayMetrics)
     }
 
     private fun recreateWithAnimation() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        }
         finish()
+        @Suppress("DEPRECATION")
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         startActivity(intent)
     }

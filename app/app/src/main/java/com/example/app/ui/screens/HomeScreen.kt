@@ -54,17 +54,15 @@ import androidx.navigation.compose.rememberNavController
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.ui.theme.AppTheme
+import com.example.app.ui.viewmodels.TripListViewModel
 
-/**
- * Pantalla principal de la app. 
- * Aquí el usuario ve sugerencias de viajes y ofertas.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController, username: String) {
-    // Si es la primera vez, le pedimos que acepte los términos
-    TermsAndConditionsDialog(navController = navController)
-
+fun HomeScreen(
+    navController: NavHostController, 
+    username: String,
+    viewModel: TripListViewModel
+) {
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
@@ -74,7 +72,6 @@ fun HomeScreen(navController: NavHostController, username: String) {
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Cabecera con saludo personalizado
             CustomHeader("${stringResource(id = R.string.home_hola)}, $username", stringResource(id = R.string.home_busca_aventura))
 
             Column(
@@ -84,20 +81,16 @@ fun HomeScreen(navController: NavHostController, username: String) {
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Fila de sitios recomendados
                 RecomendadosSection(navController)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Fila de sitios destacados
                 DestacadosSection(navController)
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Lista de trucos y ofertas
                 OfertasTipsSection(navController)
 
-                // Mensaje final del pie de página
                 Spacer(modifier = Modifier.height(32.dp))
                 Text(
                     text = stringResource(id = R.string.home_explora_nomad),
@@ -112,9 +105,6 @@ fun HomeScreen(navController: NavHostController, username: String) {
     }
 }
 
-/**
- * Sección con tarjetas grandes de sitios recomendados.
- */
 @Composable
 fun RecomendadosSection(navController: NavHostController) {
     Text(
@@ -142,9 +132,6 @@ fun RecomendadosSection(navController: NavHostController) {
     }
 }
 
-/**
- * Sección con tarjetas medianas de sitios destacados.
- */
 @Composable
 fun DestacadosSection(navController: NavHostController) {
     Text(
@@ -179,9 +166,6 @@ fun DestacadosSection(navController: NavHostController) {
     }
 }
 
-/**
- * Sección de trucos para viajar y ofertas especiales.
- */
 @Composable
 fun OfertasTipsSection(navController: NavHostController) {
     Text(
@@ -273,66 +257,5 @@ fun DestacadoCard(image: Int, name: String, onClick: () -> Unit) {
                 Text(text = name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, maxLines = 1)
             }
         }
-    }
-}
-
-/**
- * Diálogo que aparece al principio para aceptar las reglas de la app.
- */
-@Composable
-fun TermsAndConditionsDialog(navController: NavHostController) {
-    val context = LocalContext.current
-    val sharedPreferences = remember {
-        context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE)
-    }
-
-    var hasAccepted by remember {
-        mutableStateOf(sharedPreferences.getBoolean("terms_accepted", false))
-    }
-
-    // Si ya aceptó antes, no mostramos nada
-    if (!hasAccepted) {
-        AlertDialog(
-            onDismissRequest = { },
-            containerColor = MaterialTheme.colorScheme.background,
-            title = {
-                Text(text = stringResource(id = R.string.home_terminos_dialog_titulo), fontWeight = FontWeight.Bold)
-            },
-            text = {
-                val annotatedText = buildAnnotatedString {
-                    append(stringResource(id = R.string.home_terminos_dialog_msg))
-                    pushStringAnnotation(tag = "URL", annotation = "terms")
-                    withStyle(style = SpanStyle(
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        textDecoration = TextDecoration.Underline
-                    )) {
-                        append(stringResource(id = R.string.home_terminos_dialog_link))
-                    }
-                    pop()
-                }
-
-                ClickableText(
-                    text = annotatedText,
-                    onClick = { offset ->
-                        annotatedText.getStringAnnotations(tag = "URL", start = offset, end = offset)
-                            .firstOrNull()?.let {
-                                navController.navigate(Routes.TERMINOS_CONDICIONES)
-                            }
-                    },
-                    style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground)
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        hasAccepted = true
-                        sharedPreferences.edit().putBoolean("terms_accepted", true).apply()
-                    }
-                ) {
-                    Text(stringResource(id = R.string.home_aceptar))
-                }
-            }
-        )
     }
 }

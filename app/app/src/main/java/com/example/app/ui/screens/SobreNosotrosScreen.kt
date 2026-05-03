@@ -4,31 +4,14 @@ import android.content.res.Configuration
 import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +33,6 @@ import com.example.app.ui.theme.AppTheme
 
 @Composable
 fun SobreNosotrosScreen(navController: NavHostController) {
-    // Contenedor base con el color de fondo definido en el tema
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -65,12 +47,11 @@ fun SobreNosotrosScreen(navController: NavHostController) {
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Cabecera visual con branding y control de navegación
             HeroHeader(navController)
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Sección: Identificación de los autores del proyecto
+            // Usamos GlassCard definido en Modules.kt
             GlassCard(title = stringResource(id = R.string.sobre_equipo_titulo)) {
                 DeveloperRowModern(R.drawable.oriol, "Oriol Alvarez Arisa", stringResource(id = R.string.sobre_rol_oriol))
                 Spacer(modifier = Modifier.height(12.dp))
@@ -79,10 +60,9 @@ fun SobreNosotrosScreen(navController: NavHostController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Sección: Especificaciones técnicas y metadatos del entorno de ejecución
             GlassCard(title = stringResource(id = R.string.sobre_tecnica_titulo)) {
-                InfoRowModern(stringResource(id = R.string.sobre_version), "2.0.0")
-                InfoRowModern(stringResource(id = R.string.sobre_sprint), "02")
+                InfoRowModern(stringResource(id = R.string.sobre_version), "3.0.0")
+                InfoRowModern(stringResource(id = R.string.sobre_sprint), "03")
                 InfoRowModern(stringResource(id = R.string.sobre_build), "100")
                 InfoRowModern(stringResource(id = R.string.sobre_plataforma), "Android")
                 InfoRowModern(stringResource(id = R.string.sobre_min_sdk), "24")
@@ -93,7 +73,6 @@ fun SobreNosotrosScreen(navController: NavHostController) {
             }
         }
 
-        // Barra de navegación inferior anclada
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             BottomNavigationBar(navController)
         }
@@ -102,7 +81,6 @@ fun SobreNosotrosScreen(navController: NavHostController) {
 
 @Composable
 fun HeroHeader(navController: NavHostController) {
-    // Composición del área de marca con efecto de iluminación (glow)
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,7 +102,6 @@ fun HeroHeader(navController: NavHostController) {
             modifier = Modifier.align(Alignment.Center)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                // Efecto de brillo desenfocado detrás del logotipo
                 Box(
                     modifier = Modifier
                         .size(110.dp)
@@ -157,7 +134,7 @@ fun HeroHeader(navController: NavHostController) {
             )
 
             Text(
-                text = "v2.0.0 · Sprint 02",
+                text = "v3.0.0 · Sprint 03",
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
                 fontSize = 13.sp
@@ -167,41 +144,7 @@ fun HeroHeader(navController: NavHostController) {
 }
 
 @Composable
-fun GlassCard(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    // Tarjeta con efecto de transparencia y borde definido
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(
-                width = 4.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(24.dp)
-            )
-    ) {
-        Column(modifier = Modifier.padding(18.dp)) {
-            Text(
-                text = title.uppercase(),
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.2.sp
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-            content()
-        }
-    }
-}
-
-@Composable
 fun DeveloperRowModern(image: Int, name: String, role: String) {
-    // Fila para mostrar la información del desarrollador con avatar circular
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier
@@ -228,7 +171,6 @@ fun DeveloperRowModern(image: Int, name: String, role: String) {
 
 @Composable
 fun InfoRowModern(label: String, value: String) {
-    // Fila de datos técnicos con justificación entre extremos
     Row(
         modifier = Modifier
             .fillMaxWidth()

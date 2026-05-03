@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "340307007867",
+    "project_id": "nomad-6dce0",
+    "storage_bucket": "nomad-6dce0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:340307007867:android:274a5f1085893d5aed85de",
+        "android_client_info": {
+          "package_name": "com.example.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfajzRhY-2w4FNbVA25QdkPIhY9xAYvJA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

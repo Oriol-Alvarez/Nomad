@@ -150,7 +150,7 @@
         2. Funcionalitats\n
         L\'aplicació permet planificar rutes, buscar llocs propers, guardar imatges de viatges i rebre recomanacions basades en intel·ligència artificial.\n\n
         3. Responsabilitat\n
-        Nomad proporciona informació orientativa. No garantim l\'exactitud o disponibilitat dels llocs o serveis mostrats.\n\n
+        Nomad proporciona informació orientativa. No garantim l\'exactitud o disponibilitat dels llocs o serveis mostrados.\n\n
         4. Propietat intel·lectual\n
         Tot el contingut, disseny i codi de l\'aplicació pertany als seus desenvolupadors i no pot ser copiat o distribuït sense autorització.\n\n
         5. Canvis en els termes\n
@@ -165,4 +165,32 @@
     <string name="terminos_aceptados_titulo">✅ Termes acceptats</string>
     <string name="terminos_aceptados_msg">Ja has acceptat els Termes i Condicions de Nomad.</string>
 
+    <!-- Autentificació -->
+    <string name="auth_titulo">Benvingut</string>
+    <string name="auth_subtitulo">Inicia sessió per continuar la teva aventura</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Contrasenya</string>
+    <string name="auth_username">Nom d\'usuari</string>
+    <string name="auth_birthdate">Data de naixement</string>
+    <string name="auth_login">Iniciar sessió</string>
+    <string name="auth_signup">Registrar-se</string>
+    <string name="auth_continue">Continuar</string>
+    <string name="auth_no_account">No tens compte? Registra\'t</string>
+    <string name="auth_have_account">Ja tens compte? Inicia sessió</string>
+    <string name="auth_error_campos">Email i contrasenya requerits</string>
+    <string name="auth_signup_step2_titulo">Quasi llest</string>
+    <string name="auth_signup_step2_subtitulo">Completa el teu perfil de viatger</string>
+    <string name="auth_olvido_pass">Has oblidat la teva contrasenya?</string>
+    <string name="auth_recuperar_titulo">Recuperar contrasenya</string>
+    <string name="auth_recuperar_btn">Enviar enllaç</string>
+    <string name="auth_recuperar_msg">Introdueix el teu email per enviar-te un enllaç de recuperació.</string>
+
+    <!-- Feedback Autentificació -->
+    <string name="auth_error_all_fields">Tots els camps són requerits</string>
+    <string name="auth_error_password_short">La contrasenya ha de tenir almenys 6 caràcters</string>
+    <string name="auth_error_verify_email">Si us plau, verifica el teu email</string>
+    <string name="auth_signup_success">Compte creat! Verifica el teu email per entrar</string>
+    <string name="auth_error_reset_email">Introdueix el teu email</string>
+    <string name="auth_error_unknown">Error desconegut</string>
+    <string name="auth_error_prefix">Error: %1$s</string>
 </resources>

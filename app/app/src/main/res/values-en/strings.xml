@@ -22,7 +22,7 @@
     <string name="preferencias_info_app_role">A bit about us</string>
     <string name="preferencias_terminos">Terms and conditions</string>
     <string name="preferencias_terminos_role">Legal info</string>
-    <string name="preferencias_footer">Programmed with a lot of ☕</string>
+    <string name="preferencias_footer">Programed with a lot of ☕</string>
 
     <!-- Home Screen -->
     <string name="home_hola">Hello</string>
@@ -165,4 +165,32 @@
     <string name="terminos_aceptados_titulo">✅ Terms accepted</string>
     <string name="terminos_aceptados_msg">You have already accepted the Nomad Terms and Conditions.</string>
 
+    <!-- Authentication -->
+    <string name="auth_titulo">Welcome</string>
+    <string name="auth_subtitulo">Log in to continue your adventure</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_username">Username</string>
+    <string name="auth_birthdate">Birthdate</string>
+    <string name="auth_login">Log In</string>
+    <string name="auth_signup">Sign Up</string>
+    <string name="auth_continue">Continue</string>
+    <string name="auth_no_account">Don\'t have an account? Sign up</string>
+    <string name="auth_have_account">Already have an account? Log in</string>
+    <string name="auth_error_campos">Email and password required</string>
+    <string name="auth_signup_step2_titulo">Almost ready</string>
+    <string name="auth_signup_step2_subtitulo">Complete your traveler profile</string>
+    <string name="auth_olvido_pass">Forgot your password?</string>
+    <string name="auth_recuperar_titulo">Recover password</string>
+    <string name="auth_recuperar_btn">Send link</string>
+    <string name="auth_recuperar_msg">Enter your email to send you a recovery link.</string>
+
+    <!-- Authentication Feedback -->
+    <string name="auth_error_all_fields">All fields are required</string>
+    <string name="auth_error_password_short">Password must be at least 6 characters</string>
+    <string name="auth_error_verify_email">Please verify your email</string>
+    <string name="auth_signup_success">Account created! Verify your email to enter</string>
+    <string name="auth_error_reset_email">Enter your email</string>
+    <string name="auth_error_unknown">Unknown error</string>
+    <string name="auth_error_prefix">Error: %1$s</string>
 </resources>

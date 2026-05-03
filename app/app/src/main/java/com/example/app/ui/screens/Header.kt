@@ -27,6 +27,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.app.R
 
 /**
  * Esta es la cabecera que usamos en casi todas las pantallas.
@@ -37,12 +38,12 @@ fun CustomHeader(
     title: String? = null,
     subtitle: String? = null,
     showBackButton: Boolean = false,
-    backgroundImageRes: String? = null,
+    backgroundImageRes: Any? = null, // Cambiado a Any? para aceptar String o Int (R.drawable)
     content: (@Composable ColumnScope.() -> Unit)? = null 
 ) {
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    // Colores por defecto si no hay imagen
+    // Colores por defecto si no hay imagen ni recurso
     val defaultGradientBrush = Brush.linearGradient(
         colors = listOf(
             MaterialTheme.colorScheme.surfaceVariant,
@@ -56,8 +57,8 @@ fun CustomHeader(
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
 
-            // Ponemos el fondo: imagen si hay una, o el degradado si no
-            if (!backgroundImageRes.isNullOrEmpty()) {
+            // Ponemos el fondo: imagen si hay una, recurso si hay uno, o el degradado si no
+            if (backgroundImageRes != null && (backgroundImageRes !is String || backgroundImageRes.isNotEmpty())) {
                 AsyncImage(
                     model = backgroundImageRes,
                     contentDescription = "Imagen de fondo",

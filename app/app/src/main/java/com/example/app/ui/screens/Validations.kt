@@ -9,6 +9,8 @@ import java.util.Locale
  */
 object Validator {
 
+    const val DATE_FORMAT = "dd/MM/yyyy"
+
     // Comprueba si el texto no está vacío
     fun isNotEmpty(text: String): Boolean = text.trim().isNotEmpty()
     
@@ -43,17 +45,27 @@ object Validator {
         return value != null && value >= 0
     }
 
-    // Filtra caracteres raros que podrían dar problemas de seguridad
+    /**
+     * Filtra caracteres que podrían dar problemas de seguridad (XSS, Inyección).
+     * Solo permite letras, números, espacios y puntuación básica.
+     */
     fun isSecureText(text: String): Boolean {
-        val forbiddenChars = listOf("<", ">", "{", "}", "[", "]", ";", "$", "http", "www")
-        return forbiddenChars.none { text.lowercase().contains(it) }
+        if (text.isEmpty()) return true
+        // El guion '-' debe ir al final para que no se interprete como un rango inválido
+        val safePattern = Regex("^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s,.!?()\\-]*$")
+        val forbiddenSubstrings = listOf("http", "www", "<script", "javascript:")
+        
+        val isSafePattern = safePattern.matches(text)
+        val hasForbiddenSubstrings = forbiddenSubstrings.any { text.lowercase().contains(it) }
+        
+        return isSafePattern && !hasForbiddenSubstrings
     }
 
     // --- MANEJO DE FECHAS ---
 
     // Intenta entender la fecha sin importar si usa guiones o barras
     private fun parseAnyDate(dateStr: String): java.util.Date? {
-        val formats = listOf("dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "dd-MM-yyyy")
+        val formats = listOf(DATE_FORMAT, "yyyy-MM-dd", "yyyy/MM/dd", "dd-MM-yyyy")
         for (format in formats) {
             try {
                 val sdf = SimpleDateFormat(format, Locale.getDefault())
@@ -75,7 +87,7 @@ object Validator {
     // Comprueba que la fecha no sea de ayer o antes
     fun isNotPastDate(fecha: String): Boolean {
         val dateInput = parseAnyDate(fecha) ?: return false
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
         val today = sdf.parse(sdf.format(java.util.Date()))
         return !dateInput.before(today)
     }
