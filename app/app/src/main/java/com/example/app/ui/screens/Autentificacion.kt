@@ -38,7 +38,7 @@ import com.example.app.ui.viewmodels.AuthViewModel
 fun AutentificacionScreen(
     navController: NavHostController,
     vm: AuthViewModel = viewModel(),
-    onUserDataSaved: (String, String) -> Unit
+    onUserDataSaved: (String, String, Boolean) -> Unit
 ) {
     var showResetPasswordDialog by remember { mutableStateOf(false) }
     var resetEmail by remember { mutableStateOf("") }

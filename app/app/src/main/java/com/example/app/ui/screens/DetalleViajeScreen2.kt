@@ -49,8 +49,10 @@ fun formatDateHeader(dateStr: String): String {
             SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(dateStr)
         }
         val outputSdf = SimpleDateFormat("d MMM", Locale("es", "ES"))
-        date?.let { 
-            outputSdf.format(it).replace(".", "").replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+        date?.let { d -> 
+            outputSdf.format(d).replace(".", "").replaceFirstChar { char -> 
+                if (char.isLowerCase()) char.titlecase(Locale.getDefault()) else char.toString() 
+            }
         } ?: dateStr
     } catch (e: Exception) {
         dateStr
@@ -130,9 +132,9 @@ fun DetalleViajeScreen2(
 
     // Lógica para imagen por defecto (si no hay imagen, usamos R.drawable.viaje_predefinido)
     val displayImage: Any = if (isEditMode) {
-        if (editedImageUri.isEmpty()) R.drawable.viaje_predefinido else editedImageUri
+        editedImageUri.ifEmpty { R.drawable.viaje_predefinido }
     } else {
-        if (imageUri.isEmpty()) R.drawable.viaje_predefinido else imageUri
+        imageUri.ifEmpty { R.drawable.viaje_predefinido }
     }
 
     val nochesReales = calcularNoches(trip?.dataInici, trip?.dataFinal)
@@ -168,7 +170,9 @@ fun DetalleViajeScreen2(
             text = { Text(stringResource(id = R.string.detalle2_delete_activity_msg, activityToDelete?.nombre ?: "")) },
             confirmButton = {
                 TextButton(onClick = {
-                    activityToDelete?.let { viewModel.deleteActivity(it) }
+                    activityToDelete?.let { item: ItineraryItem -> 
+                        viewModel.deleteActivity(item) 
+                    }
                     activityToDelete = null
                 }) { Text(stringResource(id = R.string.detalle_eliminar_btn), color = MaterialTheme.colorScheme.error) }
             },
@@ -269,8 +273,8 @@ fun DetalleViajeScreen2(
 
                         IconButton(
                             onClick = {
-                                trip?.let {
-                                    viewModel.updateTrip(it.copy(title = editedTitle, description = editedDescription, imageUri = editedImageUri))
+                                trip?.let { t ->
+                                    viewModel.updateTrip(t.copy(title = editedTitle, description = editedDescription, imageUri = editedImageUri))
                                 }
                                 isEditMode = false
                             },
