@@ -12,7 +12,6 @@ import com.example.app.domain.AuthRepository
 import com.example.app.ui.screens.Validator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,6 +24,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class TripListViewModel @Inject constructor(
     private val tripRepository: TripRepository,
@@ -34,13 +34,12 @@ class TripListViewModel @Inject constructor(
 
     private val TAG_DB = "DatabaseLog"
     private val TAG_VAL = "ValidationLog"
-    private val auth = FirebaseAuth.getInstance()
 
     private val _uiEvents = MutableSharedFlow<String>()
     val uiEvents: SharedFlow<String> = _uiEvents
 
     // T4.2: Solo mostramos los viajes del usuario logueado actualmente
-    val trips: StateFlow<List<Trip>> = flowOf(auth.currentUser?.uid)
+    val trips: StateFlow<List<Trip>> = flowOf(authRepository.getCurrentUser()?.uid)
         .flatMapLatest { uid ->
             if (uid != null) tripRepository.getTripsForUser(uid)
             else flowOf(emptyList())
@@ -61,9 +60,8 @@ class TripListViewModel @Inject constructor(
         imageUri: String,
         activitiesFromForm: List<ItineraryItem>
     ): Boolean {
-        val currentUserId = auth.currentUser?.uid ?: return false
 
-        val currentUserId = authRepository.getCurrentUser()?.uid ?: return
+        val currentUserId = authRepository.getCurrentUser()?.uid ?: return false
 
         // Validaciones Síncronas
         if (!Validator.isValidTitle(title)) {
@@ -119,6 +117,7 @@ class TripListViewModel @Inject constructor(
                 _uiEvents.emit("Error al guardar el viaje")
             }
         }
+        return true
     }
 
     fun deleteTrip(id: String) {
