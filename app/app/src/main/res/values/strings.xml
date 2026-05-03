@@ -23,6 +23,12 @@
     <string name="preferencias_terminos">Términos y condiciones</string>
     <string name="preferencias_terminos_role">Info legal</string>
     <string name="preferencias_footer">Programado con mucho ☕</string>
+    <string name="preferencias_perfil_usuario">Perfil de Usuario</string>
+    <string name="preferencias_cerrar_sesion">Cerrar sesión</string>
+    <string name="preferencias_letra_pequeno">Pequeño</string>
+    <string name="preferencias_letra_normal">Normal</string>
+    <string name="preferencias_letra_grande">Grande</string>
+    <string name="preferencias_letra_extra_grande">Extra Grande</string>
 
     <!-- Home Screen -->
     <string name="home_hola">Hola</string>
@@ -81,6 +87,7 @@
     <string name="form_error_fechas_vacias">Debes seleccionar ambas fechas</string>
     <string name="form_error_fechas_coherencia">La vuelta no puede ser anterior a la ida</string>
     <string name="form_actividades_para">Actividades para %1$s</string>
+    <string name="form_error_seguridad">El texto contiene caracteres no permitidos</string>
 
     <!-- Diálogo Actividad -->
     <string name="act_nueva_parada">Nueva Parada</string>
@@ -98,12 +105,13 @@
     <string name="act_error_hora">Selecciona una hora</string>
     <string name="act_error_hora_repetida">Esta hora ya está ocupada</string>
     <string name="act_error_desc">La descripción es obligatoria</string>
+    <string name="act_error_precio">Precio inválido</string>
 
     <!-- Activity Types -->
     <string name="act_tipo_vuelo">Vuelo</string>
     <string name="act_tipo_restaurante">Restaurante</string>
     <string name="act_tipo_hotel">Hotel</string>
-    <string name="act_tipo_museo">Museo</string>
+    <string name="act_tipo_museum">Museo</string>
     <string name="act_tipo_ocio">Ocio</string>
     <string name="act_tipo_otros">Otros</string>
 
@@ -184,6 +192,10 @@
     <string name="auth_recuperar_titulo">Recuperar contraseña</string>
     <string name="auth_recuperar_btn">Enviar enlace</string>
     <string name="auth_recuperar_msg">Introduce tu email para enviarte un enlace de recuperación.</string>
+    <string name="auth_address">Dirección</string>
+    <string name="auth_country">País</string>
+    <string name="auth_phone">Teléfono</string>
+    <string name="auth_accept_emails">Acepto recibir correos electrónicos</string>
 
     <!-- Feedback Autentificación -->
     <string name="auth_error_all_fields">Todos los campos son requeridos</string>

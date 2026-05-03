@@ -1,6 +1,7 @@
 package com.example.app.ui.screens
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
@@ -69,6 +71,10 @@ fun FormularioViaje(
     ciudadDestino: String = "",
     viewModel: TripListViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
     // --- DATOS DEL VIAJE ---
     var title by rememberSaveable { mutableStateOf("") }
     var description by rememberSaveable { mutableStateOf("") }
@@ -87,7 +93,6 @@ fun FormularioViaje(
     var expandido by remember { mutableStateOf(false) }
     var sugerencias by remember { mutableStateOf(listOf<String>()) }
     var job by remember { mutableStateOf<Job?>(null) }
-    val scope = rememberCoroutineScope()
 
     // --- MENSAJES DE ERROR ---
     var errorTitle by remember { mutableStateOf<String?>(null) }
@@ -103,11 +108,18 @@ fun FormularioViaje(
     var indiceEdicion by rememberSaveable { mutableIntStateOf(-1) }
     var itemAEliminar by remember { mutableStateOf<Int?>(null) }
 
+    // Escuchar eventos del ViewModel (errores de duplicados, etc)
+    LaunchedEffect(Unit) {
+        viewModel.uiEvents.collect { message ->
+            snackbarHostState.showSnackbar(message)
+        }
+    }
+
     // Calcula la fecha mínima de vuelta según la de ida
     val minimaVueltaMs = remember(fechaIda) {
         if (fechaIda.isNotEmpty()) {
             try {
-                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val sdf = SimpleDateFormat(Validator.DATE_FORMAT, Locale.getDefault())
                 sdf.timeZone = java.util.TimeZone.getTimeZone("UTC")
                 sdf.parse(fechaIda)?.time ?: System.currentTimeMillis()
             } catch (e: Exception) {
@@ -147,7 +159,8 @@ fun FormularioViaje(
     val errFechasCoherenciaText = stringResource(id = R.string.form_error_fechas_coherencia)
 
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController) }
+        bottomBar = { BottomNavigationBar(navController) },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -170,7 +183,7 @@ fun FormularioViaje(
                             value = title,
                             onValueChange = {
                                 title = it
-                                if (Validator.isValidTitle(it)) errorTitle = null
+                                errorTitle = if (Validator.isValidTitle(it)) null else errTitleText
                             },
                             label = { Text(stringResource(id = R.string.form_titulo_label)) },
                             isError = errorTitle != null,
@@ -185,7 +198,7 @@ fun FormularioViaje(
                                 value = country,
                                 onValueChange = { newValue ->
                                     country = newValue
-                                    if (Validator.isValidLocation(newValue.text)) errorCountry = null
+                                    errorCountry = if (Validator.isValidLocation(newValue.text)) null else errDestText
                                     expandido = newValue.text.length > 2
                                     job?.cancel()
                                     job = scope.launch {
@@ -198,7 +211,7 @@ fun FormularioViaje(
                                 },
                                 label = { Text(stringResource(id = R.string.form_destino_label)) },
                                 isError = errorCountry != null,
-                                supportingText = { if (errorCountry != null) Text(text = errorCountry!!, color = MaterialTheme.colorScheme.error) },
+                                supportingText = { errorCountry?.let { Text(it) } },
                                 leadingIcon = { Icon(imageVector = Icons.Default.Place, contentDescription = null) },
                                 trailingIcon = {
                                     if (country.text.isNotEmpty()) {
@@ -237,7 +250,10 @@ fun FormularioViaje(
                                 SelectorFechaModular(
                                     label = stringResource(id = R.string.form_ida_label),
                                     fechaSeleccionada = fechaIda,
-                                    onFechaElegida = { fechaIda = it; errorFechas = null },
+                                    onFechaElegida = { 
+                                        fechaIda = it
+                                        errorFechas = null 
+                                    },
                                     fechaMinima = System.currentTimeMillis(),
                                     isError = errorFechas != null,
                                     modifier = Modifier.weight(1f)
@@ -245,7 +261,10 @@ fun FormularioViaje(
                                 SelectorFechaModular(
                                     label = stringResource(id = R.string.form_vuelta_label),
                                     fechaSeleccionada = fechaVuelta,
-                                    onFechaElegida = { fechaVuelta = it; errorFechas = null },
+                                    onFechaElegida = { 
+                                        fechaVuelta = it
+                                        errorFechas = null 
+                                    },
                                     fechaMinima = minimaVueltaMs,
                                     isError = errorFechas != null,
                                     modifier = Modifier.weight(1f)
@@ -279,10 +298,13 @@ fun FormularioViaje(
                                 val fRellenas = fechaIda.isNotEmpty() && fechaVuelta.isNotEmpty()
                                 val fCoherentes = if (fRellenas) Validator.areDatesValid(fechaIda, fechaVuelta) else false
 
-                                if (!tOk) errorTitle = errTitleText
-                                if (!lOk) errorCountry = errDestText
-                                if (!fRellenas) errorFechas = errFechasVaciasText
-                                else if (!fCoherentes) errorFechas = errFechasCoherenciaText
+                                errorTitle = if (!tOk) errTitleText else null
+                                errorCountry = if (!lOk) errDestText else null
+                                errorFechas = when {
+                                    !fRellenas -> errFechasVaciasText
+                                    !fCoherentes -> errFechasCoherenciaText
+                                    else -> null
+                                }
 
                                 if (tOk && lOk && fRellenas && fCoherentes) etapaActual = 1
                             },
@@ -321,9 +343,11 @@ fun FormularioViaje(
                             }
                             Button(
                                 onClick = {
-                                    val budget = listaItinerarios.sumOf { it.precio.toDoubleOrNull() ?: 0.0 }
-                                    viewModel.saveTrip(title, country.text, fechaIda, fechaVuelta, description, budget, selectedImageUri?.toString() ?: "", listaItinerarios)
-                                    navController.popBackStack()
+                                    val budget = listaItinerarios.sumOf { it.precio.toDouble() }
+                                    val saved = viewModel.saveTrip(title, country.text, fechaIda, fechaVuelta, description, budget, selectedImageUri?.toString() ?: "", listaItinerarios)
+                                    if (saved) {
+                                        navController.popBackStack()
+                                    }
                                 },
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
@@ -341,7 +365,7 @@ fun FormularioViaje(
 
     // Ventana para añadir una actividad nueva o editarla
     if (mostrarDialogo) {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+        val sdf = SimpleDateFormat(Validator.DATE_FORMAT, Locale.getDefault())
         val inicioMs = try { sdf.parse(fechaIda)?.time } catch (e: Exception) { null }
         val finMs = try { sdf.parse(fechaVuelta)?.time } catch (e: Exception) { null }
 
@@ -391,7 +415,7 @@ fun getTipoTraduccion(tipo: String): String {
         "Vuelo" -> stringResource(id = R.string.act_tipo_vuelo)
         "Restaurante" -> stringResource(id = R.string.act_tipo_restaurante)
         "Hotel" -> stringResource(id = R.string.act_tipo_hotel)
-        "Museo" -> stringResource(id = R.string.act_tipo_museo)
+        "Museo" -> stringResource(id = R.string.act_tipo_museum)
         "Ocio" -> stringResource(id = R.string.act_tipo_ocio)
         "Otros" -> stringResource(id = R.string.act_tipo_otros)
         else -> tipo
@@ -415,16 +439,16 @@ fun DialogoNuevaActividad(
     var n by remember { mutableStateOf(actividadAEditar?.nombre ?: "") }
     var d by remember { mutableStateOf(actividadAEditar?.dia ?: "") }
     var h by remember { mutableStateOf(actividadAEditar?.hora ?: "") }
-    var p by remember { mutableStateOf(actividadAEditar?.precio ?: "") }
+    var p by remember { mutableStateOf(actividadAEditar?.precio?.toString() ?: "") }
     var t by remember { mutableStateOf(actividadAEditar?.tipo ?: "Vuelo") }
     var desc by remember { mutableStateOf(actividadAEditar?.descripcion ?: "") }
 
     // Estados de error de cada campo
-    var errorN by remember { mutableStateOf(false) }
-    var errorD by remember { mutableStateOf(false) }
-    var errorH by remember { mutableStateOf(false) }
-    var errorDesc by remember { mutableStateOf(false) }
-    var errorHoraRepetida by remember { mutableStateOf(false) }
+    var errorN by remember { mutableStateOf<String?>(null) }
+    var errorD by remember { mutableStateOf<String?>(null) }
+    var errorH by remember { mutableStateOf<String?>(null) }
+    var errorP by remember { mutableStateOf<String?>(null) }
+    var errorDesc by remember { mutableStateOf<String?>(null) }
     var exp by remember { mutableStateOf(false) }
 
     val monedaSimbolo = "€"
@@ -443,13 +467,16 @@ fun DialogoNuevaActividad(
                 Column {
                     OutlinedTextField(
                         value = n,
-                        onValueChange = { n = it; errorN = false },
+                        onValueChange = { 
+                            n = it
+                            errorN = if (it.isNotBlank()) null else "Campo obligatorio" 
+                        },
                         label = { Text(stringResource(id = R.string.act_nombre_label)) },
-                        isError = errorN,
+                        isError = errorN != null,
+                        supportingText = { errorN?.let { Text(it) } },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     )
-                    if (errorN) Text(text = stringResource(id = R.string.act_error_nombre), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 12.dp))
                 }
 
                 // Selector de día
@@ -459,38 +486,50 @@ fun DialogoNuevaActividad(
                         fechaSeleccionada = d,
                         fechaMinima = fechaInicioViaje,
                         fechaMaxima = fechaFinViaje,
-                        onFechaElegida = { d = it; errorD = false },
-                        isError = errorD
+                        onFechaElegida = { d = it; errorD = null },
+                        isError = errorD != null
                     )
-                    if (errorD) Text(text = stringResource(id = R.string.act_error_dia), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 12.dp))
+                    if (errorD != null) Text(text = errorD!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 12.dp))
                 }
 
                 // Selector de hora
                 Column {
-                    SelectorHoraModular(label = stringResource(id = R.string.act_hora_label), horaSeleccionada = h, onHoraElegida = { h = it; errorH = false; errorHoraRepetida = false }, isError = errorH)
-                    if (errorH) Text(text = stringResource(id = R.string.act_error_hora), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 12.dp))
-                    else if (errorHoraRepetida) Text(text = stringResource(id = R.string.act_error_hora_repetida), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 12.dp))
+                    SelectorHoraModular(label = stringResource(id = R.string.act_hora_label), horaSeleccionada = h, onHoraElegida = { h = it; errorH = null }, isError = errorH != null)
+                    if (errorH != null) Text(text = errorH!!, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 12.dp))
                 }
 
                 // Precio
-                OutlinedTextField(
-                    value = p,
-                    onValueChange = { input -> if (input.isEmpty() || input.matches(Regex("""^\d*[.,]?\d{0,2}$"""))) p = input.replace(",", ".") },
-                    label = { Text(stringResource(id = R.string.act_precio_label, monedaSimbolo)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                )
+                Column {
+                    OutlinedTextField(
+                        value = p,
+                        onValueChange = { input -> 
+                            val cleanInput = input.replace(",", ".")
+                            if (cleanInput.isEmpty() || cleanInput.matches(Regex("""^\d*[.]?\d{0,2}$"""))) {
+                                p = cleanInput
+                                errorP = if (Validator.isValidPrice(cleanInput)) null else "Precio inválido"
+                            }
+                        },
+                        label = { Text(stringResource(id = R.string.act_precio_label, monedaSimbolo)) },
+                        isError = errorP != null,
+                        supportingText = { errorP?.let { Text(it) } },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
 
                 // Notas
                 OutlinedTextField(
                     value = desc,
-                    onValueChange = { desc = it; errorDesc = false },
+                    onValueChange = { 
+                        desc = it
+                        errorDesc = if (Validator.isSecureText(it)) null else "Caracteres no permitidos"
+                    },
                     label = { Text(stringResource(id = R.string.act_notas_label)) },
-                    isError = errorDesc,
+                    isError = errorDesc != null,
+                    supportingText = { errorDesc?.let { Text(it) } },
                     modifier = Modifier.fillMaxWidth().height(100.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    supportingText = { if (errorDesc) Text(stringResource(id = R.string.act_error_desc)) }
+                    shape = RoundedCornerShape(12.dp)
                 )
 
                 // Tipo de actividad (Vuelo, Hotel, etc.)
@@ -505,7 +544,6 @@ fun DialogoNuevaActividad(
                         modifier = Modifier.fillMaxWidth().clickable { exp = true },
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            // Colores cuando está deshabilitado (nuestro caso)
                             disabledTextColor = MaterialTheme.colorScheme.onSurface,
                             disabledBorderColor = MaterialTheme.colorScheme.outline,
                             disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -524,9 +562,15 @@ fun DialogoNuevaActividad(
         confirmButton = {
             Button(onClick = {
                 val colision = listaExistente.any { it.dia == d && it.hora == h && it.id != actividadAEditar?.id }
-                errorN = n.isBlank(); errorD = d.isBlank(); errorH = h.isBlank(); errorDesc = desc.isBlank(); errorHoraRepetida = !errorH && colision
-                if (!errorN && !errorD && !errorH && !errorDesc && !errorHoraRepetida) {
-                    onGuardar(ItineraryItem(actividadAEditar?.id ?: java.util.UUID.randomUUID().toString(), "", n, d, h, if (p.isEmpty()) "0" else p, t, desc))
+                
+                errorN = if (n.isBlank()) "Campo obligatorio" else null
+                errorD = if (d.isBlank()) "Selecciona un día" else null
+                errorH = if (h.isBlank()) "Selecciona una hora" else if (colision) "Hora ya ocupada" else null
+                errorDesc = if (!Validator.isSecureText(desc)) "Contenido no seguro" else null
+                errorP = if (p.isNotEmpty() && !Validator.isValidPrice(p)) "Precio inválido" else null
+
+                if (errorN == null && errorD == null && errorH == null && errorDesc == null && errorP == null) {
+                    onGuardar(ItineraryItem(actividadAEditar?.id ?: java.util.UUID.randomUUID().toString(), "", n, d, h, if (p.isEmpty()) 0 else p.toIntOrNull() ?: 0, t, desc))
                 }
             }) { Text(stringResource(id = R.string.act_guardar)) }
         },
@@ -550,14 +594,12 @@ fun CampoSeleccionImagen(uriSeleccionada: Uri?, label: String, onBorrar: () -> U
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            // Colores cuando está deshabilitado (nuestro caso)
             disabledTextColor = MaterialTheme.colorScheme.onSurface,
             disabledBorderColor = MaterialTheme.colorScheme.outline,
             disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
             disabledLeadingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
             disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-
-            ),
+        ),
     )
 }
 

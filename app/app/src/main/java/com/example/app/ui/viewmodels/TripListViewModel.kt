@@ -10,6 +10,8 @@ import com.example.app.domain.ItineraryItemRepository
 import com.example.app.domain.ItineraryItem
 import com.example.app.ui.screens.Validator
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -24,8 +26,12 @@ class TripListViewModel(
     private val itineraryRepository: ItineraryItemRepository
 ) : ViewModel() {
 
-    private val TAG = "TripListViewModel"
+    private val TAG_DB = "DatabaseLog"
+    private val TAG_VAL = "ValidationLog"
     private val auth = FirebaseAuth.getInstance()
+
+    private val _uiEvents = MutableSharedFlow<String>()
+    val uiEvents: SharedFlow<String> = _uiEvents
 
     // T4.2: Solo mostramos los viajes del usuario logueado actualmente
     val trips: StateFlow<List<Trip>> = flowOf(auth.currentUser?.uid)
@@ -39,6 +45,10 @@ class TripListViewModel(
             initialValue = emptyList()
         )
 
+    /**
+     * T5.2: Guarda un viaje validando los datos.
+     * Devuelve true si la validación inicial es correcta.
+     */
     fun saveTrip(
         title: String,
         destination: String,
@@ -48,21 +58,41 @@ class TripListViewModel(
         budget: Double,
         imageUri: String,
         activitiesFromForm: List<ItineraryItem>
-    ) {
-        val currentUserId = auth.currentUser?.uid ?: return // T4.2: Asegurar que hay un usuario
+    ): Boolean {
+        val currentUserId = auth.currentUser?.uid ?: return false
         
-        if (!Validator.isValidTitle(title) || !Validator.isValidLocation(destination)) return
-        
-        val imagenFinal = imageUri.ifBlank {
-            "android.resource://com.example.app/" + R.drawable.viaje_predefinido
+        // Validaciones Síncronas
+        if (!Validator.isValidTitle(title)) {
+            Log.e(TAG_VAL, "Título inválido: $title")
+            return false
+        }
+        if (!Validator.isValidLocation(destination)) {
+            Log.e(TAG_VAL, "Ubicación inválida: $destination")
+            return false
+        }
+        if (!Validator.areDatesValid(dataInici, dataFinal)) {
+            Log.e(TAG_VAL, "Fechas inconsistentes: $dataInici - $dataFinal")
+            return false
         }
 
         viewModelScope.launch {
             try {
+                // Prevenir nombres de viaje duplicados para el mismo usuario
+                val currentTrips = trips.value
+                if (currentTrips.any { it.title.equals(title, ignoreCase = true) }) {
+                    Log.w(TAG_VAL, "El usuario ya tiene un viaje llamado: $title")
+                    _uiEvents.emit("Ya existe un viaje con este nombre")
+                    return@launch
+                }
+
+                val imagenFinal = imageUri.ifBlank {
+                    "android.resource://com.example.app/" + R.drawable.viaje_predefinido
+                }
+
                 val newTripId = UUID.randomUUID().toString()
                 val newTrip = Trip(
                     id = newTripId,
-                    userId = currentUserId, // Asociar con el usuario logueado
+                    userId = currentUserId,
                     title = title,
                     country = destination,
                     description = desc,
@@ -79,16 +109,23 @@ class TripListViewModel(
                     itineraryRepository.insertItineraryItem(item.copy(tripId = newTripId))
                 }
                 updateTripBudget(newTripId)
+                _uiEvents.emit("Viaje guardado correctamente")
             } catch (e: Exception) {
-                Log.e(TAG, "Error al guardar el viaje", e)
+                Log.e(TAG_DB, "Error crítico al guardar viaje", e)
+                _uiEvents.emit("Error al guardar el viaje")
             }
         }
+        return true
     }
 
     fun deleteTrip(id: String) {
         viewModelScope.launch {
-            itineraryRepository.deleteItineraryItemsByTripId(id)
-            tripRepository.deleteTrip(id)
+            try {
+                itineraryRepository.deleteItineraryItemsByTripId(id)
+                tripRepository.deleteTrip(id)
+            } catch (e: Exception) {
+                Log.e(TAG_DB, "Error al borrar viaje", e)
+            }
         }
     }
 
@@ -96,28 +133,49 @@ class TripListViewModel(
 
     fun getActivitiesForTrip(tripId: String) = itineraryRepository.getItineraryItemsForTrip(tripId)
 
-    fun addActivityToTrip(tripId: String, item: ItineraryItem) {
+    /**
+     * T5.2: Añade una actividad validando el rango de fechas.
+     */
+    fun addActivityToTrip(tripId: String, item: ItineraryItem): Boolean {
+        // Validación síncrona del precio
+        if (item.precio < 0) return false
+
         viewModelScope.launch {
-            val trip = tripRepository.getTripById(tripId) ?: return@launch
-            itineraryRepository.insertItineraryItem(item.copy(tripId = tripId))
-            updateTripBudget(tripId)
+            try {
+                val trip = tripRepository.getTripById(tripId) ?: return@launch
+                if (Validator.isActivityInTripRange(item.dia, trip.dataInici, trip.dataFinal)) {
+                    itineraryRepository.insertItineraryItem(item.copy(tripId = tripId))
+                    updateTripBudget(tripId)
+                    _uiEvents.emit("Actividad añadida")
+                } else {
+                    _uiEvents.emit("La fecha de la actividad está fuera del rango del viaje")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG_DB, "Error al añadir actividad", e)
+            }
         }
+        return true // Retornamos true indicando que se ha iniciado el proceso de guardado
     }
 
     fun updateActivity(item: ItineraryItem) {
         viewModelScope.launch {
-            val trip = tripRepository.getTripById(item.tripId)
-            if (trip != null && Validator.isActivityInTripRange(item.dia, trip.dataInici, trip.dataFinal)) {
+            try {
                 itineraryRepository.updateItineraryItem(item)
                 updateTripBudget(item.tripId)
+            } catch (e: Exception) {
+                Log.e(TAG_DB, "Error al actualizar actividad", e)
             }
         }
     }
 
     fun deleteActivity(activity: ItineraryItem) {
         viewModelScope.launch {
-            itineraryRepository.deleteItineraryItem(activity)
-            updateTripBudget(activity.tripId)
+            try {
+                itineraryRepository.deleteItineraryItem(activity)
+                updateTripBudget(activity.tripId)
+            } catch (e: Exception) {
+                Log.e(TAG_DB, "Error al borrar actividad", e)
+            }
         }
     }
 
@@ -125,12 +183,12 @@ class TripListViewModel(
         try {
             val trip = tripRepository.getTripById(tripId) ?: return
             val activities = itineraryRepository.getItineraryItemsForTrip(tripId).first()
-            val newBudget = activities.sumOf { it.precio.toDoubleOrNull() ?: 0.0 }
+            val newBudget = activities.sumOf { it.precio.toDouble() }
             
             trip.budget = newBudget
             tripRepository.updateTrip(trip)
         } catch (e: Exception) {
-            Log.e(TAG, "Error actualizando presupuesto", e)
+            Log.e(TAG_DB, "Error actualizando presupuesto", e)
         }
     }
 
@@ -140,5 +198,10 @@ class TripListViewModel(
                 tripRepository.updateTrip(trip)
             }
         }
+    }
+
+    // Para compatibilidad con tests que no usan DB real
+    fun refreshTrips() {
+        // En una implementación real con Room, el StateFlow se actualiza solo.
     }
 }

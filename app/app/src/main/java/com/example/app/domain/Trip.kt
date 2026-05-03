@@ -2,10 +2,14 @@ package com.example.app.domain
 
 import androidx.room.Entity
 import androidx.room.Ignore
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import android.media.Image
 
-@Entity(tableName = "trips")
+@Entity(
+    tableName = "trips",
+    indices = [Index(value = ["userId", "title"], unique = true)]
+)
 data class Trip(
     @PrimaryKey
     val id: String,

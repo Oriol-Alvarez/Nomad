@@ -377,7 +377,7 @@ fun ItineraryItemCard(item: ItineraryItem, onEdit: (ItineraryItem) -> Unit, onDe
                 Text(text = item.nombre, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                 Text(text = "${item.hora} • ${item.tipo}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
-            Text(text = if (item.precio == "0") "Gratis" else "${item.precio}€", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = if (item.precio == "0") Color(0xFF2E7D32) else Color.Black)
+            Text(text = if (item.precio == 0) "Gratis" else "${item.precio}€", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = if (item.precio == 0) Color(0xFF2E7D32) else Color.Black)
             IconButton(onClick = { onDelete(item) }) {
                 Icon(Icons.Default.Delete, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(20.dp))
             }

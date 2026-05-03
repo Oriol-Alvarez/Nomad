@@ -1,6 +1,5 @@
 package com.example.app.ui.screens
 
-import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -25,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.app.R
@@ -39,7 +36,7 @@ import java.util.Locale
 @Composable
 fun PreferenciasScreen(
     navController: NavHostController,
-    authViewModel: AuthViewModel, // Eliminado = viewModel() para evitar el crash
+    authViewModel: AuthViewModel,
     isDarkMode: Boolean,
     onDarkModeChange: (Boolean) -> Unit,
     recordatorioViajes: Boolean,
@@ -59,6 +56,7 @@ fun PreferenciasScreen(
 ) {
     var showUserDialog by remember { mutableStateOf(false) }
     var tempUsername by remember { mutableStateOf(username) }
+    var errorUsername by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
     
     var showDatePicker by remember { mutableStateOf(false) }
@@ -87,22 +85,23 @@ fun PreferenciasScreen(
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
-                GlassCard(title = "Perfil de Usuario") {
+                GlassCard(title = stringResource(R.string.preferencias_perfil_usuario)) {
                     CajasPreferencias(
                         image = R.drawable.user_solid_full,
-                        name = "Nombre de Usuario",
+                        name = stringResource(R.string.auth_username),
                         role = username,
                         value = "nav",
                         type = "nav",
                         onClick = { 
                             tempUsername = username
+                            errorUsername = null
                             showUserDialog = true 
                         }
                     )
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
                     CajasPreferencias(
                         image = R.drawable.birthday,
-                        name = "Fecha de Nacimiento",
+                        name = stringResource(R.string.auth_birthdate),
                         role = birthdate,
                         value = "nav",
                         type = "nav",
@@ -112,7 +111,7 @@ fun PreferenciasScreen(
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
                     TextButton(
                         onClick = {
-                            authViewModel.signOut() // Corregido: signOut con 'O' mayúscula
+                            authViewModel.signOut()
                             navController.navigate(Routes.AUTH) {
                                 popUpTo(0) { inclusive = true }
                             }
@@ -120,7 +119,7 @@ fun PreferenciasScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            text = "Cerrar sesión",
+                            text = stringResource(R.string.preferencias_cerrar_sesion),
                             color = Color.Red,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
@@ -166,10 +165,10 @@ fun PreferenciasScreen(
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
                     
                     val fontSizeLabel = when(fontSizeScale) {
-                        0.85f -> "Pequeño"
-                        1.15f -> "Grande"
-                        1.30f -> "Extra Grande"
-                        else -> "Normal"
+                        0.85f -> stringResource(R.string.preferencias_letra_pequeno)
+                        1.15f -> stringResource(R.string.preferencias_letra_grande)
+                        1.30f -> stringResource(R.string.preferencias_letra_extra_grande)
+                        else -> stringResource(R.string.preferencias_letra_normal)
                     }
                     
                     CajasPreferencias(
@@ -177,13 +176,18 @@ fun PreferenciasScreen(
                         name = stringResource(R.string.preferencias_titulo_tamaño_letra),
                         role = stringResource(R.string.preferencias_role_tamaño_letra),
                         value = fontSizeLabel,
-                        options = listOf("Pequeño", "Normal", "Grande", "Extra Grande"),
+                        options = listOf(
+                            stringResource(R.string.preferencias_letra_pequeno),
+                            stringResource(R.string.preferencias_letra_normal),
+                            stringResource(R.string.preferencias_letra_grande),
+                            stringResource(R.string.preferencias_letra_extra_grande)
+                        ),
                         type = "select",
                         onCurrencySelect = { selection ->
                             val newScale = when(selection) {
-                                "Pequeño" -> 0.85f
-                                "Grande" -> 1.15f
-                                "Extra Grande" -> 1.30f
+                                context.getString(R.string.preferencias_letra_pequeno) -> 0.85f
+                                context.getString(R.string.preferencias_letra_grande) -> 1.15f
+                                context.getString(R.string.preferencias_letra_extra_grande) -> 1.30f
                                 else -> 1.0f
                             }
                             onFontSizeScaleChange(newScale)
@@ -243,27 +247,33 @@ fun PreferenciasScreen(
     if (showUserDialog) {
         AlertDialog(
             onDismissRequest = { showUserDialog = false },
-            title = { Text("Editar Usuario") },
+            title = { Text(stringResource(R.string.preferencias_perfil_usuario)) },
             text = {
                 OutlinedTextField(
                     value = tempUsername,
-                    onValueChange = { tempUsername = it },
-                    label = { Text("Nombre") },
-                    singleLine = true
+                    onValueChange = { 
+                        tempUsername = it
+                        errorUsername = if (Validator.hasMinLength(it, 3) && Validator.isOnlyLetters(it)) null else "Nombre inválido (mín. 3 letras)"
+                    },
+                    label = { Text(stringResource(R.string.auth_username)) },
+                    isError = errorUsername != null,
+                    supportingText = { errorUsername?.let { Text(it) } },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
                 )
             },
             confirmButton = {
                 Button(onClick = {
-                    if (tempUsername.isNotBlank()) {
+                    if (Validator.hasMinLength(tempUsername, 3) && Validator.isOnlyLetters(tempUsername)) {
                         onUsernameChange(tempUsername)
                         showUserDialog = false
                     } else {
-                        Toast.makeText(context, "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show()
+                        errorUsername = "Nombre inválido (mín. 3 letras)"
                     }
-                }) { Text("Guardar") }
+                }) { Text(stringResource(R.string.act_guardar)) }
             },
             dismissButton = {
-                TextButton(onClick = { showUserDialog = false }) { Text("Cancelar") }
+                TextButton(onClick = { showUserDialog = false }) { Text(stringResource(R.string.act_cancelar)) }
             }
         )
     }
@@ -274,7 +284,7 @@ fun PreferenciasScreen(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
-                        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                        val sdf = SimpleDateFormat(Validator.DATE_FORMAT, Locale.getDefault())
                         val formattedDate = sdf.format(Date(it))
                         if (Validator.isBirthdateValid(formattedDate)) {
                             onBirthdateChange(formattedDate)
@@ -286,7 +296,7 @@ fun PreferenciasScreen(
                 }) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancelar") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.act_cancelar)) }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -318,32 +328,32 @@ fun CajasPreferencias(
     ) {
         Box(
             modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.background)
-                .padding(2.dp),
+                .size(40.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(id = image),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
             )
         }
 
-        Spacer(modifier = Modifier.width(14.dp))
+        Spacer(modifier = Modifier.width(16.dp))
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = name,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = role,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontSize = 13.sp
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -353,70 +363,57 @@ fun CajasPreferencias(
                     checked = value == "on",
                     onCheckedChange = onCheckedChange,
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = Color.White,
-                        checkedTrackColor = MaterialTheme.colorScheme.primary,
-                        uncheckedThumbColor = Color.White,
-                        uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
+                        checkedThumbColor = MaterialTheme.colorScheme.primary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                     )
                 )
             }
             "select" -> {
                 var expanded by remember { mutableStateOf(false) }
-
-                Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
+                Box {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(color = MaterialTheme.colorScheme.background.copy(alpha = 0.5f))
+                            .clip(RoundedCornerShape(8.dp))
                             .clickable { expanded = true }
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
-                            .widthIn(min = 60.dp)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = value,
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowDown,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.rotate(if (expanded) 180f else 0f)
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
-
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        offset = DpOffset(x = 0.dp, y = 4.dp),
-                        modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                        offset = DpOffset(x = 0.dp, y = 4.dp)
                     ) {
-                        if (options.isEmpty()) {
-                            DropdownMenuItem(text = { Text("No hay opciones") }, onClick = { expanded = false })
-                        } else {
-                            options.forEach { opcion ->
-                                DropdownMenuItem(
-                                    text = { Text(text = opcion) },
-                                    onClick = {
-                                        expanded = false
-                                        onCurrencySelect(opcion)
-                                    }
-                                )
-                            }
+                        options.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option) },
+                                onClick = {
+                                    onCurrencySelect(option)
+                                    expanded = false
+                                }
+                            )
                         }
                     }
                 }
             }
-            else -> {
-                IconButton(onClick = onClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Acceder",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            "nav" -> {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
             }
         }
     }
