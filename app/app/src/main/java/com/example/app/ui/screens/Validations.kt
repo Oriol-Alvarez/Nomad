@@ -51,7 +51,8 @@ object Validator {
      */
     fun isSecureText(text: String): Boolean {
         if (text.isEmpty()) return true
-        val safePattern = Regex("^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s,.-!?()]*$")
+        // El guion '-' debe ir al final para que no se interprete como un rango inválido
+        val safePattern = Regex("^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\\s,.!?()\\-]*$")
         val forbiddenSubstrings = listOf("http", "www", "<script", "javascript:")
         
         val isSafePattern = safePattern.matches(text)

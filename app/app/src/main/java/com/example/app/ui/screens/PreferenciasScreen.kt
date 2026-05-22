@@ -112,6 +112,11 @@ fun PreferenciasScreen(
                     TextButton(
                         onClick = {
                             authViewModel.signOut()
+                            // Resetear valores para evitar que el siguiente usuario vea los del anterior
+                            onUsernameChange("Viajero")
+                            onBirthdateChange("01/01/2000")
+                            onResumenChange(true)
+
                             navController.navigate(Routes.AUTH) {
                                 popUpTo(0) { inclusive = true }
                             }

@@ -43,9 +43,10 @@ fun NavGraph(
             AutentificacionScreen(
                 navController = navController,
                 vm = authViewModel,
-                onUserDataSaved = { newName, newBirth ->
+                onUserDataSaved = { newName, newBirth, newResumen ->
                     onUsernameChange(newName)
                     onBirthdateChange(newBirth)
+                    onResumenChange(newResumen)
                 }
             ) 
         }

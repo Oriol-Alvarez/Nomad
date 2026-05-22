@@ -12,14 +12,7 @@ import com.example.app.domain.AuthRepository
 import com.example.app.ui.screens.Validator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -38,15 +31,21 @@ class TripListViewModel @Inject constructor(
     private val _uiEvents = MutableSharedFlow<String>()
     val uiEvents: SharedFlow<String> = _uiEvents
 
-    // T4.2: Solo mostramos los viajes del usuario logueado actualmente
-    val trips: StateFlow<List<Trip>> = flowOf(authRepository.getCurrentUser()?.uid)
+    val trips: StateFlow<List<Trip>> = authRepository.getAuthStateFlow()
+        .map { it?.uid }
+        .distinctUntilChanged()
         .flatMapLatest { uid ->
-            if (uid != null) tripRepository.getTripsForUser(uid)
-            else flowOf(emptyList())
+            if (uid != null) {
+                Log.d(TAG_DB, "Observando viajes para UID: $uid")
+                tripRepository.getTripsForUser(uid)
+            } else {
+                Log.d(TAG_DB, "Sin usuario, lista de viajes vacía")
+                flowOf(emptyList())
+            }
         }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
+            started = SharingStarted.Eagerly,
             initialValue = emptyList()
         )
 
@@ -60,37 +59,19 @@ class TripListViewModel @Inject constructor(
         imageUri: String,
         activitiesFromForm: List<ItineraryItem>
     ): Boolean {
-
         val currentUserId = authRepository.getCurrentUser()?.uid ?: return false
-
-        // Validaciones Síncronas
-        if (!Validator.isValidTitle(title)) {
-            Log.e(TAG_VAL, "Título inválido: $title")
-            return false
-        }
-        if (!Validator.isValidLocation(destination)) {
-            Log.e(TAG_VAL, "Ubicación inválida: $destination")
-            return false
-        }
-        if (!Validator.areDatesValid(dataInici, dataFinal)) {
-            Log.e(TAG_VAL, "Fechas inconsistentes: $dataInici - $dataFinal")
-            return false
-        }
+        if (!Validator.isValidTitle(title) || !Validator.isValidLocation(destination)) return false
+        if (!Validator.areDatesValid(dataInici, dataFinal)) return false
 
         viewModelScope.launch {
             try {
-                // Prevenir nombres de viaje duplicados para el mismo usuario
-                val currentTrips = trips.value
-                if (currentTrips.any { it.title.equals(title, ignoreCase = true) }) {
-                    Log.w(TAG_VAL, "El usuario ya tiene un viaje llamado: $title")
+                if (trips.value.any { it.title.equals(title, ignoreCase = true) }) {
                     _uiEvents.emit("Ya existe un viaje con este nombre")
                     return@launch
                 }
-
                 val imagenFinal = imageUri.ifBlank {
                     "android.resource://com.example.app/" + R.drawable.viaje_predefinido
                 }
-
                 val newTripId = UUID.randomUUID().toString()
                 val newTrip = Trip(
                     id = newTripId,
@@ -104,17 +85,15 @@ class TripListViewModel @Inject constructor(
                     dataInici = dataInici,
                     dataFinal = dataFinal
                 )
-                
                 tripRepository.insertTrip(newTrip)
-
                 activitiesFromForm.forEach { item ->
                     itineraryRepository.insertItineraryItem(item.copy(tripId = newTripId))
                 }
                 updateTripBudget(newTripId)
-                _uiEvents.emit("Viaje guardado correctamente")
+                _uiEvents.emit("¡Viaje creado con éxito!")
             } catch (e: Exception) {
-                Log.e(TAG_DB, "Error crítico al guardar viaje", e)
-                _uiEvents.emit("Error al guardar el viaje")
+                Log.e(TAG_DB, "Error al guardar viaje", e)
+                _uiEvents.emit("Error al guardar en la base de datos")
             }
         }
         return true
@@ -135,30 +114,25 @@ class TripListViewModel @Inject constructor(
 
     fun getActivitiesForTrip(tripId: String) = itineraryRepository.getItineraryItemsForTrip(tripId)
 
-    /**
-     * T5.2: Añade una actividad validando el rango de fechas.
-     */
     fun addActivityToTrip(tripId: String, item: ItineraryItem): Boolean {
-        // Validación síncrona del precio
         if (item.precio < 0) return false
-
         viewModelScope.launch {
             try {
                 val trip = tripRepository.getTripById(tripId) ?: return@launch
                 if (Validator.isActivityInTripRange(item.dia, trip.dataInici, trip.dataFinal)) {
                     itineraryRepository.insertItineraryItem(item.copy(tripId = tripId))
                     updateTripBudget(tripId)
-                    _uiEvents.emit("Actividad añadida")
                 } else {
-                    _uiEvents.emit("La fecha de la actividad está fuera del rango del viaje")
+                    _uiEvents.emit("Fecha fuera del rango del viaje")
                 }
             } catch (e: Exception) {
                 Log.e(TAG_DB, "Error al añadir actividad", e)
             }
         }
-        return true // Retornamos true indicando que se ha iniciado el proceso de guardado
+        return true
     }
 
+    // --- MÉTODOS RESTAURADOS ---
     fun updateActivity(item: ItineraryItem) {
         viewModelScope.launch {
             try {
@@ -186,11 +160,10 @@ class TripListViewModel @Inject constructor(
             val trip = tripRepository.getTripById(tripId) ?: return
             val activities = itineraryRepository.getItineraryItemsForTrip(tripId).first()
             val newBudget = activities.sumOf { it.precio.toDouble() }
-            
             trip.budget = newBudget
             tripRepository.updateTrip(trip)
         } catch (e: Exception) {
-            Log.e(TAG_DB, "Error actualizando presupuesto", e)
+            Log.e(TAG_DB, "Error presupuesto", e)
         }
     }
 
@@ -200,10 +173,5 @@ class TripListViewModel @Inject constructor(
                 tripRepository.updateTrip(trip)
             }
         }
-    }
-
-    // Para compatibilidad con tests que no usan DB real
-    fun refreshTrips() {
-        // En una implementación real con Room, el StateFlow se actualiza solo.
     }
 }

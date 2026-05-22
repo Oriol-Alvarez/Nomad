@@ -2,9 +2,11 @@ package com.example.app.domain
 
 import com.example.app.ui.screens.UiText
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
     fun getCurrentUser(): FirebaseUser?
+    fun getAuthStateFlow(): Flow<FirebaseUser?>
     fun isEmailVerified(): Boolean
     fun signOut()
     

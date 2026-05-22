@@ -47,10 +47,10 @@ class AuthViewModel @Inject constructor(
 
     fun onAuthAction(
         navController: NavHostController,
-        onUserDataSaved: (String, String) -> Unit
+        onUserDataSaved: (String, String, Boolean) -> Unit
     ) {
         if (isLoginMode) {
-            handleLogin(navController)
+            handleLogin(navController, onUserDataSaved)
         } else {
             viewModelScope.launch {
                 if (email.isBlank() || password.isBlank() || username.isBlank() || birthdate.isBlank()) {
@@ -74,7 +74,10 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    private fun handleLogin(navController: NavHostController) {
+    private fun handleLogin(
+        navController: NavHostController,
+        onUserDataSaved: (String, String, Boolean) -> Unit
+    ) {
         if (email.isBlank() || password.isBlank()) {
             errorMessage = UiText.StringResource(R.string.auth_error_campos)
             return
@@ -85,23 +88,30 @@ class AuthViewModel @Inject constructor(
 
         viewModelScope.launch {
             val result = authRepository.login(email, password)
-            isLoading = false
             
             result.fold(
                 onSuccess = {
                     val firebaseUser = authRepository.getCurrentUser()
                     if (firebaseUser != null && authRepository.isEmailVerified()) {
+                        val user = userRepository.getUserById(firebaseUser.uid)
+                        if (user != null) {
+                            onUserDataSaved(user.username, user.birthdate, user.acceptEmails)
+                        }
+                        
                         accessLogRepository.logAccess(firebaseUser.uid, "LOGIN")
+                        isLoading = false
                         navController.navigate(Routes.HOME) {
                             popUpTo(Routes.AUTH) { inclusive = true }
                         }
                     } else {
+                        isLoading = false
                         errorMessage = UiText.StringResource(R.string.auth_error_verify_email)
                         authRepository.sendEmailVerification()
                         authRepository.signOut()
                     }
                 },
                 onFailure = { exception ->
+                    isLoading = false
                     val msg = exception.localizedMessage
                     errorMessage = if (msg != null) UiText.DynamicString(msg)
                                    else UiText.StringResource(R.string.auth_error_unknown)
@@ -112,7 +122,7 @@ class AuthViewModel @Inject constructor(
 
     private fun handleSignup(
         navController: NavHostController,
-        onUserDataSaved: (String, String) -> Unit
+        onUserDataSaved: (String, String, Boolean) -> Unit
     ) {
         isLoading = true
         errorMessage = null
@@ -134,7 +144,7 @@ class AuthViewModel @Inject constructor(
                     )
                     userRepository.insertUser(newUser)
                     authRepository.sendEmailVerification()
-                    onUserDataSaved(username, birthdate)
+                    onUserDataSaved(username, birthdate, acceptEmails)
                     isLoading = false
                     errorMessage = UiText.StringResource(R.string.auth_signup_success)
                     isLoginMode = true
