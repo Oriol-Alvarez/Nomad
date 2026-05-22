@@ -2,11 +2,13 @@ package com.example.app.di
 
 import com.example.app.data.repository.AccessLogRepositoryImpl
 import com.example.app.data.repository.AuthRepositoryImpl
+import com.example.app.data.repository.HotelRepositoryImpl
 import com.example.app.data.repository.ItineraryItemRepositoryImpl
 import com.example.app.data.repository.TripRepositoryImpl
 import com.example.app.data.repository.UserRepositoryImpl
 import com.example.app.domain.AccessLogRepository
 import com.example.app.domain.AuthRepository
+import com.example.app.domain.HotelRepository
 import com.example.app.domain.ItineraryItemRepository
 import com.example.app.domain.TripRepository
 import com.example.app.domain.UserRepository
@@ -49,4 +51,10 @@ abstract class RepositoryModule {
     abstract fun bindAccessLogRepository(
         accessLogRepositoryImpl: AccessLogRepositoryImpl
     ): AccessLogRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindHotelRepository(
+        hotelRepositoryImpl: HotelRepositoryImpl
+    ): HotelRepository
 }
