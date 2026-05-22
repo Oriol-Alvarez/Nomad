@@ -10,12 +10,14 @@ import androidx.navigation.navArgument
 import com.example.app.ui.screens.*
 import com.example.app.ui.viewmodels.TripListViewModel
 import com.example.app.ui.viewmodels.AuthViewModel
+import com.example.app.ui.viewmodels.HotelViewModel
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
     tripViewModel: TripListViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
+    hotelViewModel: HotelViewModel = hiltViewModel(),
     isDarkMode: Boolean,
     onDarkModeChange: (Boolean) -> Unit,
     recordatorioViajes: Boolean,
@@ -118,6 +120,36 @@ fun NavGraph(
                 navController = navController, 
                 ciudadDestino = ciudadReal,
                 viewModel = tripViewModel
+            )
+        }
+
+        composable(Routes.HOTEL_SEARCH) {
+            HotelSearchScreen(
+                navController = navController,
+                viewModel = hotelViewModel
+            )
+        }
+
+        composable(
+            route = "${Routes.HOTEL_DETAIL}/{hotelId}/{startDate}/{endDate}/{city}",
+            arguments = listOf(
+                navArgument("hotelId") { type = NavType.StringType },
+                navArgument("startDate") { type = NavType.StringType },
+                navArgument("endDate") { type = NavType.StringType },
+                navArgument("city") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val hotelId = backStackEntry.arguments?.getString("hotelId") ?: ""
+            val startDate = backStackEntry.arguments?.getString("startDate") ?: ""
+            val endDate = backStackEntry.arguments?.getString("endDate") ?: ""
+            val city = backStackEntry.arguments?.getString("city") ?: ""
+            HotelDetailScreen(
+                navController = navController,
+                hotelId = hotelId,
+                startDate = startDate,
+                endDate = endDate,
+                city = city,
+                viewModel = hotelViewModel
             )
         }
     }

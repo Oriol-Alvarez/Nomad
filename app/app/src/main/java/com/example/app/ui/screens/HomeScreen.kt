@@ -36,6 +36,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -81,6 +83,8 @@ fun HomeScreen(
             ) {
                 Spacer(modifier = Modifier.height(24.dp))
 
+                HotelSearchBanner(navController)
+
                 RecomendadosSection(navController)
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -100,6 +104,67 @@ fun HomeScreen(
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun HotelSearchBanner(navController: NavHostController) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp)
+            .clickable { navController.navigate(Routes.HOTEL_SEARCH) },
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color(0xFF2196F3), // NomadBlue
+                            Color(0xFF0D47A1)  // NomadBlueDark
+                        )
+                    )
+                )
+                .padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "¿Buscas estancia?",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Encuentra hoteles exclusivos en Barcelona, París o Londres",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Card(
+                    shape = RoundedCornerShape(50),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    modifier = Modifier.clickable { navController.navigate(Routes.HOTEL_SEARCH) }
+                ) {
+                    Text(
+                        text = "Buscar",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0D47A1)
+                    )
+                }
             }
         }
     }
