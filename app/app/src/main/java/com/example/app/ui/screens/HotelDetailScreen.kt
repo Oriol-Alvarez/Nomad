@@ -23,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.app.R
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.app.domain.Hotel
@@ -68,7 +70,7 @@ fun HotelDetailScreen(
     LaunchedEffect(bookingState) {
         when (val state = bookingState) {
             is BookingState.Success -> {
-                Toast.makeText(context, "¡Reserva realizada con éxito!", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.hotel_detail_exito), Toast.LENGTH_LONG).show()
                 viewModel.resetBookingState()
                 selectedRoomForBooking = null
                 // Navegar de vuelta a la lista de viajes (detalle_viaje)
@@ -77,7 +79,7 @@ fun HotelDetailScreen(
                 }
             }
             is BookingState.Error -> {
-                Toast.makeText(context, "Error: ${state.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.auth_error_prefix, state.message), Toast.LENGTH_LONG).show()
             }
             else -> {}
         }
@@ -92,7 +94,7 @@ fun HotelDetailScreen(
         ) {
             if (hotel == null) {
                 // Cabecera vacía con botón atrás
-                CustomHeader(title = "Cargando...", showBackButton = true)
+                CustomHeader(title = stringResource(id = R.string.hotel_detail_cargando), showBackButton = true)
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
@@ -134,13 +136,13 @@ fun HotelDetailScreen(
                                 )
                                 Column {
                                     Text(
-                                        "Tu Estancia",
+                                        stringResource(id = R.string.hotel_detail_tu_estancia),
                                         fontWeight = FontWeight.Bold,
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
-                                        "$uiStart - $uiEnd ($nights ${if (nights == 1) "noche" else "noches"})",
+                                        "$uiStart - $uiEnd ($nights ${stringResource(id = if (nights == 1) R.string.hotel_search_por_noche else R.string.hotel_search_por_noches)})",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
@@ -152,7 +154,7 @@ fun HotelDetailScreen(
                     // Título Habitaciones
                     item {
                         Text(
-                            text = "Habitaciones Disponibles",
+                            text = stringResource(id = R.string.hotel_detail_habitaciones_disponibles),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 8.dp)
@@ -168,7 +170,7 @@ fun HotelDetailScreen(
                                     .padding(32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("No hay habitaciones disponibles para estas fechas.", color = Color.Gray)
+                                Text(stringResource(id = R.string.hotel_detail_no_habitaciones), color = Color.Gray)
                             }
                         }
                     } else {
@@ -197,7 +199,7 @@ fun HotelDetailScreen(
             containerColor = MaterialTheme.colorScheme.background,
             modifier = Modifier.fillMaxWidth(0.95f),
             title = {
-                Text("Confirmar Reserva", fontWeight = FontWeight.Bold)
+                Text(stringResource(id = R.string.hotel_detail_confirmar_reserva), fontWeight = FontWeight.Bold)
             },
             text = {
                 Column(
@@ -209,15 +211,15 @@ fun HotelDetailScreen(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(hotel.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Text("Habitación: ${room.roomType}", style = MaterialTheme.typography.bodyMedium)
-                            Text("Fechas: $uiStart a $uiEnd", style = MaterialTheme.typography.bodyMedium)
-                            Text("Estancia: $nights ${if (nights == 1) "noche" else "noches"}", style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(id = R.string.hotel_detail_habitacion, room.roomType), style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(id = R.string.hotel_detail_fechas, uiStart, uiEnd), style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(id = R.string.hotel_detail_estancia, nights, stringResource(id = if (nights == 1) R.string.hotel_search_por_noche else R.string.hotel_search_por_noches)), style = MaterialTheme.typography.bodyMedium)
                             Spacer(Modifier.height(8.dp))
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("Total a pagar:", fontWeight = FontWeight.Bold)
+                                Text(stringResource(id = R.string.hotel_detail_total_pagar), fontWeight = FontWeight.Bold)
                                 Text("€${totalPrice.toInt()}", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)
                             }
                         }
@@ -226,7 +228,7 @@ fun HotelDetailScreen(
                     OutlinedTextField(
                         value = guestName,
                         onValueChange = { guestName = it },
-                        label = { Text("Nombre del Huésped") },
+                        label = { Text(stringResource(id = R.string.hotel_detail_nombre_huesped)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         enabled = bookingState !is BookingState.Loading
@@ -235,7 +237,7 @@ fun HotelDetailScreen(
                     OutlinedTextField(
                         value = guestEmail,
                         onValueChange = { guestEmail = it },
-                        label = { Text("Email de Contacto") },
+                        label = { Text(stringResource(id = R.string.hotel_detail_email_contacto)) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
                         enabled = bookingState !is BookingState.Loading
@@ -257,7 +259,7 @@ fun HotelDetailScreen(
                 Button(
                     onClick = {
                         if (guestName.isBlank() || guestEmail.isBlank()) {
-                            Toast.makeText(context, "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.hotel_detail_error_campos), Toast.LENGTH_SHORT).show()
                             return@Button
                         }
                         viewModel.bookRoom(
@@ -272,7 +274,7 @@ fun HotelDetailScreen(
                     enabled = bookingState !is BookingState.Loading,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Confirmar Reserva", color = Color.White)
+                    Text(stringResource(id = R.string.hotel_detail_confirmar_reserva), color = Color.White)
                 }
             },
             dismissButton = {
@@ -280,7 +282,7 @@ fun HotelDetailScreen(
                     onClick = { selectedRoomForBooking = null },
                     enabled = bookingState !is BookingState.Loading
                 ) {
-                    Text("Cancelar")
+                    Text(stringResource(id = R.string.hotel_detail_cancelar))
                 }
             }
         )
@@ -342,13 +344,13 @@ fun RoomItemCard(
                 ) {
                     Column {
                         Text(
-                            text = "€${room.price.toInt()} / noche",
+                            text = stringResource(id = R.string.hotel_search_precio_noche, room.price.toInt()),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Total por $nights ${if (nights == 1) "noche" else "noches"}: €${(nights * room.price).toInt()}",
+                            text = stringResource(id = R.string.hotel_detail_total_noches, nights, stringResource(id = if (nights == 1) R.string.hotel_search_por_noche else R.string.hotel_search_por_noches), (nights * room.price).toInt()),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
@@ -358,7 +360,7 @@ fun RoomItemCard(
                         onClick = onBookClick,
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text("Reservar", fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(stringResource(id = R.string.hotel_detail_reservar), fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }

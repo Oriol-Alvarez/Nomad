@@ -139,14 +139,14 @@ fun HotelSearchBanner(navController: NavHostController) {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "¿Buscas estancia?",
+                        text = stringResource(id = R.string.home_banner_titulo),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Encuentra hoteles exclusivos en Barcelona, París o Londres",
+                        text = stringResource(id = R.string.home_banner_subtitulo),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.9f)
                     )
@@ -158,7 +158,7 @@ fun HotelSearchBanner(navController: NavHostController) {
                     modifier = Modifier.clickable { navController.navigate(Routes.HOTEL_SEARCH) }
                 ) {
                     Text(
-                        text = "Buscar",
+                        text = stringResource(id = R.string.home_banner_btn),
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,

@@ -26,7 +26,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
+import com.example.app.R
 import com.example.app.Routes
 import com.example.app.domain.Hotel
 import com.example.app.ui.viewmodels.HotelViewModel
@@ -68,8 +70,8 @@ fun HotelSearchScreen(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             CustomHeader(
-                title = "Buscar Estancia",
-                subtitle = "Reserva estancias y hoteles increíbles",
+                title = stringResource(id = R.string.hotel_search_titulo),
+                subtitle = stringResource(id = R.string.hotel_search_subtitulo),
                 showBackButton = true
             )
 
@@ -94,7 +96,7 @@ fun HotelSearchScreen(
                             onValueChange = {},
                             readOnly = true,
                             enabled = false,
-                            label = { Text("Destino") },
+                            label = { Text(stringResource(id = R.string.hotel_search_destino)) },
                             leadingIcon = { Icon(Icons.Default.Place, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                             trailingIcon = { IconButton(onClick = { cityExpanded = true }) { Icon(Icons.Default.KeyboardArrowDown, null) } },
                             modifier = Modifier
@@ -132,14 +134,14 @@ fun HotelSearchScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         SelectorFechaModular(
-                            label = "Entrada",
+                            label = stringResource(id = R.string.hotel_search_entrada),
                             fechaSeleccionada = viewModel.startDate,
                             onFechaElegida = { viewModel.startDate = it },
                             fechaMinima = System.currentTimeMillis(),
                             modifier = Modifier.weight(1f)
                         )
                         SelectorFechaModular(
-                            label = "Salida",
+                            label = stringResource(id = R.string.hotel_search_salida),
                             fechaSeleccionada = viewModel.endDate,
                             onFechaElegida = { viewModel.endDate = it },
                             fechaMinima = minimaVueltaMs,
@@ -158,7 +160,7 @@ fun HotelSearchScreen(
                     ) {
                         Icon(Icons.Default.Search, null, tint = Color.White)
                         Spacer(Modifier.width(8.dp))
-                        Text("Buscar Hoteles", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
+                        Text(stringResource(id = R.string.hotel_search_btn_buscar), fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
                     }
                 }
             }
@@ -186,13 +188,13 @@ fun HotelSearchScreen(
                             )
                             Spacer(Modifier.height(16.dp))
                             Text(
-                                "Comienza tu búsqueda",
+                                stringResource(id = R.string.hotel_search_comienza),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(Modifier.height(6.dp))
                             Text(
-                                "Elige tu destino y fechas para encontrar ofertas en hoteles seleccionados.",
+                                stringResource(id = R.string.hotel_search_comienza_desc),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color.Gray,
                                 textAlign = TextAlign.Center
@@ -222,7 +224,7 @@ fun HotelSearchScreen(
                                     onClick = { viewModel.searchAvailability() },
                                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                                 ) {
-                                    Text("Reintentar", color = Color.White)
+                                    Text(stringResource(id = R.string.hotel_search_reintentar), color = Color.White)
                                 }
                             }
                         }
@@ -236,13 +238,13 @@ fun HotelSearchScreen(
                                 modifier = Modifier.padding(32.dp)
                             ) {
                                 Text(
-                                    "No se encontraron hoteles",
+                                    stringResource(id = R.string.hotel_search_no_encontrado),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(Modifier.height(8.dp))
                                 Text(
-                                    "Prueba con otras fechas o cambia el destino.",
+                                    stringResource(id = R.string.hotel_search_no_encontrado_desc),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = Color.Gray,
                                     textAlign = TextAlign.Center
@@ -367,12 +369,12 @@ fun HotelCard(
                 ) {
                     val minPrice = hotel.rooms.minOfOrNull { it.price } ?: 0.0
                     Text(
-                        text = "Habitaciones desde",
+                        text = stringResource(id = R.string.hotel_search_desde),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray
                     )
                     Text(
-                        text = "€${minPrice.toInt()}/noche",
+                        text = stringResource(id = R.string.hotel_search_precio_noche, minPrice.toInt()),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.primary
