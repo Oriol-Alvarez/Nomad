@@ -4,9 +4,9 @@
 
 El objetivo principal de este sprint era dar el salto de una arquitectura de datos volátil (en memoria) a un sistema de persistencia real y robusto, integrando SQLite (mediante la librería Room) y añadiendo un sistema de autenticación completo con Firebase. Podemos confirmar que el objetivo se ha cumplido satisfactoriamente y la arquitectura de la aplicación ha dado un salto de calidad importante.
 
-Se ha logrado implementar el patrón Repository y la inyección de dependencias con HILT, lo cual ha requerido un esfuerzo inicial de configuración pero ha dejado el código mucho más modular y preparado para el futuro. La transición de los ViewModels para consumir datos de la base de datos en lugar de la memoria se ha realizado gestionando correctamente las corrutinas, evitando así los bloqueos del hilo principal (uno de los riesgos previstos).
+Se ha logrado implementar el patrón Repository y la inyección de dependencias con HILT, lo cual ha requerido un esfuerzo inicial de configuración pero ha dejado el código mucho más modular y preparado para el futuro.
 
-La integración con Firebase para el registro, inicio de sesión y recuperación de contraseñas es totalmente funcional. Además, se ha adaptado la lógica de negocio para que la aplicación sea multiusuario, filtrando los viajes según el usuario logueado y manteniendo un registro de auditoría local de los accesos.
+La integración con Firebase para el registro, inicio de sesión y recuperación de contraseñas es totalmente funcional. Además, se ha adaptado la lógica de negocio para que la aplicación sea multiusuario, filtrando los viajes según el usuario logueado.
 
 El sprint concluye con la documentación correctamente actualizada (evitando el error de sprints pasados), la grabación del vídeo demostrativo y la publicación de la Release v3.0.0.
 
@@ -33,7 +33,7 @@ El sprint concluye con la documentación correctamente actualizada (evitando el 
 | T4.3 | Sí         | Tabla `AccessLog` implementada. Registra el timestamp de cada login/logout. |
 | T5.1 | Sí         | Tests de Room implementados en paralelo al desarrollo, tal como nos propusimos en el sprint 2. |
 | T5.2 | Sí         | Validaciones aplicadas tanto a nivel de UI como de restricciones en la base de datos (Unique). |
-| T5.3 | Sí         | Esquema de base de datos añadido a `design.md`. Entregado en la carpeta correcta. |
+| T5.3 | Sí         | Esquema de base de datos añadido a `design.md`. |
 | T5.4 | Sí         | Vídeo demostrativo grabado mostrando el flujo multiusuario y persistencia, subido a `/docs/evidence/v3.x.x`. |
 
 ---
@@ -41,9 +41,8 @@ El sprint concluye con la documentación correctamente actualizada (evitando el 
 ## 3. Desviaciones
 
 * **Curva de aprendizaje de HILT (T1.1 - T1.5):** Como preveíamos en el análisis de riesgos, la configuración inicial de HILT requirió más tiempo del estimado. Entender cómo proveer las instancias de la base de datos de Room y los repositorios a los ViewModels nos obligó a reescribir algunos módulos, consumiendo algo de margen de tiempo.
-* **Gestión asíncrona de Firebase (T3.2):** La verificación del correo electrónico y el feedback visual al usuario tuvieron pequeñas complicaciones. A veces la UI no reflejaba inmediatamente que el correo se había enviado, por lo que tuvimos que refinar los estados de carga (Loading states) en la interfaz.
+* **Gestión asíncrona de Firebase (T3.2):** La verificación del correo electrónico y el feedback visual al usuario tuvieron pequeñas complicaciones. A veces la UI no reflejaba inmediatamente que el correo se había enviado.
 * **Refactorización Multiusuario (T4.2):** Modificar la tabla de viajes para depender de un usuario implicó tener que borrar y recrear la base de datos local durante las pruebas varias veces (FallbackToDestructiveMigration), lo que ralentizó un poco el testeo manual.
-* **Cuidado especial en la entrega documental (T5.3):** Dada la advertencia en los riesgos sobre las entregas en la carpeta de documentación equivocada, el equipo hizo una revisión cruzada antes del push final, asegurando que `design.md` estaba perfecto.
 
 ---
 
@@ -51,7 +50,6 @@ El sprint concluye con la documentación correctamente actualizada (evitando el 
 
 ### Qué funcionó bien
 * **Testing en paralelo:** Aplicar la mejora propuesta en el Sprint 02 (escribir los tests unitarios de los DAOs mientras se desarrollaban y no al final) evitó cuellos de botella en los últimos días del sprint.
-* **Gestión de hilos (Corrutinas):** El equipo estuvo muy atento al riesgo de bloquear el hilo principal. El uso de Kotlin Coroutines con Room y Firebase ha resultado en una aplicación muy fluida.
 * **Patrón Repository:** La separación de responsabilidades ahora es excelente. La UI no sabe si los datos vienen de Room o de Firebase, lo que facilitará futuras integraciones (ej. una API REST).
 
 ### Qué no funcionó
