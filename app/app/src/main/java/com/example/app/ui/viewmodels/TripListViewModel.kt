@@ -280,25 +280,26 @@ class TripListViewModel @Inject constructor(
                 val totalCost = nights * trip.roomPrice
                 val newBudget = (trip.budget - totalCost).coerceAtLeast(0.0)
 
-                // Resetear campos de reserva locally on the trip in Room
-                trip.hasReservation = false
-                trip.reservationId = null
-                trip.hotelId = null
-                trip.hotelName = null
-                trip.hotelAddress = null
-                trip.hotelRating = 0
-                trip.hotelImageUrl = null
-                trip.roomId = null
-                trip.roomType = null
-                trip.roomPrice = 0.0
-                trip.reservationStartDate = null
-                trip.reservationEndDate = null
-                trip.guestName = null
-                trip.guestEmail = null
-                trip.budget = newBudget
+                val updatedTrip = trip.copy(
+                    hasReservation = false,
+                    reservationId = null,
+                    hotelId = null,
+                    hotelName = null,
+                    hotelAddress = null,
+                    hotelRating = 0,
+                    hotelImageUrl = null,
+                    roomId = null,
+                    roomType = null,
+                    roomPrice = 0.0,
+                    reservationStartDate = null,
+                    reservationEndDate = null,
+                    guestName = null,
+                    guestEmail = null,
+                    budget = newBudget
+                )
 
                 // Update the trip in Room
-                tripRepository.updateTrip(trip)
+                tripRepository.updateTrip(updatedTrip)
             }
         }
     }

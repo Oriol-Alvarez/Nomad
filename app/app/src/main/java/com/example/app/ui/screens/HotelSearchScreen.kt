@@ -117,7 +117,8 @@ fun HotelSearchScreen(
                             DropdownMenu(
                                 expanded = cityExpanded,
                                 onDismissRequest = { cityExpanded = false },
-                                modifier = Modifier.fillMaxWidth(0.85f).background(MaterialTheme.colorScheme.surface)
+                                modifier = Modifier.fillMaxWidth(0.85f),
+                                containerColor = MaterialTheme.colorScheme.surface
                             ) {
                                 cities.forEach { item ->
                                     DropdownMenuItem(

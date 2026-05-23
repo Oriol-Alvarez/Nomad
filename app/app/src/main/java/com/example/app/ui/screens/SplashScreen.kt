@@ -127,7 +127,7 @@ fun SplashScreen(navController: NavHostController, authViewModel: AuthViewModel)
 
             // Indicador de progreso lineal personalizado
             LinearProgressIndicator(
-                progress = progress,
+                progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)

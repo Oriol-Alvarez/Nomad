@@ -406,7 +406,7 @@ fun CajasPreferencias(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
                         offset = DpOffset(x = 0.dp, y = 4.dp),
-                        modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                        containerColor = MaterialTheme.colorScheme.surface
                     ) {
                         options.forEach { option ->
                             DropdownMenuItem(

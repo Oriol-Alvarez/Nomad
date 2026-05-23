@@ -6,7 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -214,21 +215,21 @@ fun AutentificacionScreen(
                                 )
                                 val annotatedString = buildAnnotatedString {
                                     append("Acepto los ")
-                                    pushStringAnnotation(tag = "terms", annotation = "terms")
-                                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)) {
-                                        append("términos y condiciones")
-                                    }
-                                    pop()
-                                }
-                                ClickableText(
-                                    text = annotatedString,
-                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface),
-                                    onClick = { offset ->
-                                        annotatedString.getStringAnnotations(tag = "terms", start = offset, end = offset)
-                                            .firstOrNull()?.let {
+                                    pushLink(
+                                        LinkAnnotation.Clickable(
+                                            tag = "terms",
+                                            styles = TextLinkStyles(style = SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)),
+                                            linkInteractionListener = {
                                                 navController.navigate(Routes.TERMINOS_CONDICIONES)
                                             }
-                                    }
+                                        )
+                                    )
+                                    append("términos y condiciones")
+                                    pop()
+                                }
+                                Text(
+                                    text = annotatedString,
+                                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurface)
                                 )
                             }
                         } else {

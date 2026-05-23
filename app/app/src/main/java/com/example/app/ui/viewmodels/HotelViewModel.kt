@@ -146,25 +146,25 @@ class HotelViewModel @Inject constructor(
                     val nights = calculateNights(start, end)
                     val totalCost = nights * room.price
                     
-                    trip.hasReservation = true
-                    trip.reservationId = reservation.id
-                    trip.hotelId = hotel.id
-                    trip.hotelName = hotel.name
-                    trip.hotelAddress = hotel.address
-                    trip.hotelRating = hotel.rating
-                    trip.hotelImageUrl = hotel.imageUrl
-                    trip.roomId = room.id
-                    trip.roomType = room.roomType
-                    trip.roomPrice = room.price
-                    trip.reservationStartDate = start
-                    trip.reservationEndDate = end
-                    trip.guestName = guestName
-                    trip.guestEmail = guestEmail
-                    
-                    // Increment trip budget with hotel cost
-                    trip.budget = trip.budget + totalCost
+                    val updatedTrip = trip.copy(
+                        hasReservation = true,
+                        reservationId = reservation.id,
+                        hotelId = hotel.id,
+                        hotelName = hotel.name,
+                        hotelAddress = hotel.address,
+                        hotelRating = hotel.rating,
+                        hotelImageUrl = hotel.imageUrl,
+                        roomId = room.id,
+                        roomType = room.roomType,
+                        roomPrice = room.price,
+                        reservationStartDate = start,
+                        reservationEndDate = end,
+                        guestName = guestName,
+                        guestEmail = guestEmail,
+                        budget = trip.budget + totalCost
+                    )
 
-                    tripRepository.updateTrip(trip)
+                    tripRepository.updateTrip(updatedTrip)
                 }
 
                 _bookingState.value = BookingState.Success(reservation)

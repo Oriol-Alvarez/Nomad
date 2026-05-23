@@ -297,9 +297,8 @@ fun HotelDetailScreen(
                                 DropdownMenu(
                                     expanded = dropdownExpanded,
                                     onDismissRequest = { dropdownExpanded = false },
-                                    modifier = Modifier
-                                        .fillMaxWidth(0.9f)
-                                        .background(MaterialTheme.colorScheme.surface)
+                                    modifier = Modifier.fillMaxWidth(0.9f),
+                                    containerColor = MaterialTheme.colorScheme.surface
                                 ) {
                                     activeTrips.forEach { trip ->
                                         DropdownMenuItem(
