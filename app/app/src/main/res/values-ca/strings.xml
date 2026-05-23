@@ -112,6 +112,7 @@
     <string name="nav_viajes">Viatges</string>
     <string name="nav_galeria">Galeria</string>
     <string name="nav_ajustes">Ajustos</string>
+    <string name="nav_reservas">Reserves</string>
 
     <!-- Sobre Nosotros -->
     <string name="sobre_equipo_titulo">Equip de desenvolupament</string>
@@ -231,4 +232,20 @@
     <string name="home_banner_titulo">Busques estada?</string>
     <string name="home_banner_subtitulo">Troba hotels exclusius a Barcelona, París o Londres</string>
     <string name="home_banner_btn">Buscar</string>
+
+    <!-- Reservations List & Cancel (Tarea 4) -->
+    <string name="reservations_titulo">Les meves Reserves</string>
+    <string name="reservations_no_reservas">No tens reserves actives.</string>
+    <string name="reservations_hotel_titulo">Hotel: %1$s</string>
+    <string name="reservations_room_type">Habitació: %1$s</string>
+    <string name="reservations_id">ID de reserva: %1$s</string>
+    <string name="reservations_guest">Huésped: %1$s (%2$s)</string>
+    <string name="reservations_viaje_relacionado">Viatge relacionat: %1$s</string>
+    <string name="reservations_cancelar_btn">Cancel·lar Reserva</string>
+    <string name="reservations_cancel_confirm_titulo">Cancel·lar Reserva</string>
+    <string name="reservations_cancel_confirm_msg">Estàs segur que vols cancel·lar aquesta reserva? Aquesta acció cancel·larà la reserva al servidor i eliminarà el viatge corresponent.</string>
+    <string name="reservations_cancel_success">Reserva cancel·lada amb èxit!</string>
+    <string name="reservations_cancel_error">Error al cancel·lar la reserva: %1$s</string>
+    <string name="detalle_reserva_badge">Reserva</string>
+    <string name="detalle_mis_reservas_btn">Veure reserves</string>
 </resources>

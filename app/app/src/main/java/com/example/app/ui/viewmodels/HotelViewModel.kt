@@ -8,9 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.app.BuildConfig
 import com.example.app.domain.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -18,6 +17,7 @@ import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HotelViewModel @Inject constructor(
     private val hotelRepository: HotelRepository,
@@ -34,6 +34,41 @@ class HotelViewModel @Inject constructor(
 
     private val _bookingState = MutableStateFlow<BookingState>(BookingState.Idle)
     val bookingState: StateFlow<BookingState> = _bookingState.asStateFlow()
+
+    val localReservations: StateFlow<List<Trip>> = authRepository.getAuthStateFlow()
+        .map { it?.uid }
+        .distinctUntilChanged()
+        .flatMapLatest { uid ->
+            if (uid != null) {
+                tripRepository.getTripsForUser(uid).map { list ->
+                    list.filter { it.hasReservation }
+                }
+            } else {
+                flowOf(emptyList())
+            }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = emptyList()
+        )
+
+    fun cancelReservation(trip: Trip, onSuccess: () -> Unit, onError: (String) -> Unit) {
+        val resId = trip.reservationId
+        if (resId.isNullOrBlank()) {
+            onError("ID de reserva inválido")
+            return
+        }
+        viewModelScope.launch {
+            try {
+                hotelRepository.cancelReservationById(resId)
+                tripRepository.deleteTrip(trip.id)
+                onSuccess()
+            } catch (e: Exception) {
+                onError(e.localizedMessage ?: "Error al cancelar la reserva en el servidor")
+            }
+        }
+    }
 
     init {
         // Pre-populate with dates: today and tomorrow

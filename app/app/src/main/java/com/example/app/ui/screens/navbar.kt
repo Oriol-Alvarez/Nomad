@@ -25,7 +25,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Hotel
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import com.example.app.R
+import com.example.app.Routes
 
 /**
  * Menú de navegación de la parte de abajo de la pantalla.
@@ -69,6 +73,13 @@ fun BottomNavigationBar(navController: NavHostController) {
                 label = stringResource(id = R.string.nav_galeria),
                 selected = currentRoute == "galeria_viaje"
             ) { navController.navigate("galeria_viaje") }
+
+            // Botón de Reservas
+            BottomItem(
+                icon = rememberVectorPainter(Icons.Default.Hotel),
+                label = stringResource(id = R.string.nav_reservas),
+                selected = currentRoute == Routes.RESERVATIONS_LIST
+            ) { navController.navigate(Routes.RESERVATIONS_LIST) }
 
             // Botón de Ajustes
             BottomItem(

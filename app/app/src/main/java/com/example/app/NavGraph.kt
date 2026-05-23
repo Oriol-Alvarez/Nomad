@@ -152,5 +152,13 @@ fun NavGraph(
                 viewModel = hotelViewModel
             )
         }
+
+        composable(Routes.RESERVATIONS_LIST) {
+            ReservationsListScreen(
+                navController = navController,
+                selectedCurrency = selectedCurrency,
+                viewModel = hotelViewModel
+            )
+        }
     }
 }

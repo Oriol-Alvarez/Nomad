@@ -1,7 +1,5 @@
 package com.example.app.data.repository
 
-import com.example.app.data.model.ReserveRequest
-import com.example.app.data.remote.HotelApiService
 import com.example.app.domain.HotelRepository
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
@@ -12,6 +10,7 @@ import org.junit.Before
 import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import com.example.app.data.remote.api.HotelApiService
 
 class HotelRepositoryTest {
 
@@ -65,19 +64,17 @@ class HotelRepositoryTest {
                 .setBody(mockResponseJson)
         )
 
-        val result = repository.getHotels("G15")
+        val hotels = repository.getHotels("G15")
 
-        assertTrue(result.isSuccess)
-        val hotels = result.getOrNull()
         assertNotNull(hotels)
-        assertEquals(1, hotels!!.size)
+        assertEquals(1, hotels.size)
         val hotel = hotels[0]
         assertEquals("PAR01", hotel.id)
         assertEquals("Hotel Louvre", hotel.name)
         assertEquals(4, hotel.rating)
-        assertEquals(1, hotel.rooms?.size)
-        assertEquals("R1", hotel.rooms!![0].id)
-        assertEquals(80.0, hotel.rooms!![0].price, 0.0)
+        assertEquals(1, hotel.rooms.size)
+        assertEquals("R1", hotel.rooms[0].id)
+        assertEquals(80.0, hotel.rooms[0].price, 0.0)
 
         val recordedRequest = mockWebServer.takeRequest()
         assertEquals("/hotels/G15/hotels", recordedRequest.path)
@@ -114,17 +111,15 @@ class HotelRepositoryTest {
                 .setBody(mockResponseJson)
         )
 
-        val result = repository.checkAvailability(
+        val hotels = repository.getAvailability(
             groupId = "G15",
             startDate = "2026-05-10",
             endDate = "2026-05-15",
             city = "Paris"
         )
 
-        assertTrue(result.isSuccess)
-        val hotels = result.getOrNull()
         assertNotNull(hotels)
-        assertEquals(1, hotels!!.size)
+        assertEquals(1, hotels.size)
         assertEquals("PAR01", hotels[0].id)
 
         val recordedRequest = mockWebServer.takeRequest()
@@ -159,7 +154,8 @@ class HotelRepositoryTest {
                 .setBody(mockResponseJson)
         )
 
-        val request = ReserveRequest(
+        val reservation = repository.reserveRoom(
+            groupId = "G15",
             hotelId = "PAR01",
             roomId = "R1",
             startDate = "2026-05-10",
@@ -168,15 +164,9 @@ class HotelRepositoryTest {
             guestEmail = "john@example.com"
         )
 
-        val result = repository.reserveRoom("G15", request)
-
-        assertTrue(result.isSuccess)
-        val response = result.getOrNull()
-        assertNotNull(response)
-        assertEquals("Reservation confirmed", response!!.message)
-        assertEquals(5, response.nights)
-        assertEquals("DOWOOG", response.reservation.id)
-        assertEquals("PAR01", response.reservation.hotelId)
+        assertNotNull(reservation)
+        assertEquals("DOWOOG", reservation.id)
+        assertEquals("PAR01", reservation.hotelId)
 
         val recordedRequest = mockWebServer.takeRequest()
         assertEquals("/hotels/G15/reserve", recordedRequest.path)
@@ -187,25 +177,7 @@ class HotelRepositoryTest {
     fun `test cancelReservation returns cancelled reservation on success`() = runBlocking {
         val mockResponseJson = """
             {
-              "id": "DOWOOG",
-              "hotel_id": "PAR01",
-              "room_id": "R1",
-              "start_date": "2026-05-10",
-              "end_date": "2026-05-15",
-              "guest_name": "John Doe",
-              "guest_email": "john@example.com",
-              "hotel": {
-                "id": "PAR01",
-                "name": "Hotel Louvre",
-                "address": "Rue de Rivoli 99, Paris",
-                "rating": 4,
-                "image_url": "/images/PAR01.png"
-              },
-              "room": {
-                "id": "R1",
-                "room_type": "single",
-                "price": 80.0
-              }
+              "message": "Reservation cancelled successfully"
             }
         """.trimIndent()
 
@@ -215,15 +187,10 @@ class HotelRepositoryTest {
                 .setBody(mockResponseJson)
         )
 
-        val result = repository.cancelReservation("DOWOOG")
+        val apiMessage = repository.cancelReservationById("DOWOOG")
 
-        assertTrue(result.isSuccess)
-        val reservation = result.getOrNull()
-        assertNotNull(reservation)
-        assertEquals("DOWOOG", reservation!!.id)
-        assertEquals("PAR01", reservation.hotelId)
-        assertNotNull(reservation.hotel)
-        assertEquals("Hotel Louvre", reservation.hotel!!.name)
+        assertNotNull(apiMessage)
+        assertEquals("Reservation cancelled successfully", apiMessage.message)
 
         val recordedRequest = mockWebServer.takeRequest()
         assertEquals("/reservations/DOWOOG", recordedRequest.path)
@@ -237,9 +204,10 @@ class HotelRepositoryTest {
                 .setResponseCode(500)
         )
 
-        val result = repository.getHotels("G15")
+        val result = runCatching {
+            repository.getHotels("G15")
+        }
 
         assertTrue(result.isFailure)
-        assertNull(result.getOrNull())
     }
 }
