@@ -63,122 +63,122 @@ fun HotelSearchScreen(
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            CustomHeader(
-                title = stringResource(id = R.string.hotel_search_titulo),
-                subtitle = stringResource(id = R.string.hotel_search_subtitulo),
-                showBackButton = true
-            )
+            item {
+                CustomHeader(
+                    title = stringResource(id = R.string.hotel_search_titulo),
+                    subtitle = stringResource(id = R.string.hotel_search_subtitulo),
+                    showBackButton = true
+                )
+            }
 
-            // Panel de búsqueda flotante
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f), RoundedCornerShape(24.dp))
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+            item {
+                // Panel de búsqueda flotante
+                Card(
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f), RoundedCornerShape(24.dp))
                 ) {
-                    // Selector de Ciudad
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(
-                            value = viewModel.city,
-                            onValueChange = {},
-                            readOnly = true,
-                            enabled = false,
-                            label = { Text(stringResource(id = R.string.hotel_search_destino)) },
-                            leadingIcon = { Icon(Icons.Default.Place, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-                            trailingIcon = { IconButton(onClick = { cityExpanded = true }) { Icon(Icons.Default.KeyboardArrowDown, null) } },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { cityExpanded = true },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                                disabledBorderColor = MaterialTheme.colorScheme.outline,
-                                disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                disabledLeadingIconColor = MaterialTheme.colorScheme.primary,
-                                disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                        DropdownMenu(
-                            expanded = cityExpanded,
-                            onDismissRequest = { cityExpanded = false },
-                            modifier = Modifier.fillMaxWidth(0.85f).background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            cities.forEach { item ->
-                                DropdownMenuItem(
-                                    text = { Text(item, fontWeight = FontWeight.Medium) },
-                                    onClick = {
-                                        viewModel.city = item
-                                        cityExpanded = false
-                                    }
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // Selector de Ciudad
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = viewModel.city,
+                                onValueChange = {},
+                                readOnly = true,
+                                enabled = false,
+                                label = { Text(stringResource(id = R.string.hotel_search_destino)) },
+                                leadingIcon = { Icon(Icons.Default.Place, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                                trailingIcon = { IconButton(onClick = { cityExpanded = true }) { Icon(Icons.Default.KeyboardArrowDown, null) } },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { cityExpanded = true },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                    disabledBorderColor = MaterialTheme.colorScheme.outline,
+                                    disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    disabledLeadingIconColor = MaterialTheme.colorScheme.primary,
+                                    disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                            )
+                            DropdownMenu(
+                                expanded = cityExpanded,
+                                onDismissRequest = { cityExpanded = false },
+                                modifier = Modifier.fillMaxWidth(0.85f).background(MaterialTheme.colorScheme.surface)
+                            ) {
+                                cities.forEach { item ->
+                                    DropdownMenuItem(
+                                        text = { Text(item, fontWeight = FontWeight.Medium) },
+                                        onClick = {
+                                            viewModel.city = item
+                                            cityExpanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    // Selectores de Fechas
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        SelectorFechaModular(
-                            label = stringResource(id = R.string.hotel_search_entrada),
-                            fechaSeleccionada = viewModel.startDate,
-                            onFechaElegida = { viewModel.startDate = it },
-                            fechaMinima = System.currentTimeMillis(),
-                            modifier = Modifier.weight(1f)
-                        )
-                        SelectorFechaModular(
-                            label = stringResource(id = R.string.hotel_search_salida),
-                            fechaSeleccionada = viewModel.endDate,
-                            onFechaElegida = { viewModel.endDate = it },
-                            fechaMinima = minimaVueltaMs,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+                        // Selectores de Fechas
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            SelectorFechaModular(
+                                label = stringResource(id = R.string.hotel_search_entrada),
+                                fechaSeleccionada = viewModel.startDate,
+                                onFechaElegida = { viewModel.startDate = it },
+                                fechaMinima = System.currentTimeMillis(),
+                                modifier = Modifier.weight(1f)
+                            )
+                            SelectorFechaModular(
+                                label = stringResource(id = R.string.hotel_search_salida),
+                                fechaSeleccionada = viewModel.endDate,
+                                onFechaElegida = { viewModel.endDate = it },
+                                fechaMinima = minimaVueltaMs,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
 
-                    // Botón Buscar
-                    Button(
-                        onClick = { viewModel.searchAvailability() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                    ) {
-                        Icon(Icons.Default.Search, null, tint = Color.White)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(id = R.string.hotel_search_btn_buscar), fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
+                        // Botón Buscar
+                        Button(
+                            onClick = { viewModel.searchAvailability() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(Icons.Default.Search, null, tint = Color.White)
+                            Spacer(Modifier.width(8.dp))
+                            Text(stringResource(id = R.string.hotel_search_btn_buscar), fontWeight = FontWeight.Bold, color = Color.White, fontSize = 16.sp)
+                        }
                     }
                 }
             }
 
             // Resultados de Búsqueda
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                when (val state = hotelsState) {
-                    is UiState.Empty -> {
+            when (val state = hotelsState) {
+                is UiState.Empty -> {
+                    item {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center,
-                            modifier = Modifier.padding(32.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 32.dp, vertical = 48.dp)
                         ) {
                             Icon(
                                 Icons.Default.Hotel,
@@ -201,41 +201,63 @@ fun HotelSearchScreen(
                             )
                         }
                     }
-                    is UiState.Loading -> {
-                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                    }
-                    is UiState.Error -> {
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                            modifier = Modifier.padding(16.dp)
+                }
+                is UiState.Loading -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
+                is UiState.Error -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text(
-                                    state.message,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                )
-                                Spacer(Modifier.height(12.dp))
-                                Button(
-                                    onClick = { viewModel.searchAvailability() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Text(stringResource(id = R.string.hotel_search_reintentar), color = Color.White)
+                                    Text(
+                                        state.message,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(Modifier.height(12.dp))
+                                    Button(
+                                        onClick = { viewModel.searchAvailability() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                    ) {
+                                        Text(stringResource(id = R.string.hotel_search_reintentar), color = Color.White)
+                                    }
                                 }
                             }
                         }
                     }
-                    is UiState.Success -> {
-                        val hotels = state.data
-                        if (hotels.isEmpty()) {
+                }
+                is UiState.Success -> {
+                    val hotels = state.data
+                    if (hotels.isEmpty()) {
+                        item {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
-                                modifier = Modifier.padding(32.dp)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 32.dp, vertical = 48.dp)
                             ) {
                                 Text(
                                     stringResource(id = R.string.hotel_search_no_encontrado),
@@ -250,15 +272,12 @@ fun HotelSearchScreen(
                                     textAlign = TextAlign.Center
                                 )
                             }
-                        } else {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                                contentPadding = PaddingValues(bottom = 24.dp)
-                            ) {
-                                items(hotels) { hotel ->
-                                    HotelCard(hotel = hotel) {
-                                        navController.navigate("${Routes.HOTEL_DETAIL}/${hotel.id}/${viewModel.startDate.replace("/", "-")}/${viewModel.endDate.replace("/", "-")}/${viewModel.city}")
-                                    }
+                        }
+                    } else {
+                        items(hotels) { hotel ->
+                            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                                HotelCard(hotel = hotel) {
+                                    navController.navigate("${Routes.HOTEL_DETAIL}/${hotel.id}/${viewModel.startDate.replace("/", "-")}/${viewModel.endDate.replace("/", "-")}/${viewModel.city}")
                                 }
                             }
                         }

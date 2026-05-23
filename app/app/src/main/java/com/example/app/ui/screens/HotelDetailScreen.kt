@@ -86,37 +86,37 @@ fun HotelDetailScreen(
     }
 
     Scaffold { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .background(MaterialTheme.colorScheme.background)
         ) {
             if (hotel == null) {
-                // Cabecera vacía con botón atrás
-                CustomHeader(title = stringResource(id = R.string.hotel_detail_cargando), showBackButton = true)
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                item {
+                    // Cabecera vacía con botón atrás
+                    CustomHeader(title = stringResource(id = R.string.hotel_detail_cargando), showBackButton = true)
+                }
+                item {
+                    Box(modifier = Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
             } else {
-                // Cabecera con imagen de fondo del hotel
                 val fullUrl = if (hotel.imageUrl.startsWith("http")) hotel.imageUrl else "http://15.224.84.148:8090${hotel.imageUrl}"
-                CustomHeader(
-                    title = hotel.name,
-                    subtitle = hotel.address,
-                    showBackButton = true,
-                    backgroundImageRes = fullUrl
-                )
+                item {
+                    // Cabecera con imagen de fondo del hotel
+                    CustomHeader(
+                        title = hotel.name,
+                        subtitle = hotel.address,
+                        showBackButton = true,
+                        backgroundImageRes = fullUrl
+                    )
+                }
 
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Resumen de fechas
-                    item {
+                // Resumen de fechas
+                item {
+                    Box(modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp)) {
                         Card(
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)),
@@ -150,31 +150,33 @@ fun HotelDetailScreen(
                             }
                         }
                     }
+                }
 
-                    // Título Habitaciones
+                // Título Habitaciones
+                item {
+                    Text(
+                        text = stringResource(id = R.string.hotel_detail_habitaciones_disponibles),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 8.dp)
+                    )
+                }
+
+                // Habitaciones
+                if (hotel.rooms.isEmpty()) {
                     item {
-                        Text(
-                            text = stringResource(id = R.string.hotel_detail_habitaciones_disponibles),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
-
-                    // Habitaciones
-                    if (hotel.rooms.isEmpty()) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(stringResource(id = R.string.hotel_detail_no_habitaciones), color = Color.Gray)
-                            }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(stringResource(id = R.string.hotel_detail_no_habitaciones), color = Color.Gray)
                         }
-                    } else {
-                        items(hotel.rooms) { room ->
+                    }
+                } else {
+                    items(hotel.rooms) { room ->
+                        Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                             RoomItemCard(room = room, nights = nights) {
                                 selectedRoomForBooking = room
                             }
