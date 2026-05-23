@@ -21,7 +21,23 @@ data class Trip(
     var dataFinal: String,
     var imageUri: String,
     var isFeatured: Boolean,
-    var budget: Double
+    var budget: Double,
+    
+    // Campos opcionales para la integración de reservas de hotel
+    var hasReservation: Boolean = false,
+    var reservationId: String? = null,
+    var hotelId: String? = null,
+    var hotelName: String? = null,
+    var hotelAddress: String? = null,
+    var hotelRating: Int = 0,
+    var hotelImageUrl: String? = null,
+    var roomId: String? = null,
+    var roomType: String? = null,
+    var roomPrice: Double = 0.0,
+    var reservationStartDate: String? = null,
+    var reservationEndDate: String? = null,
+    var guestName: String? = null,
+    var guestEmail: String? = null
 ) {
     @Ignore
     var images: MutableList<Image> = mutableListOf()

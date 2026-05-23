@@ -1,27 +1,42 @@
 package com.example.app.domain
 
-import com.example.app.data.model.Hotel
-import com.example.app.data.model.Reservation
-import com.example.app.data.model.ReserveRequest
-import com.example.app.data.model.ReserveResponse
-
 interface HotelRepository {
-    suspend fun getHotels(groupId: String): Result<List<Hotel>>
+    suspend fun getHotels(groupId: String): List<Hotel>
     
-    suspend fun checkAvailability(
+    suspend fun getAvailability(
         groupId: String,
         startDate: String,
         endDate: String,
         hotelId: String? = null,
         city: String? = null
-    ): Result<List<Hotel>>
-
+    ): List<Hotel>
+    
     suspend fun reserveRoom(
         groupId: String,
-        request: ReserveRequest
-    ): Result<ReserveResponse>
-
+        hotelId: String,
+        roomId: String,
+        startDate: String,
+        endDate: String,
+        guestName: String,
+        guestEmail: String
+    ): Reservation
+    
     suspend fun cancelReservation(
-        resId: String
-    ): Result<Reservation>
+        groupId: String,
+        hotelId: String,
+        roomId: String,
+        startDate: String,
+        endDate: String,
+        guestName: String,
+        guestEmail: String
+    ): ApiMessage
+    
+    suspend fun getReservations(
+        groupId: String,
+        guestEmail: String? = null
+    ): List<Reservation>
+    
+    suspend fun getReservationById(resId: String): Reservation
+    
+    suspend fun cancelReservationById(resId: String): ApiMessage
 }

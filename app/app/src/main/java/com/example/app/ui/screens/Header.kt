@@ -65,7 +65,13 @@ fun CustomHeader(
                     modifier = Modifier.matchParentSize(),
                     contentScale = ContentScale.Crop
                 )
-                // Oscurecemos un poco la imagen para que el texto se lea bien
+                // Capa translúcida sólida para oscurecer uniformemente la imagen de fondo
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(Color.Black.copy(alpha = 0.4f))
+                )
+                // Oscurecemos un poco la parte inferior para que el texto se lea bien
                 Box(
                     modifier = Modifier
                         .matchParentSize()

@@ -22,7 +22,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "HOTELS_API_URL", "\"http://15.224.84.148:8090/\"")
+            buildConfigField("String", "GROUP_ID", "\"G15\"")
+        }
         release {
+            buildConfigField("String", "HOTELS_API_URL", "\"http://15.224.84.148:8090/\"")
+            buildConfigField("String", "GROUP_ID", "\"G15\"")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -42,6 +48,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     testOptions {
@@ -86,6 +93,7 @@ dependencies {
     // Librerías externas
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11")
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("com.google.android.material:material:1.12.0")
 

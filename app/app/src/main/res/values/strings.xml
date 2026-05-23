@@ -205,4 +205,42 @@
     <string name="auth_error_reset_email">Introduce tu email</string>
     <string name="auth_error_unknown">Error desconocido</string>
     <string name="auth_error_prefix">Error: %1$s</string>
+
+    <!-- Hotel Search & Booking (Tarea 2) -->
+    <string name="hotel_search_titulo">Buscar Estancia</string>
+    <string name="hotel_search_subtitulo">Reserva estancias y hoteles increíbles</string>
+    <string name="hotel_search_destino">Destino</string>
+    <string name="hotel_search_entrada">Entrada</string>
+    <string name="hotel_search_salida">Salida</string>
+    <string name="hotel_search_btn_buscar">Buscar Hoteles</string>
+    <string name="hotel_search_comienza">Comienza tu búsqueda</string>
+    <string name="hotel_search_comienza_desc">Elige tu destino y fechas para encontrar ofertas en hoteles seleccionados.</string>
+    <string name="hotel_search_reintentar">Reintentar</string>
+    <string name="hotel_search_no_encontrado">No se encontraron hoteles</string>
+    <string name="hotel_search_no_encontrado_desc">Prueba con otras fechas o cambia el destino.</string>
+    <string name="hotel_search_desde">Habitaciones desde</string>
+    <string name="hotel_search_por_noche">noche</string>
+    <string name="hotel_search_por_noches">noches</string>
+    <string name="hotel_search_precio_noche">€%1$d/noche</string>
+
+    <string name="hotel_detail_cargando">Cargando...</string>
+    <string name="hotel_detail_tu_estancia">Tu Estancia</string>
+    <string name="hotel_detail_habitaciones_disponibles">Habitaciones Disponibles</string>
+    <string name="hotel_detail_no_habitaciones">No hay habitaciones disponibles para estas fechas.</string>
+    <string name="hotel_detail_confirmar_reserva">Confirmar Reserva</string>
+    <string name="hotel_detail_habitacion">Habitación: %1$s</string>
+    <string name="hotel_detail_fechas">Fechas: %1$s a %2$s</string>
+    <string name="hotel_detail_estancia">Estancia: %1$d %2$s</string>
+    <string name="hotel_detail_total_pagar">Total a pagar:</string>
+    <string name="hotel_detail_nombre_huesped">Nombre del Huésped</string>
+    <string name="hotel_detail_email_contacto">Email de Contacto</string>
+    <string name="hotel_detail_error_campos">Por favor completa todos los campos</string>
+    <string name="hotel_detail_exito">¡Reserva realizada con éxito!</string>
+    <string name="hotel_detail_total_noches">Total por %1$d %2$s: €%3$d</string>
+    <string name="hotel_detail_cancelar">Cancelar</string>
+    <string name="hotel_detail_reservar">Reservar</string>
+
+    <string name="home_banner_titulo">¿Buscas estancia?</string>
+    <string name="home_banner_subtitulo">Encuentra hoteles exclusivos en Barcelona, París o Londres</string>
+    <string name="home_banner_btn">Buscar</string>
 </resources>

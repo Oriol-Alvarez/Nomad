@@ -14,4 +14,6 @@ object Routes {
     const val SOBRE_NOSOTROS = "sobre_nosotros"
     const val TERMINOS_CONDICIONES = "terminos_condiciones"
     const val FORMVIAJE = "form-viaje?ciudad={ciudad}"
+    const val HOTEL_SEARCH = "hotel_search"
+    const val HOTEL_DETAIL = "hotel_detail"
 }
