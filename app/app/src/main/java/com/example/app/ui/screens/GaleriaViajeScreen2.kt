@@ -1,16 +1,11 @@
 package com.example.app.ui.screens
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import androidx.compose.foundation.Image
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -23,33 +18,43 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.example.app.R
-import com.example.app.ui.theme.AppTheme
+import com.example.app.ui.viewmodels.TripListViewModel
 
 @Composable
-fun GaleriaViajeScreen2(navController: NavHostController) {
-    val albumTitle = "La antigua Roma"
+fun GaleriaViajeScreen2(
+    navController: NavHostController,
+    tripId: String,
+    viewModel: TripListViewModel
+) {
+    val trips by viewModel.trips.collectAsState()
+    val trip = trips.find { it.id == tripId }
+    val albumTitle = trip?.title ?: stringResource(id = R.string.app_name)
 
-    // Estado reactivo que gestiona la lista de imágenes para permitir la eliminación en tiempo real
-    val allImages = remember {
-        mutableStateListOf(
-            R.drawable.roma, R.drawable.roma, R.drawable.roma,
-            R.drawable.roma, R.drawable.roma, R.drawable.roma,
-            R.drawable.roma
-        )
+    // Estado reactivo que gestiona la lista de imágenes guardadas en base de datos
+    val images by viewModel.getImagesForTrip(tripId).collectAsState(initial = emptyList())
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    // Selector de múltiples imágenes de la galería del sistema
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            val stringUris = uris.mapNotNull { uri ->
+                copyUriToInternalStorage(context, uri)?.toString()
+            }
+            viewModel.addImagesToTrip(tripId, stringUris)
+        }
     }
 
     Scaffold(
@@ -73,27 +78,26 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                 Box(modifier = Modifier.padding(bottom = 16.dp)) {
                     CustomHeader(
                         title = albumTitle,
-                        showBackButton = true,
-
+                        showBackButton = true
                     )
                 }
             }
 
             // Renderizado de las celdas de imagen con funcionalidad de eliminación
-            itemsIndexed(allImages) { index, imageRes ->
+            itemsIndexed(images) { index, tripImage ->
                 Box(
                     modifier = Modifier
                         .padding(horizontal = 4.dp)
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp))
                 ) {
-                    // Visualización de la imagen con ajuste de recorte (Crop)
-                    Image(
-                        painter = painterResource(id = imageRes),
+                    // Visualización de la imagen con AsyncImage
+                    AsyncImage(
+                        model = tripImage.imageUri,
                         contentDescription = stringResource(id = R.string.galeria2_foto_desc),
                         modifier = Modifier
                             .fillMaxSize()
-                            .clickable { /* Implementar visualización a pantalla completa */ },
+                            .clickable { /* Opcional: pantalla completa */ },
                         contentScale = ContentScale.Crop
                     )
 
@@ -108,7 +112,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                                 shape = CircleShape
                             )
                             .clip(CircleShape)
-                            .clickable { allImages.removeAt(index) },
+                            .clickable { viewModel.deleteTripImage(tripImage.id) },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -129,7 +133,7 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                        .clickable { /* Lógica de selección de archivos */ },
+                        .clickable { launcher.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -144,18 +148,20 @@ fun GaleriaViajeScreen2(navController: NavHostController) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GaleriaViajeScreen2Preview() {
-    AppTheme {
-        GaleriaViajeScreen2(navController = rememberNavController())
-    }
-}
-
-@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
-@Composable
-fun GaleriaViajeScreen2PreviewNight() {
-    AppTheme {
-        GaleriaViajeScreen2(navController = rememberNavController())
+private fun copyUriToInternalStorage(context: android.content.Context, uri: android.net.Uri): android.net.Uri? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+        val fileName = "trip_img_${System.currentTimeMillis()}.jpg"
+        val file = java.io.File(context.filesDir, fileName)
+        val outputStream = java.io.FileOutputStream(file)
+        inputStream.use { input ->
+            outputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
+        android.net.Uri.fromFile(file)
+    } catch (e: Exception) {
+        android.util.Log.e("StorageUtils", "Error copying URI to internal storage", e)
+        null
     }
 }

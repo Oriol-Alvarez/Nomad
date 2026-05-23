@@ -16,5 +16,5 @@ object Routes {
     const val FORMVIAJE = "form-viaje?ciudad={ciudad}"
     const val HOTEL_SEARCH = "hotel_search"
     const val HOTEL_DETAIL = "hotel_detail"
-    const val RESERVATIONS_LIST = "reservations_list"
+    const val RESERVAS_HOTELES = "reservas_hoteles"
 }

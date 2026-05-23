@@ -114,6 +114,19 @@
     <string name="nav_ajustes">Ajustos</string>
     <string name="nav_reservas">Reserves</string>
 
+    <!-- Reservas de Hoteles -->
+    <string name="reserva_hotel_titulo">Estades i Reserves</string>
+    <string name="reserva_hotel_subtitulo">Les teves reserves d\'hotel i allotjament</string>
+    <string name="reserva_no_reservas">No tens reserves registrades</string>
+    <string name="reserva_buscar_cta">Buscar Hotels</string>
+    <string name="reserva_confirm_delete_title">Cancel·lar reserva d\'hotel?</string>
+    <string name="reserva_confirm_delete_msg">Aquesta acció és irreversible i cancel·larà la reserva tant a la base de dades local com al servidor remot. Vols continuar?</string>
+    <string name="reserva_confirm_delete_btn">Sí, cancel·lar</string>
+    <string name="reserva_cancelar_btn">No, mantenir</string>
+    <string name="reserva_huesped">Huésped</string>
+    <string name="reserva_habitacion">Habitació</string>
+    <string name="reserva_activa_badge">Conté reserva</string>
+
     <!-- Sobre Nosotros -->
     <string name="sobre_equipo_titulo">Equip de desenvolupament</string>
     <string name="sobre_rol_oriol">Full Stack developer · UI/UX</string>
@@ -232,20 +245,4 @@
     <string name="home_banner_titulo">Busques estada?</string>
     <string name="home_banner_subtitulo">Troba hotels exclusius a Barcelona, París o Londres</string>
     <string name="home_banner_btn">Buscar</string>
-
-    <!-- Reservations List & Cancel (Tarea 4) -->
-    <string name="reservations_titulo">Les meves Reserves</string>
-    <string name="reservations_no_reservas">No tens reserves actives.</string>
-    <string name="reservations_hotel_titulo">Hotel: %1$s</string>
-    <string name="reservations_room_type">Habitació: %1$s</string>
-    <string name="reservations_id">ID de reserva: %1$s</string>
-    <string name="reservations_guest">Huésped: %1$s (%2$s)</string>
-    <string name="reservations_viaje_relacionado">Viatge relacionat: %1$s</string>
-    <string name="reservations_cancelar_btn">Cancel·lar Reserva</string>
-    <string name="reservations_cancel_confirm_titulo">Cancel·lar Reserva</string>
-    <string name="reservations_cancel_confirm_msg">Estàs segur que vols cancel·lar aquesta reserva? Aquesta acció cancel·larà la reserva al servidor i eliminarà el viatge corresponent.</string>
-    <string name="reservations_cancel_success">Reserva cancel·lada amb èxit!</string>
-    <string name="reservations_cancel_error">Error al cancel·lar la reserva: %1$s</string>
-    <string name="detalle_reserva_badge">Reserva</string>
-    <string name="detalle_mis_reservas_btn">Veure reserves</string>
 </resources>

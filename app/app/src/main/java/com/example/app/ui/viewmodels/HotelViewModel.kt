@@ -8,16 +8,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.app.BuildConfig
 import com.example.app.domain.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HotelViewModel @Inject constructor(
     private val hotelRepository: HotelRepository,
@@ -35,16 +34,42 @@ class HotelViewModel @Inject constructor(
     private val _bookingState = MutableStateFlow<BookingState>(BookingState.Idle)
     val bookingState: StateFlow<BookingState> = _bookingState.asStateFlow()
 
-    val localReservations: StateFlow<List<Trip>> = authRepository.getAuthStateFlow()
+    private fun parseTripDate(dateString: String): java.util.Date? {
+        val formatos = listOf("yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy")
+        for (patron in formatos) {
+            try {
+                val input = SimpleDateFormat(patron, Locale.getDefault())
+                input.isLenient = false
+                val date = input.parse(dateString)
+                if (date != null) return date
+            } catch (e: Exception) {
+                continue
+            }
+        }
+        return null
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val activeTrips: StateFlow<List<Trip>> = authRepository.getAuthStateFlow()
         .map { it?.uid }
         .distinctUntilChanged()
         .flatMapLatest { uid ->
             if (uid != null) {
-                tripRepository.getTripsForUser(uid).map { list ->
-                    list.filter { it.hasReservation }
-                }
+                tripRepository.getTripsForUser(uid)
             } else {
                 flowOf(emptyList())
+            }
+        }
+        .map { list ->
+            val today = java.util.Calendar.getInstance().apply {
+                set(java.util.Calendar.HOUR_OF_DAY, 0)
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }.time
+            list.filter { trip ->
+                val end = parseTripDate(trip.dataFinal)
+                end != null && !end.before(today)
             }
         }
         .stateIn(
@@ -52,23 +77,6 @@ class HotelViewModel @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = emptyList()
         )
-
-    fun cancelReservation(trip: Trip, onSuccess: () -> Unit, onError: (String) -> Unit) {
-        val resId = trip.reservationId
-        if (resId.isNullOrBlank()) {
-            onError("ID de reserva inválido")
-            return
-        }
-        viewModelScope.launch {
-            try {
-                hotelRepository.cancelReservationById(resId)
-                tripRepository.deleteTrip(trip.id)
-                onSuccess()
-            } catch (e: Exception) {
-                onError(e.localizedMessage ?: "Error al cancelar la reserva en el servidor")
-            }
-        }
-    }
 
     init {
         // Pre-populate with dates: today and tomorrow
@@ -113,6 +121,7 @@ class HotelViewModel @Inject constructor(
         end: String,
         guestName: String,
         guestEmail: String,
+        selectedTripId: String,
         onSuccess: () -> Unit
     ) {
         _bookingState.value = BookingState.Loading
@@ -131,40 +140,33 @@ class HotelViewModel @Inject constructor(
                     guestEmail = guestEmail
                 )
 
-                // Save locally in Room as a new Trip
-                val currentUserId = authRepository.getCurrentUser()?.uid ?: "anonymous"
-                
-                val nights = calculateNights(start, end)
-                val totalCost = nights * room.price
+                // Update selected Trip in Room
+                val trip = tripRepository.getTripById(selectedTripId)
+                if (trip != null) {
+                    val nights = calculateNights(start, end)
+                    val totalCost = nights * room.price
+                    
+                    trip.hasReservation = true
+                    trip.reservationId = reservation.id
+                    trip.hotelId = hotel.id
+                    trip.hotelName = hotel.name
+                    trip.hotelAddress = hotel.address
+                    trip.hotelRating = hotel.rating
+                    trip.hotelImageUrl = hotel.imageUrl
+                    trip.roomId = room.id
+                    trip.roomType = room.roomType
+                    trip.roomPrice = room.price
+                    trip.reservationStartDate = start
+                    trip.reservationEndDate = end
+                    trip.guestName = guestName
+                    trip.guestEmail = guestEmail
+                    
+                    // Increment trip budget with hotel cost
+                    trip.budget = trip.budget + totalCost
 
-                val newTrip = Trip(
-                    id = UUID.randomUUID().toString(),
-                    userId = currentUserId,
-                    title = "Hotel en ${hotel.name}",
-                    country = city,
-                    description = "Estancia en habitación ${room.roomType}. ID: ${reservation.id}",
-                    dataInici = start,
-                    dataFinal = end,
-                    imageUri = hotel.imageUrl,
-                    isFeatured = false,
-                    budget = totalCost,
-                    hasReservation = true,
-                    reservationId = reservation.id,
-                    hotelId = hotel.id,
-                    hotelName = hotel.name,
-                    hotelAddress = hotel.address,
-                    hotelRating = hotel.rating,
-                    hotelImageUrl = hotel.imageUrl,
-                    roomId = room.id,
-                    roomType = room.roomType,
-                    roomPrice = room.price,
-                    reservationStartDate = start,
-                    reservationEndDate = end,
-                    guestName = guestName,
-                    guestEmail = guestEmail
-                )
+                    tripRepository.updateTrip(trip)
+                }
 
-                tripRepository.insertTrip(newTrip)
                 _bookingState.value = BookingState.Success(reservation)
                 onSuccess()
             } catch (e: Exception) {

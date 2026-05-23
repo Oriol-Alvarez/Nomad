@@ -133,7 +133,14 @@ fun FormularioViaje(
     // Selector de imagen de la galería
     val launcherPrincipal = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? -> selectedImageUri = uri }
+    ) { uri: Uri? -> 
+        uri?.let { 
+            val copied = copyUriToInternalStorage(context, it)
+            if (copied != null) {
+                selectedImageUri = copied
+            }
+        }
+    }
 
     // Si venimos de una sugerencia (ej: "Paris" desde Home), la buscamos oficialmente
     LaunchedEffect(ciudadDestino) {
@@ -638,10 +645,28 @@ fun ItemItinerario(act: ItineraryItem, onEdit: () -> Unit, onDelete: () -> Unit)
                         Text(text = "€${act.precio}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = Color(0xFFE65100))
                     }
                 }
-            }
+                    }
             IconButton(onClick = onDelete, modifier = Modifier.align(Alignment.TopEnd).offset(x = 8.dp, y = (-8).dp)) {
                 Icon(imageVector = Icons.Rounded.Clear, contentDescription = "Borrar", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
             }
         }
+    }
+}
+
+private fun copyUriToInternalStorage(context: android.content.Context, uri: android.net.Uri): android.net.Uri? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+        val fileName = "trip_img_${System.currentTimeMillis()}.jpg"
+        val file = java.io.File(context.filesDir, fileName)
+        val outputStream = java.io.FileOutputStream(file)
+        inputStream.use { input ->
+            outputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
+        android.net.Uri.fromFile(file)
+    } catch (e: Exception) {
+        android.util.Log.e("StorageUtils", "Error copying URI to internal storage", e)
+        null
     }
 }

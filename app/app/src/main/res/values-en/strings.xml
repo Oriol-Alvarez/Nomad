@@ -114,6 +114,19 @@
     <string name="nav_ajustes">Settings</string>
     <string name="nav_reservas">Bookings</string>
 
+    <!-- Reservas de Hoteles -->
+    <string name="reserva_hotel_titulo">Stays &amp; Bookings</string>
+    <string name="reserva_hotel_subtitulo">Your hotel and accommodation bookings</string>
+    <string name="reserva_no_reservas">You have no registered bookings</string>
+    <string name="reserva_buscar_cta">Search Hotels</string>
+    <string name="reserva_confirm_delete_title">Cancel hotel booking?</string>
+    <string name="reserva_confirm_delete_msg">This action is irreversible and will cancel the reservation in both the local database and remote server. Do you want to continue?</string>
+    <string name="reserva_confirm_delete_btn">Yes, cancel</string>
+    <string name="reserva_cancelar_btn">No, keep</string>
+    <string name="reserva_huesped">Guest</string>
+    <string name="reserva_habitacion">Room</string>
+    <string name="reserva_activa_badge">Contains reservation</string>
+
     <!-- Sobre Nosotros -->
     <string name="sobre_equipo_titulo">Development team</string>
     <string name="sobre_rol_oriol">Full Stack developer · UI/UX</string>
@@ -232,20 +245,4 @@
     <string name="home_banner_titulo">Looking for a stay?</string>
     <string name="home_banner_subtitulo">Find exclusive hotels in Barcelona, Paris or London</string>
     <string name="home_banner_btn">Search</string>
-
-    <!-- Reservations List & Cancel (Tarea 4) -->
-    <string name="reservations_titulo">My Reservations</string>
-    <string name="reservations_no_reservas">You have no active reservations.</string>
-    <string name="reservations_hotel_titulo">Hotel: %1$s</string>
-    <string name="reservations_room_type">Room: %1$s</string>
-    <string name="reservations_id">Reservation ID: %1$s</string>
-    <string name="reservations_guest">Guest: %1$s (%2$s)</string>
-    <string name="reservations_viaje_relacionado">Related trip: %1$s</string>
-    <string name="reservations_cancelar_btn">Cancel Reservation</string>
-    <string name="reservations_cancel_confirm_titulo">Cancel Reservation</string>
-    <string name="reservations_cancel_confirm_msg">Are you sure you want to cancel this reservation? This action will cancel the reservation on the server and delete the corresponding trip.</string>
-    <string name="reservations_cancel_success">Reservation cancelled successfully!</string>
-    <string name="reservations_cancel_error">Error cancelling reservation: %1$s</string>
-    <string name="detalle_reserva_badge">Booking</string>
-    <string name="detalle_mis_reservas_btn">My bookings</string>
 </resources>

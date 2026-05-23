@@ -69,6 +69,14 @@ fun NavGraph(
             )
         }
 
+        composable(Routes.RESERVAS_HOTELES) {
+            ReservasHotelesScreen(
+                navController = navController,
+                selectedCurrency = selectedCurrency,
+                viewModel = tripViewModel
+            )
+        }
+
         composable(
             route = "${Routes.DETALLE_VIAJE2}/{tripId}",
             arguments = listOf(navArgument("tripId") { type = NavType.StringType })
@@ -82,8 +90,23 @@ fun NavGraph(
             )
         }
 
-        composable(Routes.GALERIA_VIAJE) { GaleriaViajeScreen(navController) }
-        composable(Routes.GALERIA_VIAJE_2) { GaleriaViajeScreen2(navController) }
+        composable(Routes.GALERIA_VIAJE) {
+            GaleriaViajeScreen(
+                navController = navController,
+                viewModel = tripViewModel
+            )
+        }
+        composable(
+            route = "${Routes.GALERIA_VIAJE_2}/{tripId}",
+            arguments = listOf(navArgument("tripId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val tripId = backStackEntry.arguments?.getString("tripId") ?: ""
+            GaleriaViajeScreen2(
+                navController = navController,
+                tripId = tripId,
+                viewModel = tripViewModel
+            )
+        }
 
         composable(Routes.PREFERENCIAS) {
             PreferenciasScreen(
