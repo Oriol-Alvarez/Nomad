@@ -1,22 +1,9 @@
 package com.example.app.ui.screens
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -30,50 +17,58 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.example.app.R
 import com.example.app.Routes
-import com.example.app.ui.theme.AppTheme
-
-// Estructura de datos que representa un álbum fotográfico vinculado a un destino
-data class GalleryAlbum(
-    val title: String,
-    val images: List<Int>
-)
+import com.example.app.ui.viewmodels.TripListViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
-fun GaleriaViajeScreen(navController: NavHostController) {
+fun GaleriaViajeScreen(
+    navController: NavHostController,
+    viewModel: TripListViewModel
+) {
     // 1. Estado para guardar el texto de la búsqueda
     var searchQuery by remember { mutableStateOf("") }
 
-    // Conjunto de datos de prueba para renderizar diferentes estados de los álbumes
-    val albums = listOf(
-        GalleryAlbum("La antigua Roma", listOf(R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma, R.drawable.roma)),
-        GalleryAlbum("Frío en Noruega", emptyList()),
-        GalleryAlbum("Negocios en Londres", listOf(R.drawable.londres, R.drawable.londres, R.drawable.londres, R.drawable.londres)),
-    )
+    // Observamos los viajes en tiempo real desde la base de datos
+    val tripsFromDB by viewModel.trips.collectAsState()
 
-    // 2. Filtramos la lista basándonos en el texto escrito (ignorando mayúsculas/minúsculas)
-    val filteredAlbums = albums.filter {
-        it.title.contains(searchQuery, ignoreCase = true)
+    val today = remember {
+        java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }.time
+    }
+
+    // Filtramos para mostrar únicamente viajes pasados o actuales (NO futuros)
+    val validTrips = remember(tripsFromDB, today) {
+        tripsFromDB.filter { trip ->
+            val start = parseTripDate(trip.dataInici)
+            start != null && !today.before(start)
+        }
+    }
+
+    // Filtramos la lista basándonos en el texto escrito (ignorando mayúsculas/minúsculas)
+    val filteredTrips = remember(validTrips, searchQuery) {
+        validTrips.filter {
+            it.title.contains(searchQuery, ignoreCase = true)
+        }
     }
 
     Scaffold(
@@ -118,7 +113,6 @@ fun GaleriaViajeScreen(navController: NavHostController) {
                                 .padding(horizontal = 20.dp),
                             contentAlignment = Alignment.CenterStart
                         ) {
-                            // 3. Componente de texto interactivo
                             BasicTextField(
                                 value = searchQuery,
                                 onValueChange = { newText -> searchQuery = newText },
@@ -153,9 +147,7 @@ fun GaleriaViajeScreen(navController: NavHostController) {
                         shadowElevation = 4.dp
                     ) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clickable { /* Espacio para añadir acción extra si lo necesitas */ },
+                            modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -168,17 +160,35 @@ fun GaleriaViajeScreen(navController: NavHostController) {
                 }
             }
 
-            // Sección 3: Iteración sobre la colección de álbumes filtrada
-            items(filteredAlbums) { album ->
-                AlbumSection(
-                    album = album,
-                    onAddImageClick = {
-                        navController.navigate(Routes.GALERIA_VIAJE_2)
-                    },
-                    onMoreImagesClick = {
-                        navController.navigate(Routes.GALERIA_VIAJE_2)
-                    }
-                )
+            if (filteredTrips.isEmpty()) {
+                item {
+                    Text(
+                        text = if (searchQuery.isEmpty()) "No tienes viajes pasados o actuales todavía" else "No se encontraron álbumes coincidentes",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 40.dp, start = 24.dp, end = 24.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            } else {
+                // Sección 3: Iteración sobre la colección de viajes filtrados
+                items(filteredTrips) { trip ->
+                    // Observamos las imágenes de este viaje en particular de forma reactiva
+                    val images by viewModel.getImagesForTrip(trip.id).collectAsState(initial = emptyList())
+
+                    AlbumSection(
+                        tripTitle = trip.title,
+                        images = images,
+                        onAddImageClick = {
+                            navController.navigate("${Routes.GALERIA_VIAJE_2}/${trip.id}")
+                        },
+                        onMoreImagesClick = {
+                            navController.navigate("${Routes.GALERIA_VIAJE_2}/${trip.id}")
+                        }
+                    )
+                }
             }
         }
     }
@@ -186,7 +196,8 @@ fun GaleriaViajeScreen(navController: NavHostController) {
 
 @Composable
 fun AlbumSection(
-    album: GalleryAlbum,
+    tripTitle: String,
+    images: List<com.example.app.domain.TripImage>,
     onAddImageClick: () -> Unit,
     onMoreImagesClick: () -> Unit
 ) {
@@ -197,13 +208,14 @@ fun AlbumSection(
     ) {
         // Encabezado textual de la sección del álbum
         Text(
-            text = album.title,
+            text = tripTitle,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 12.dp)
+                .clickable { onMoreImagesClick() }
         )
 
         // Cuadrícula horizontal fluida restringida a un máximo de 3 elementos visuales
@@ -213,21 +225,23 @@ fun AlbumSection(
                 .padding(horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            val displayImages = album.images.take(3)
-            val extraCount = album.images.size - 3
+            val displayImages = images.take(3)
+            val extraCount = images.size - 3
 
             // Renderizado de las miniaturas fotográficas del álbum
-            displayImages.forEachIndexed { index, imageRes ->
+            displayImages.forEachIndexed { index, tripImage ->
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp))
                 ) {
-                    Image(
-                        painter = painterResource(id = imageRes),
+                    AsyncImage(
+                        model = tripImage.imageUri,
                         contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clickable { onMoreImagesClick() },
                         contentScale = ContentScale.Crop
                     )
 
@@ -265,7 +279,7 @@ fun AlbumSection(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = stringResource(id = R.string.galeria_anadir_foto_desc, album.title),
+                            contentDescription = stringResource(id = R.string.galeria_anadir_foto_desc, tripTitle),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(32.dp)
                         )
@@ -284,18 +298,18 @@ fun AlbumSection(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun GaleriaViajeScreenPreview() {
-    AppTheme {
-        GaleriaViajeScreen(navController = rememberNavController())
+private fun parseTripDate(dateString: String?): java.util.Date? {
+    if (dateString.isNullOrEmpty()) return null
+    val formatosPosibles = listOf("yyyy-MM-dd", "yyyy/MM/dd", "dd/MM/yyyy", "dd-MM-yyyy")
+    for (patron in formatosPosibles) {
+        try {
+            val input = SimpleDateFormat(patron, Locale.getDefault())
+            input.isLenient = false
+            val date = input.parse(dateString)
+            if (date != null) return date
+        } catch (e: Exception) {
+            continue
+        }
     }
-}
-
-@Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
-@Composable
-fun GaleriaViajeScreenNightPreview() {
-    AppTheme {
-        GaleriaViajeScreen(navController = rememberNavController())
-    }
+    return null
 }

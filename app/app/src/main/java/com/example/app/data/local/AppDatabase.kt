@@ -8,10 +8,11 @@ import com.example.app.domain.Trip
 import com.example.app.domain.ItineraryItem
 import com.example.app.domain.User
 import com.example.app.domain.AccessLog
+import com.example.app.domain.TripImage
 
 @Database(
-    entities = [Trip::class, ItineraryItem::class, User::class, AccessLog::class],
-    version = 3,
+    entities = [Trip::class, ItineraryItem::class, User::class, AccessLog::class, TripImage::class],
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

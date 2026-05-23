@@ -17,8 +17,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -28,9 +30,11 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
 import com.example.app.R
 import com.example.app.Routes
 import com.example.app.domain.ItineraryItem
+import com.example.app.domain.TripImage
 import com.example.app.ui.viewmodels.TripListViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -109,6 +113,38 @@ fun DetalleViajeScreen2(
     
     // Observamos las actividades (que ahora también vienen de un Flow en el repo)
     val activities by viewModel.getActivitiesForTrip(tripId).collectAsState(initial = emptyList())
+    
+    // Observamos las imágenes de este viaje
+    val tripImages by viewModel.getImagesForTrip(tripId).collectAsState(initial = emptyList())
+
+    val today = remember {
+        java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }.time
+    }
+
+    val isPastOrCurrent = remember(trip, today) {
+        if (trip == null) false else {
+            val start = parseTripDate(trip.dataInici)
+            start != null && !today.before(start)
+        }
+    }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            val stringUris = uris.mapNotNull { uri ->
+                copyUriToInternalStorage(context, uri)?.toString()
+            }
+            viewModel.addImagesToTrip(tripId, stringUris)
+        }
+    }
 
     var isEditMode by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
@@ -124,11 +160,19 @@ fun DetalleViajeScreen2(
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? -> uri?.let { editedImageUri = it.toString() } }
+    ) { uri: Uri? -> 
+        uri?.let { 
+            val copied = copyUriToInternalStorage(context, it)
+            if (copied != null) {
+                editedImageUri = copied.toString()
+            }
+        }
+    }
 
     val title = trip?.title ?: stringResource(id = R.string.app_name)
     val country = trip?.country ?: ""
     val imageUri = trip?.imageUri ?: ""
+    val budget = trip?.budget ?: 0.0
 
     // Lógica para imagen por defecto (si no hay imagen, usamos R.drawable.viaje_predefinido)
     val displayImage: Any = if (isEditMode) {
@@ -138,6 +182,7 @@ fun DetalleViajeScreen2(
     }
 
     val nochesReales = calcularNoches(trip?.dataInici, trip?.dataFinal)
+    val rangoFechas = formatTripRange(trip?.dataInici, trip?.dataFinal)
 
     val annotatedTitle = buildAnnotatedString {
         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) { append(title) }
@@ -261,37 +306,33 @@ fun DetalleViajeScreen2(
                     }
                 )
 
+                // Botón para cambiar la foto si estamos editando
                 if (isEditMode) {
-                    Row(
-                        modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        IconButton(
-                            onClick = { launcher.launch("image/*") },
-                            modifier = Modifier.background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                        ) { Icon(Icons.Default.CameraAlt, contentDescription = null, tint = Color.White) }
-
-                        IconButton(
-                            onClick = {
-                                trip?.let { t ->
-                                    viewModel.updateTrip(t.copy(title = editedTitle, description = editedDescription, imageUri = editedImageUri))
-                                }
-                                isEditMode = false
-                            },
-                            modifier = Modifier.background(Color(0xFF4CAF50), CircleShape)
-                        ) { Icon(Icons.Default.Check, contentDescription = null, tint = Color.White) }
-
-                        IconButton(
-                            onClick = { isEditMode = false; editedTitle = title; editedDescription = trip?.description ?: ""; editedImageUri = imageUri },
-                            modifier = Modifier.background(Color(0xFFF44336), CircleShape)
-                        ) { Icon(Icons.Rounded.Close, contentDescription = null, tint = Color.White) }
+                    IconButton(onClick = { launcher.launch("image/*") }, modifier = Modifier.align(Alignment.TopStart).padding(top = 24.dp, start = 8.dp)) {
+                        Icon(imageVector = Icons.Default.CameraAlt, contentDescription = "Cambiar foto", tint = Color.White)
                     }
-                } else {
-                    Box(modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)) {
-                        IconButton(
-                            onClick = { showMenu = true },
-                            modifier = Modifier.background(Color.Black.copy(alpha = 0.3f), CircleShape)
-                        ) { Icon(Icons.Default.MoreVert, contentDescription = null, tint = Color.White) }
+                }
+
+                // Botones de guardar/cancelar o menú de 3 puntos
+                Box(modifier = Modifier.align(Alignment.TopEnd).padding(top = if (isEditMode) 16.dp else 24.dp, end = 8.dp)) {
+                    if (isEditMode) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(onClick = { 
+                                // Resetear campos al cancelar para volver al estado anterior
+                                editedTitle = trip?.title ?: ""
+                                editedDescription = trip?.description ?: ""
+                                editedImageUri = trip?.imageUri ?: ""
+                                isEditMode = false 
+                            }) {
+                                Text(stringResource(id = R.string.act_cancelar), color = Color.White, fontWeight = FontWeight.Bold)
+                            }
+                            Button(onClick = {
+                                trip?.let { viewModel.updateTrip(it.copy(title = editedTitle, description = editedDescription, imageUri = editedImageUri)) }
+                                isEditMode = false
+                            }) { Text(stringResource(id = R.string.act_guardar), fontWeight = FontWeight.Bold) }
+                        }
+                    } else {
+                        IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, contentDescription = null, tint = Color.White) }
 
                         DropdownMenu(
                             expanded = showMenu,
@@ -313,48 +354,198 @@ fun DetalleViajeScreen2(
                 }
             }
 
-            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-                Spacer(modifier = Modifier.height(20.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Column {
-                        Text(text = stringResource(id = R.string.detalle2_activities), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        Text(text = "$nochesReales ${stringResource(id = R.string.detalle2_nights)}", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            // Fechas del viaje (ej: 1 Ago — 5 Ago)
+            if (rangoFechas.isNotEmpty()) {
+                Text(
+                    text = rangoFechas,
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // Datos rápidos (Noches, Presupuesto, Actividades)
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                StatItem(
+                    value = nochesReales,
+                    label = if (nochesReales == "1") stringResource(id = R.string.detalle2_nights_singular) else stringResource(id = R.string.detalle2_nights),
+                    modifier = Modifier.weight(1f)
+                )
+                HorizontalDivider(
+                    modifier = Modifier.height(40.dp).width(1.dp),
+                    color = Color.LightGray.copy(alpha = 0.5f)
+                )
+                StatItem(
+                    value = CurrencyConverter.convert(budget, selectedCurrency),
+                    label = stringResource(id = R.string.detalle2_budget),
+                    modifier = Modifier.weight(1f)
+                )
+                HorizontalDivider(
+                    modifier = Modifier.height(40.dp).width(1.dp),
+                    color = Color.LightGray.copy(alpha = 0.5f)
+                )
+                StatItem(
+                    value = activities.size.toString(),
+                    label = stringResource(id = R.string.detalle2_activities),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            if (isEditMode) {
+                Button(
+                    onClick = { showAddActivityDialog = true },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
+                ) {
+                    Icon(Icons.Default.Add, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(id = R.string.detalle2_add_activity))
+                }
+            }
+
+            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.2f))
+
+            // Lista del itinerario con diseño de Timeline y Galería del viaje
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                if (activities.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(id = R.string.detalle2_no_activities),
+                            modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+                            textAlign = TextAlign.Center,
+                            color = Color.Gray
+                        )
                     }
-                    Button(
-                        onClick = { showAddActivityDialog = true },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0288D1))
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(id = R.string.detalle2_add_activity))
+                } else {
+                    val sdfSort = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                    val sorted = activities.sortedBy {
+                        try {
+                            sdfSort.parse("${it.dia} ${it.hora}")?.time ?: 0L
+                        } catch (e: Exception) {
+                            0L
+                        }
+                    }
+                    sorted.groupBy { it.dia }.forEach { (dia, acts) ->
+                        item { DayHeader(formatDateHeader(dia)) }
+                        items(acts) { act ->
+                            val iconData = getIconForType(act.tipo)
+                            TimelineEvent(
+                                time = act.hora,
+                                icon = iconData.first,
+                                iconBg = iconData.second,
+                                iconTint = iconData.third,
+                                title = act.nombre,
+                                subtitle = act.descripcion,
+                                price = if (act.precio == 0) "Gratis" else "${act.precio}€",
+                                priceColor = if (act.precio == 0) Color(0xFF2E7D32) else Color(0xFFE65100),
+                                isEditMode = true,
+                                onDelete = { activityToDelete = act },
+                                onClick = { activityToEdit = act }
+                            )
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (activities.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = stringResource(id = R.string.detalle2_no_activities), color = Color.Gray, textAlign = TextAlign.Center)
-                    }
-                } else {
-                    val groupedActivities = activities.groupBy { it.dia }
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp), contentPadding = PaddingValues(bottom = 32.dp)) {
-                        groupedActivities.forEach { (dia, activitiesInDay) ->
-                            item {
+                // 3. GALERÍA DEL VIAJE (Solo si es viaje pasado o actual)
+                if (isPastOrCurrent) {
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
                                 Text(
-                                    text = formatDateHeader(dia),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(vertical = 8.dp)
+                                    text = "Galería del viaje",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Recuerdos e imágenes de tu aventura",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray
                                 )
                             }
-                            items(activitiesInDay) { item ->
-                                ItineraryItemCard(
-                                    item = item,
-                                    onEdit = { activityToEdit = it },
-                                    onDelete = { activityToDelete = it }
+                            Button(
+                                onClick = { galleryLauncher.launch("image/*") },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)) // Elegant green
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Añadir fotos")
+                            }
+                        }
+                    }
+
+                    if (tripImages.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                                    .height(100.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                                        RoundedCornerShape(16.dp)
+                                    )
+                                    .clickable { galleryLauncher.launch("image/*") },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No hay fotos asociadas. ¡Añade las primeras!",
+                                    color = Color.Gray,
+                                    textAlign = TextAlign.Center
                                 )
+                            }
+                        }
+                    } else {
+                        item {
+                            androidx.compose.foundation.lazy.LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+                                contentPadding = PaddingValues(vertical = 4.dp)
+                            ) {
+                                items(tripImages) { tripImg ->
+                                    Box(
+                                        modifier = Modifier
+                                            .size(120.dp)
+                                            .clip(RoundedCornerShape(16.dp))
+                                    ) {
+                                        AsyncImage(
+                                            model = tripImg.imageUri,
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .clickable { navController.navigate("${Routes.GALERIA_VIAJE_2}/${tripId}") },
+                                            contentScale = ContentScale.Crop
+                                        )
+                                        IconButton(
+                                            onClick = { viewModel.deleteTripImage(tripImg.id) },
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .padding(4.dp)
+                                                .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                                                .size(24.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = null,
+                                                tint = Color.White,
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -364,39 +555,134 @@ fun DetalleViajeScreen2(
     }
 }
 
+// Icono y colores según sea un vuelo, hotel, restaurante...
+private fun getIconForType(type: String): Triple<ImageVector, Color, Color> {
+    return when (type.lowercase()) {
+        "vuelo" -> Triple(Icons.Default.Flight, Color(0xFFE3F2FD), Color(0xFF1976D2))
+        "hotel" -> Triple(Icons.Default.Hotel, Color(0xFFF3E5F5), Color(0xFF7B1FA2))
+        "restaurante" -> Triple(Icons.Default.Restaurant, Color(0xFFFFF3E0), Color(0xFFE65100))
+        "museo" -> Triple(Icons.Default.Museum, Color(0xFFE8F5E9), Color(0xFF2E7D32))
+        "ocio" -> Triple(Icons.Default.LocalActivity, Color(0xFFE1F5FE), Color(0xFF0288D1))
+        "transporte" -> Triple(Icons.Default.DirectionsBus, Color(0xFFE0F7FA), Color(0xFF00838F))
+        else -> Triple(Icons.Default.ConfirmationNumber, Color(0xFFFFEBEE), Color(0xFFC62828))
+    }
+}
+
 @Composable
-fun ItineraryItemCard(item: ItineraryItem, onEdit: (ItineraryItem) -> Unit, onDelete: (ItineraryItem) -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth().clickable { onEdit(item) },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+private fun StatItem(value: String, label: String, modifier: Modifier = Modifier) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier) {
+        Text(text = value, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        Text(text = label, fontSize = 11.sp, color = Color.Gray, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun DayHeader(text: String) {
+    Surface(
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+        shape = RoundedCornerShape(50),
+        modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
-        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(modifier = Modifier.size(40.dp).background(Color(0xFFE3F2FD), CircleShape), contentAlignment = Alignment.Center) {
-                Icon(imageVector = getIconForType(item.tipo), contentDescription = null, tint = Color(0xFF0288D1), modifier = Modifier.size(20.dp))
+        Text(
+            text = text,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+        )
+    }
+}
+
+@Composable
+private fun TimelineEvent(
+    time: String,
+    icon: ImageVector,
+    iconBg: Color,
+    iconTint: Color,
+    title: String,
+    subtitle: String,
+    price: String,
+    priceColor: Color,
+    isEditMode: Boolean,
+    onDelete: () -> Unit,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = isEditMode, onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = time,
+            color = Color.Gray,
+            fontSize = 14.sp,
+            modifier = Modifier.width(50.dp).padding(top = 8.dp)
+        )
+        Surface(
+            shape = CircleShape,
+            color = iconBg,
+            modifier = Modifier.size(42.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(20.dp)
+                )
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = item.nombre, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                Text(text = "${item.hora} • ${item.tipo}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            }
-            Text(text = if (item.precio == 0) "Gratis" else "${item.precio}€", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = if (item.precio == 0) Color(0xFF2E7D32) else Color.Black)
-            IconButton(onClick = { onDelete(item) }) {
-                Icon(Icons.Default.Delete, contentDescription = null, tint = Color.LightGray, modifier = Modifier.size(20.dp))
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Text(text = subtitle, fontSize = 14.sp, color = Color.Gray)
+            Text(text = price, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = priceColor)
+        }
+        if (isEditMode) {
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(20.dp)
+                )
             }
         }
     }
 }
 
-fun getIconForType(tipo: String): ImageVector {
-    return when (tipo.lowercase()) {
-        "vuelo" -> Icons.Default.Flight
-        "hotel" -> Icons.Default.Hotel
-        "restaurante" -> Icons.Default.Restaurant
-        "museo" -> Icons.Default.Museum
-        "ocio" -> Icons.Default.LocalActivity
-        "transporte" -> Icons.Default.DirectionsBus
-        else -> Icons.Default.ConfirmationNumber
+private fun parseTripDate(dateString: String?): java.util.Date? {
+    if (dateString.isNullOrEmpty()) return null
+    val formatosPosibles = listOf("yyyy-MM-dd", "yyyy/MM/dd", "dd/MM/yyyy", "dd-MM-yyyy")
+    for (patron in formatosPosibles) {
+        try {
+            val input = SimpleDateFormat(patron, Locale.getDefault())
+            input.isLenient = false
+            val date = input.parse(dateString)
+            if (date != null) return date
+        } catch (e: Exception) {
+            continue
+        }
+    }
+    return null
+}
+
+private fun copyUriToInternalStorage(context: android.content.Context, uri: android.net.Uri): android.net.Uri? {
+    return try {
+        val inputStream = context.contentResolver.openInputStream(uri) ?: return null
+        val fileName = "trip_img_${System.currentTimeMillis()}.jpg"
+        val file = java.io.File(context.filesDir, fileName)
+        val outputStream = java.io.FileOutputStream(file)
+        inputStream.use { input ->
+            outputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
+        android.net.Uri.fromFile(file)
+    } catch (e: Exception) {
+        android.util.Log.e("StorageUtils", "Error copying URI to internal storage", e)
+        null
     }
 }

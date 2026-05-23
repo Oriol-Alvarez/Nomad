@@ -29,7 +29,7 @@ import com.example.app.ui.viewmodels.TripListViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetalleViajeScreen(
     navController: NavHostController,
@@ -64,16 +64,47 @@ fun DetalleViajeScreen(
         )
     }
 
+    val today = remember {
+        java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, 0)
+            set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }.time
+    }
+
+    val currentTrips = remember(tripsFromDB, today) {
+        tripsFromDB.filter { trip ->
+            val start = parseTripDate(trip.dataInici)
+            val end = parseTripDate(trip.dataFinal)
+            start != null && end != null && !today.before(start) && !today.after(end)
+        }
+    }
+
+    val futureTrips = remember(tripsFromDB, today) {
+        tripsFromDB.filter { trip ->
+            val start = parseTripDate(trip.dataInici)
+            start != null && today.before(start)
+        }
+    }
+
+    val pastTrips = remember(tripsFromDB, today) {
+        tripsFromDB.filter { trip ->
+            val end = parseTripDate(trip.dataFinal)
+            end != null && today.after(end)
+        }
+    }
+
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate("form-viaje?ciudad=") },
-                containerColor = Color(0xFF0288D1),
+                containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White,
                 shape = CircleShape
             ) {
-                Icon(Icons.Default.Add, contentDescription = null)
+                Icon(Icons.Default.Add, contentDescription = "Añadir viaje")
             }
         }
     ) { innerPadding ->
@@ -98,26 +129,108 @@ fun DetalleViajeScreen(
                         color = Color.Gray
                     )
                 }
-            }
+            } else {
+                // 1. VIAJE ACTUAL
+                if (currentTrips.isNotEmpty()) {
+                    item {
+                        SectionSeparator(title = "Viaje actual", isGreen = true)
+                    }
+                    items(currentTrips) { trip ->
+                        Box(modifier = Modifier.padding(horizontal = 25.dp)) {
+                            TripCardModule(
+                                title = trip.title,
+                                date = "${formatShortDate(trip.dataInici)} - ${formatShortDate(trip.dataFinal)}",
+                                price = trip.budget,
+                                imageUri = trip.imageUri,
+                                selectedCurrency = selectedCurrency,
+                                onClick = { navController.navigate("${Routes.DETALLE_VIAJE2}/${trip.id}") },
+                                onDelete = { tripIdToDelete = trip.id }
+                            )
+                        }
+                    }
+                }
 
-            items(tripsFromDB) { trip ->
-                Box(modifier = Modifier.padding(horizontal = 25.dp)) {
-                    TripCardModule(
-                        title = trip.title,
-                        date = "${formatShortDate(trip.dataInici)} - ${formatShortDate(trip.dataFinal)}",
-                        price = trip.budget,
-                        imageUri = trip.imageUri,
-                        selectedCurrency = selectedCurrency,
-                        onClick = { navController.navigate("${Routes.DETALLE_VIAJE2}/${trip.id}") },
-                        onDelete = { tripIdToDelete = trip.id }
-                    )
+                // 2. FUTUROS VIAJES
+                if (futureTrips.isNotEmpty()) {
+                    item {
+                        SectionSeparator(title = "Futuros viajes", isGreen = false)
+                    }
+                    items(futureTrips) { trip ->
+                        Box(modifier = Modifier.padding(horizontal = 25.dp)) {
+                            TripCardModule(
+                                title = trip.title,
+                                date = "${formatShortDate(trip.dataInici)} - ${formatShortDate(trip.dataFinal)}",
+                                price = trip.budget,
+                                imageUri = trip.imageUri,
+                                selectedCurrency = selectedCurrency,
+                                onClick = { navController.navigate("${Routes.DETALLE_VIAJE2}/${trip.id}") },
+                                onDelete = { tripIdToDelete = trip.id }
+                            )
+                        }
+                    }
+                }
+
+                // 3. VIAJES PASADOS
+                if (pastTrips.isNotEmpty()) {
+                    item {
+                        SectionSeparator(title = "Viajes pasados", isGreen = false)
+                    }
+                    items(pastTrips) { trip ->
+                        Box(modifier = Modifier.padding(horizontal = 25.dp)) {
+                            TripCardModule(
+                                title = trip.title,
+                                date = "${formatShortDate(trip.dataInici)} - ${formatShortDate(trip.dataFinal)}",
+                                price = trip.budget,
+                                imageUri = trip.imageUri,
+                                selectedCurrency = selectedCurrency,
+                                onClick = { navController.navigate("${Routes.DETALLE_VIAJE2}/${trip.id}") },
+                                onDelete = { tripIdToDelete = trip.id }
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+private fun parseTripDate(dateString: String?): java.util.Date? {
+    if (dateString.isNullOrEmpty()) return null
+    val formatosPosibles = listOf("yyyy-MM-dd", "yyyy/MM/dd", "dd/MM/yyyy", "dd-MM-yyyy")
+    for (patron in formatosPosibles) {
+        try {
+            val input = SimpleDateFormat(patron, Locale.getDefault())
+            input.isLenient = false
+            val date = input.parse(dateString)
+            if (date != null) return date
+        } catch (e: Exception) {
+            continue
+        }
+    }
+    return null
+}
 
+@Composable
+fun SectionSeparator(title: String, isGreen: Boolean) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 25.dp, vertical = 8.dp)
+    ) {
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 1.5.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = if (isGreen) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onBackground
+        )
+    }
+}
 
 fun formatShortDate(dateString: String?): String {
     if (dateString.isNullOrEmpty()) return ""
