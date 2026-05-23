@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
+import com.example.app.ui.theme.DarkSurf
 
 private val DarkColorScheme = darkColorScheme(
     primary = Color(0xFF4FC3F7),
@@ -27,7 +28,8 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = Color.White,
     onSurfaceVariant = Color(0xFFB0BEC5),
     outline = Color(0xFF3D3D3D),
-    surfaceContainer = Color(0xFF4FC3F7)
+    surfaceContainer = Color(0xFF4FC3F7),
+    onSecondary = DarkSurf
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -43,7 +45,9 @@ private val LightColorScheme = lightColorScheme(
     onSurface = Color(0xFF0F172A),
     onSurfaceVariant = NomadBlueDark,
     outline = Color(0xFFCBD5E1),
-    surfaceContainer = NomadBlueDark
+    surfaceContainer = NomadBlueDark,
+    onSecondary = Color.LightGray
+
 )
 
 @Composable

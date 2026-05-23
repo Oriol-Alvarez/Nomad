@@ -15,6 +15,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
 import java.util.UUID
 import javax.inject.Inject
 
@@ -24,6 +26,7 @@ class TripListViewModel @Inject constructor(
     private val tripRepository: TripRepository,
     private val itineraryRepository: ItineraryItemRepository,
     private val authRepository: AuthRepository,
+    private val hotelRepository: com.example.app.domain.HotelRepository,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context?
 ) : ViewModel() {
 
@@ -32,7 +35,21 @@ class TripListViewModel @Inject constructor(
         tripRepository: TripRepository,
         itineraryRepository: ItineraryItemRepository,
         authRepository: AuthRepository
-    ) : this(tripRepository, itineraryRepository, authRepository, null)
+    ) : this(
+        tripRepository, 
+        itineraryRepository, 
+        authRepository, 
+        object : com.example.app.domain.HotelRepository {
+            override suspend fun getHotels(groupId: String) = emptyList<com.example.app.domain.Hotel>()
+            override suspend fun getAvailability(groupId: String, startDate: String, endDate: String, hotelId: String?, city: String?) = emptyList<com.example.app.domain.Hotel>()
+            override suspend fun reserveRoom(groupId: String, hotelId: String, roomId: String, startDate: String, endDate: String, guestName: String, guestEmail: String) = com.example.app.domain.Reservation("", "", "", "", "", "", "")
+            override suspend fun cancelReservation(groupId: String, hotelId: String, roomId: String, startDate: String, endDate: String, guestName: String, guestEmail: String) = com.example.app.domain.ApiMessage("")
+            override suspend fun getReservations(groupId: String, guestEmail: String?) = emptyList<com.example.app.domain.Reservation>()
+            override suspend fun getReservationById(resId: String) = com.example.app.domain.Reservation("", "", "", "", "", "", "")
+            override suspend fun cancelReservationById(resId: String) = com.example.app.domain.ApiMessage("")
+        }, 
+        null
+    )
 
     private val TAG_DB = "DatabaseLog"
     private val TAG_VAL = "ValidationLog"
@@ -64,6 +81,10 @@ class TripListViewModel @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = emptyList()
         )
+
+    val hotelReservations: Flow<List<Trip>> = trips.map { list ->
+        list.filter { it.hasReservation && !it.reservationId.isNullOrEmpty() }
+    }
 
     fun saveTrip(
         title: String,
@@ -221,6 +242,63 @@ class TripListViewModel @Inject constructor(
                 tripRepository.deleteTripImage(imageId)
             } catch (e: Exception) {
                 Log.e(TAG_DB, "Error al borrar imagen", e)
+            }
+        }
+    }
+
+    private fun calculateNights(start: String?, end: String?): Int {
+        if (start.isNullOrEmpty() || end.isNullOrEmpty()) return 1
+        try {
+            val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val startDateObj = sdf.parse(start)
+            val endDateObj = sdf.parse(end)
+            if (startDateObj != null && endDateObj != null) {
+                val diff = endDateObj.time - startDateObj.time
+                val nights = (diff / (1000 * 60 * 60 * 24)).toInt()
+                return if (nights > 0) nights else 1
+            }
+        } catch (e: Exception) {
+            // fallback
+        }
+        return 1
+    }
+
+    fun cancelHotelReservation(trip: Trip) {
+        viewModelScope.launch {
+            try {
+                trip.reservationId?.let { resId ->
+                    if (resId.isNotEmpty()) {
+                        Log.d(TAG_DB, "Cancelando reserva remota ID: $resId")
+                        hotelRepository.cancelReservationById(resId)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG_DB, "Error cancelando reserva remota", e)
+            } finally {
+                // Calcular costo total para restarlo del presupuesto del viaje
+                val nights = calculateNights(trip.reservationStartDate, trip.reservationEndDate)
+                val totalCost = nights * trip.roomPrice
+                val newBudget = (trip.budget - totalCost).coerceAtLeast(0.0)
+
+                // Resetear campos de reserva locally on the trip in Room
+                trip.hasReservation = false
+                trip.reservationId = null
+                trip.hotelId = null
+                trip.hotelName = null
+                trip.hotelAddress = null
+                trip.hotelRating = 0
+                trip.hotelImageUrl = null
+                trip.roomId = null
+                trip.roomType = null
+                trip.roomPrice = 0.0
+                trip.reservationStartDate = null
+                trip.reservationEndDate = null
+                trip.guestName = null
+                trip.guestEmail = null
+                trip.budget = newBudget
+
+                // Update the trip in Room
+                tripRepository.updateTrip(trip)
             }
         }
     }

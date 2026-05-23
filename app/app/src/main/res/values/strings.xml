@@ -120,6 +120,20 @@
     <string name="nav_viajes">Viajes</string>
     <string name="nav_galeria">Galería</string>
     <string name="nav_ajustes">Ajustes</string>
+    <string name="nav_reservas">Reservas</string>
+
+    <!-- Reservas de Hoteles -->
+    <string name="reserva_hotel_titulo">Estancias y Reservas</string>
+    <string name="reserva_hotel_subtitulo">Tus reservas de hotel y alojamiento</string>
+    <string name="reserva_no_reservas">No tienes reservas registradas</string>
+    <string name="reserva_buscar_cta">Buscar Hoteles</string>
+    <string name="reserva_confirm_delete_title">¿Cancelar reserva de hotel?</string>
+    <string name="reserva_confirm_delete_msg">Esta acción es irreversible y cancelará la reserva tanto en la base de datos local como en el servidor remoto. ¿Deseas continuar?</string>
+    <string name="reserva_confirm_delete_btn">Sí, cancelar</string>
+    <string name="reserva_cancelar_btn">No, mantener</string>
+    <string name="reserva_huesped">Huésped</string>
+    <string name="reserva_habitacion">Habitación</string>
+    <string name="reserva_activa_badge">Contiene reserva</string>
 
     <!-- Sobre Nosotros -->
     <string name="sobre_equipo_titulo">Equipo de desarrollo</string>

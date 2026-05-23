@@ -145,10 +145,16 @@ fun PreferenciasScreen(
                         onCurrencySelect = { onLanguageChange(it) }
                     )
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.3f))
+                    val currencyExample = when (selectedCurrency) {
+                        "USD($)" -> "1 € = 1.09 $"
+                        "MXN($)" -> "1 € = 18.50 $"
+                        "GBP(£)" -> "1 € = 0.85 £"
+                        else -> "1 $ = 0.91 €"
+                    }
                     CajasPreferencias(
                         image = R.drawable.coins_solid_full,
                         name = stringResource(R.string.preferencias_titulo_moneda),
-                        role = stringResource(R.string.preferencias_subtitulo_moneda),
+                        role = currencyExample,
                         value = selectedCurrency,
                         options = listOf("EUR(€)", "USD($)", "GBP(£)", "MXN($)"),
                         type = "select",
@@ -399,7 +405,8 @@ fun CajasPreferencias(
                     DropdownMenu(
                         expanded = expanded,
                         onDismissRequest = { expanded = false },
-                        offset = DpOffset(x = 0.dp, y = 4.dp)
+                        offset = DpOffset(x = 0.dp, y = 4.dp),
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                     ) {
                         options.forEach { option ->
                             DropdownMenuItem(

@@ -69,6 +69,14 @@ fun NavGraph(
             )
         }
 
+        composable(Routes.RESERVAS_HOTELES) {
+            ReservasHotelesScreen(
+                navController = navController,
+                selectedCurrency = selectedCurrency,
+                viewModel = tripViewModel
+            )
+        }
+
         composable(
             route = "${Routes.DETALLE_VIAJE2}/{tripId}",
             arguments = listOf(navArgument("tripId") { type = NavType.StringType })

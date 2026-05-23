@@ -4,9 +4,11 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -152,6 +154,7 @@ fun DetalleViajeScreen2(
     var activityToDelete by remember { mutableStateOf<ItineraryItem?>(null) }
     var activityToEdit by remember { mutableStateOf<ItineraryItem?>(null) }
     var showAddActivityDialog by remember { mutableStateOf(false) }
+    var showCancelReservationDialog by remember { mutableStateOf(false) }
 
     // Estados para edición
     var editedTitle by remember(trip) { mutableStateOf(trip?.title ?: "") }
@@ -224,6 +227,33 @@ fun DetalleViajeScreen2(
             dismissButton = {
                 TextButton(onClick = { activityToDelete = null }) { Text(stringResource(id = R.string.detalle_cancelar_btn)) }
             }
+        )
+    }
+
+    if (showCancelReservationDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelReservationDialog = false },
+            title = { Text("Cancelar Reserva de Hotel") },
+            text = { Text("¿Estás seguro de que deseas cancelar la reserva del hotel? Se cancelará remotamente, se reembolsará del presupuesto del viaje, pero se mantendrán intactas el resto de actividades y el propio viaje.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        trip?.let { viewModel.cancelHotelReservation(it) }
+                        showCancelReservationDialog = false
+                        navController.navigate(Routes.DETALLE_VIAJE) {
+                            popUpTo(Routes.DETALLE_VIAJE) { inclusive = true }
+                        }
+                    }
+                ) {
+                    Text("Cancelar Reserva", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelReservationDialog = false }) {
+                    Text("Volver")
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.background
         )
     }
 
@@ -415,6 +445,175 @@ fun DetalleViajeScreen2(
                 modifier = Modifier.fillMaxWidth().weight(1f),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
+                // 1. HOTEL RESERVATION CARD (Stay Card at the very top of the list)
+                if (trip?.hasReservation == true) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(
+                                                Color(0xFF1A237E), // Deep Indigo
+                                                Color(0xFF283593)  // VIP Royal Navy
+                                            )
+                                        )
+                                    )
+                                    .border(
+                                        width = 1.dp,
+                                        brush = Brush.horizontalGradient(
+                                            listOf(
+                                                Color(0xFFFFD700), // Gold
+                                                Color(0xFFFFA000)  // Amber Gold
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                                    .padding(14.dp)
+                            ) {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    // Row with Icon & Title & Rating/Price
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Surface(
+                                                shape = CircleShape,
+                                                color = Color(0xFFFFD700).copy(alpha = 0.2f),
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Hotel,
+                                                        contentDescription = null,
+                                                        tint = Color(0xFFFFD700),
+                                                        modifier = Modifier.size(16.dp)
+                                                    )
+                                                }
+                                            }
+                                            Text(
+                                                text = "RESERVA",
+                                                color = Color(0xFFFFD700),
+                                                fontWeight = FontWeight.Black,
+                                                fontSize = 11.sp,
+                                                letterSpacing = 1.sp
+                                            )
+                                        }
+
+                                        // Stars and Price underneath
+                                        val nightsCount = calcularNoches(trip.reservationStartDate, trip.reservationEndDate)
+                                        val hotelCost = nightsCount.toIntOrNull()?.let { it * trip.roomPrice } ?: trip.roomPrice
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            if (trip.hotelRating > 0) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(1.dp)
+                                                ) {
+                                                    repeat(trip.hotelRating) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Star,
+                                                            contentDescription = null,
+                                                            tint = Color(0xFFFFD700),
+                                                            modifier = Modifier.size(12.dp)
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                            Text(
+                                                text = CurrencyConverter.convert(hotelCost, selectedCurrency),
+                                                color = Color(0xFFFFD700),
+                                                fontSize = 15.sp,
+                                                fontWeight = FontWeight.Black
+                                            )
+                                        }
+                                    }
+
+                                    // Hotel name and address
+                                    Text(
+                                        text = trip.hotelName ?: "Hotel Reservado",
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+
+                                    trip.hotelAddress?.let {
+                                        Text(
+                                            text = it,
+                                            color = Color.White.copy(alpha = 0.7f),
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+                                    }
+
+                                    // Check-in / Check-out stay dates
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(
+                                                Color.White.copy(alpha = 0.08f),
+                                                RoundedCornerShape(8.dp)
+                                            )
+                                            .padding(8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = "ENTRADA",
+                                                color = Color.White.copy(alpha = 0.5f),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontSize = 9.sp
+                                            )
+                                            Text(
+                                                text = trip.reservationStartDate ?: "",
+                                                color = Color.White,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowForward,
+                                            contentDescription = null,
+                                            tint = Color(0xFFFFD700),
+                                            modifier = Modifier.size(14.dp)
+                                        )
+
+                                        Column(horizontalAlignment = Alignment.End) {
+                                            Text(
+                                                text = "SALIDA",
+                                                color = Color.White.copy(alpha = 0.5f),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontSize = 9.sp
+                                            )
+                                            Text(
+                                                text = trip.reservationEndDate ?: "",
+                                                color = Color.White,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (activities.isEmpty()) {
                     item {
                         Text(

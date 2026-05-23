@@ -3,6 +3,7 @@ package com.example.app.ui.screens
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -29,9 +30,14 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.app.domain.Hotel
 import com.example.app.domain.Room
+import com.example.app.domain.Trip
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import com.example.app.ui.viewmodels.BookingState
 import com.example.app.ui.viewmodels.HotelViewModel
 import com.example.app.ui.viewmodels.UiState
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -191,6 +197,13 @@ fun HotelDetailScreen(
     if (selectedRoomForBooking != null && hotel != null) {
         val room = selectedRoomForBooking!!
         val totalPrice = nights * room.price
+        val activeTrips by viewModel.activeTrips.collectAsState()
+        var selectedTrip by remember(activeTrips) { mutableStateOf(activeTrips.firstOrNull()) }
+        var dropdownExpanded by remember { mutableStateOf(false) }
+
+        val isDatesValid = selectedTrip?.let { trip ->
+            isBookingWithinTripRange(uiStart, uiEnd, trip.dataInici, trip.dataFinal)
+        } ?: false
 
         AlertDialog(
             onDismissRequest = {
@@ -208,7 +221,7 @@ fun HotelDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onSecondary),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
@@ -223,6 +236,113 @@ fun HotelDetailScreen(
                             ) {
                                 Text(stringResource(id = R.string.hotel_detail_total_pagar), fontWeight = FontWeight.Bold)
                                 Text("€${totalPrice.toInt()}", fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)
+                            }
+                        }
+                    }
+
+                    // Dropdown Selector para Viajes Activos
+                    Column {
+                        Text(
+                            text = "Asociar a un viaje activo:",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        if (activeTrips.isEmpty()) {
+                            Surface(
+                                color = MaterialTheme.colorScheme.errorContainer,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                    Text(
+                                        text = "No tienes ningún viaje activo. Crea un viaje antes de reservar.",
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        } else {
+                            Box(modifier = Modifier.fillMaxWidth()) {
+                                OutlinedTextField(
+                                    value = selectedTrip?.let { "${it.title} (${it.dataInici} - ${it.dataFinal})" } ?: "Selecciona un viaje...",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = if (dropdownExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable(enabled = bookingState !is BookingState.Loading) {
+                                            dropdownExpanded = true
+                                        }
+                                )
+                                DropdownMenu(
+                                    expanded = dropdownExpanded,
+                                    onDismissRequest = { dropdownExpanded = false },
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.9f)
+                                        .background(MaterialTheme.colorScheme.surface)
+                                ) {
+                                    activeTrips.forEach { trip ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Column {
+                                                    Text(trip.title, fontWeight = FontWeight.Bold)
+                                                    Text("${trip.dataInici} - ${trip.dataFinal}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                                }
+                                            },
+                                            onClick = {
+                                                selectedTrip = trip
+                                                dropdownExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Red Warning Banner if booking is not within range of selected trip
+                    if (selectedTrip != null && !isDatesValid) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.errorContainer,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                                Text(
+                                    text = "Las fechas seleccionadas de la reserva deben estar dentro del rango de fechas del viaje (${selectedTrip?.dataInici} a ${selectedTrip?.dataFinal})",
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
                         }
                     }
@@ -264,16 +384,18 @@ fun HotelDetailScreen(
                             Toast.makeText(context, context.getString(R.string.hotel_detail_error_campos), Toast.LENGTH_SHORT).show()
                             return@Button
                         }
+                        val tripId = selectedTrip?.id ?: return@Button
                         viewModel.bookRoom(
                             hotel = hotel,
                             room = room,
                             start = uiStart,
                             end = uiEnd,
                             guestName = guestName,
-                            guestEmail = guestEmail
+                            guestEmail = guestEmail,
+                            selectedTripId = tripId
                         ) {}
                     },
-                    enabled = bookingState !is BookingState.Loading,
+                    enabled = bookingState !is BookingState.Loading && selectedTrip != null && isDatesValid,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Text(stringResource(id = R.string.hotel_detail_confirmar_reserva), color = Color.White)
@@ -369,3 +491,33 @@ fun RoomItemCard(
         }
     }
 }
+
+private fun parseScreenDate(dateString: String): java.util.Date? {
+    val formats = listOf("dd/MM/yyyy", "yyyy-MM-dd", "d/M/yyyy")
+    for (fmt in formats) {
+        try {
+            val sdf = SimpleDateFormat(fmt, Locale.getDefault())
+            sdf.isLenient = false
+            val parsed = sdf.parse(dateString)
+            if (parsed != null) return parsed
+        } catch (e: Exception) {
+            // ignore and try next
+        }
+    }
+    return null
+}
+
+private fun isBookingWithinTripRange(
+    bookingStart: String,
+    bookingEnd: String,
+    tripStart: String,
+    tripEnd: String
+): Boolean {
+    val bStart = parseScreenDate(bookingStart) ?: return false
+    val bEnd = parseScreenDate(bookingEnd) ?: return false
+    val tStart = parseScreenDate(tripStart) ?: return false
+    val tEnd = parseScreenDate(tripEnd) ?: return false
+    
+    return !bStart.before(tStart) && !bEnd.after(tEnd)
+}
+

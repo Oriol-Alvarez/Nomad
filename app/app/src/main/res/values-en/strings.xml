@@ -112,6 +112,20 @@
     <string name="nav_viajes">Trips</string>
     <string name="nav_galeria">Gallery</string>
     <string name="nav_ajustes">Settings</string>
+    <string name="nav_reservas">Bookings</string>
+
+    <!-- Reservas de Hoteles -->
+    <string name="reserva_hotel_titulo">Stays &amp; Bookings</string>
+    <string name="reserva_hotel_subtitulo">Your hotel and accommodation bookings</string>
+    <string name="reserva_no_reservas">You have no registered bookings</string>
+    <string name="reserva_buscar_cta">Search Hotels</string>
+    <string name="reserva_confirm_delete_title">Cancel hotel booking?</string>
+    <string name="reserva_confirm_delete_msg">This action is irreversible and will cancel the reservation in both the local database and remote server. Do you want to continue?</string>
+    <string name="reserva_confirm_delete_btn">Yes, cancel</string>
+    <string name="reserva_cancelar_btn">No, keep</string>
+    <string name="reserva_huesped">Guest</string>
+    <string name="reserva_habitacion">Room</string>
+    <string name="reserva_activa_badge">Contains reservation</string>
 
     <!-- Sobre Nosotros -->
     <string name="sobre_equipo_titulo">Development team</string>

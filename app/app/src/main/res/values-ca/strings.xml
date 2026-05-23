@@ -112,6 +112,20 @@
     <string name="nav_viajes">Viatges</string>
     <string name="nav_galeria">Galeria</string>
     <string name="nav_ajustes">Ajustos</string>
+    <string name="nav_reservas">Reserves</string>
+
+    <!-- Reservas de Hoteles -->
+    <string name="reserva_hotel_titulo">Estades i Reserves</string>
+    <string name="reserva_hotel_subtitulo">Les teves reserves d\'hotel i allotjament</string>
+    <string name="reserva_no_reservas">No tens reserves registrades</string>
+    <string name="reserva_buscar_cta">Buscar Hotels</string>
+    <string name="reserva_confirm_delete_title">Cancel·lar reserva d\'hotel?</string>
+    <string name="reserva_confirm_delete_msg">Aquesta acció és irreversible i cancel·larà la reserva tant a la base de dades local com al servidor remot. Vols continuar?</string>
+    <string name="reserva_confirm_delete_btn">Sí, cancel·lar</string>
+    <string name="reserva_cancelar_btn">No, mantenir</string>
+    <string name="reserva_huesped">Huésped</string>
+    <string name="reserva_habitacion">Habitació</string>
+    <string name="reserva_activa_badge">Conté reserva</string>
 
     <!-- Sobre Nosotros -->
     <string name="sobre_equipo_titulo">Equip de desenvolupament</string>

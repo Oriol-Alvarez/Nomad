@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,10 +22,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.app.R
 import com.example.app.Routes
+import com.example.app.domain.Trip
 import com.example.app.ui.viewmodels.TripListViewModel
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -138,10 +141,7 @@ fun DetalleViajeScreen(
                     items(currentTrips) { trip ->
                         Box(modifier = Modifier.padding(horizontal = 25.dp)) {
                             TripCardModule(
-                                title = trip.title,
-                                date = "${formatShortDate(trip.dataInici)} - ${formatShortDate(trip.dataFinal)}",
-                                price = trip.budget,
-                                imageUri = trip.imageUri,
+                                trip = trip,
                                 selectedCurrency = selectedCurrency,
                                 onClick = { navController.navigate("${Routes.DETALLE_VIAJE2}/${trip.id}") },
                                 onDelete = { tripIdToDelete = trip.id }
@@ -158,10 +158,7 @@ fun DetalleViajeScreen(
                     items(futureTrips) { trip ->
                         Box(modifier = Modifier.padding(horizontal = 25.dp)) {
                             TripCardModule(
-                                title = trip.title,
-                                date = "${formatShortDate(trip.dataInici)} - ${formatShortDate(trip.dataFinal)}",
-                                price = trip.budget,
-                                imageUri = trip.imageUri,
+                                trip = trip,
                                 selectedCurrency = selectedCurrency,
                                 onClick = { navController.navigate("${Routes.DETALLE_VIAJE2}/${trip.id}") },
                                 onDelete = { tripIdToDelete = trip.id }
@@ -178,10 +175,7 @@ fun DetalleViajeScreen(
                     items(pastTrips) { trip ->
                         Box(modifier = Modifier.padding(horizontal = 25.dp)) {
                             TripCardModule(
-                                title = trip.title,
-                                date = "${formatShortDate(trip.dataInici)} - ${formatShortDate(trip.dataFinal)}",
-                                price = trip.budget,
-                                imageUri = trip.imageUri,
+                                trip = trip,
                                 selectedCurrency = selectedCurrency,
                                 onClick = { navController.navigate("${Routes.DETALLE_VIAJE2}/${trip.id}") },
                                 onDelete = { tripIdToDelete = trip.id }
@@ -258,14 +252,16 @@ fun formatShortDate(dateString: String?): String {
 
 @Composable
 fun TripCardModule(
-    title: String,
-    date: String,
-    price: Double,
-    imageUri: String,
+    trip: Trip,
     selectedCurrency: String,
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val title = trip.title
+    val date = "${formatShortDate(trip.dataInici)} - ${formatShortDate(trip.dataFinal)}"
+    val price = trip.budget
+    val imageUri = trip.imageUri
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -275,20 +271,50 @@ fun TripCardModule(
     ) {
         Box {
             Column {
-                if (imageUri.isNotEmpty()) {
-                    AsyncImage(
-                        model = imageUri,
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxWidth().height(140.dp),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    androidx.compose.foundation.Image(
-                        painter = painterResource(id = R.drawable.viaje_predefinido),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxWidth().height(140.dp),
-                        contentScale = ContentScale.Crop
-                    )
+                Box(modifier = Modifier.fillMaxWidth().height(140.dp)) {
+                    if (imageUri.isNotEmpty()) {
+                        AsyncImage(
+                            model = imageUri,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        androidx.compose.foundation.Image(
+                            painter = painterResource(id = R.drawable.viaje_predefinido),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    // Overlay Badge for Hotel Reservation
+                    if (trip.hasReservation) {
+                        Surface(
+                            color = Color(0xFF1E3C72),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.padding(12.dp).align(Alignment.TopStart)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Hotel,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFFD700), // Yellow/Gold
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = stringResource(id = R.string.reserva_activa_badge),
+                                    color = Color(0xFFFFD700), // Yellow/Gold
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Column(modifier = Modifier.padding(18.dp)) {
@@ -297,6 +323,10 @@ fun TripCardModule(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
+
+
+
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),

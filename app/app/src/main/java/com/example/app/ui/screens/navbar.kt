@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -18,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,7 +43,7 @@ fun BottomNavigationBar(navController: NavHostController) {
     Surface(
         modifier = Modifier.background(color = MaterialTheme.colorScheme.surface)
     ) {
-        // Ponemos los 4 botones repartidos por el ancho de la pantalla
+        // Ponemos los botones repartidos por el ancho de la pantalla
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -55,6 +58,13 @@ fun BottomNavigationBar(navController: NavHostController) {
                 label = stringResource(id = R.string.nav_home),
                 selected = currentRoute == "home"
             ) { navController.navigate("home") }
+
+            // Botón de Reservas - Cambiado a icono de cama (Hotel)
+            BottomItem(
+                icon = rememberVectorPainter(Icons.Default.Hotel),
+                label = stringResource(id = R.string.nav_reservas),
+                selected = currentRoute == "reservas_hoteles"
+            ) { navController.navigate("reservas_hoteles") }
 
             // Botón de Mis Viajes
             BottomItem(
