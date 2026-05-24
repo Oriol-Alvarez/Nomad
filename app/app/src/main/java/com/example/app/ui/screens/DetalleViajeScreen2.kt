@@ -117,38 +117,6 @@ fun DetalleViajeScreen2(
     // Observamos las actividades (que ahora también vienen de un Flow en el repo)
     val activities by viewModel.getActivitiesForTrip(tripId).collectAsState(initial = emptyList())
     
-    // Observamos las imágenes de este viaje
-    val tripImages by viewModel.getImagesForTrip(tripId).collectAsState(initial = emptyList())
-
-    val today = remember {
-        java.util.Calendar.getInstance().apply {
-            set(java.util.Calendar.HOUR_OF_DAY, 0)
-            set(java.util.Calendar.MINUTE, 0)
-            set(java.util.Calendar.SECOND, 0)
-            set(java.util.Calendar.MILLISECOND, 0)
-        }.time
-    }
-
-    val isPastOrCurrent = remember(trip, today) {
-        if (trip == null) false else {
-            val start = parseTripDate(trip.dataInici)
-            start != null && !today.before(start)
-        }
-    }
-
-    val context = androidx.compose.ui.platform.LocalContext.current
-
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetMultipleContents()
-    ) { uris ->
-        if (uris.isNotEmpty()) {
-            val stringUris = uris.mapNotNull { uri ->
-                copyUriToInternalStorage(context, uri)?.toString()
-            }
-            viewModel.addImagesToTrip(tripId, stringUris)
-        }
-    }
-
     var isEditMode by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showDeleteTripDialog by remember { mutableStateOf(false) }
@@ -161,6 +129,8 @@ fun DetalleViajeScreen2(
     var editedTitle by remember(trip) { mutableStateOf(trip?.title ?: "") }
     var editedDescription by remember(trip) { mutableStateOf(trip?.description ?: "") }
     var editedImageUri by remember(trip) { mutableStateOf(trip?.imageUri ?: "") }
+
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -650,103 +620,6 @@ fun DetalleViajeScreen2(
                                 onDelete = { activityToDelete = act },
                                 onClick = { activityToEdit = act }
                             )
-                        }
-                    }
-                }
-
-                // 3. GALERÍA DEL VIAJE (Solo si es viaje pasado o actual)
-                if (isPastOrCurrent) {
-                    item {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column {
-                                Text(
-                                    text = "Galería del viaje",
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "Recuerdos e imágenes de tu aventura",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.Gray
-                                )
-                            }
-                            Button(
-                                onClick = { galleryLauncher.launch("image/*") },
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)) // Elegant green
-                            ) {
-                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Añadir fotos")
-                            }
-                        }
-                    }
-
-                    if (tripImages.isEmpty()) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 24.dp, vertical = 8.dp)
-                                    .height(100.dp)
-                                    .background(
-                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
-                                        RoundedCornerShape(16.dp)
-                                    )
-                                    .clickable { galleryLauncher.launch("image/*") },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "No hay fotos asociadas. ¡Añade las primeras!",
-                                    color = Color.Gray,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-                    } else {
-                        item {
-                            androidx.compose.foundation.lazy.LazyRow(
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
-                                contentPadding = PaddingValues(vertical = 4.dp)
-                            ) {
-                                items(tripImages) { tripImg ->
-                                    Box(
-                                        modifier = Modifier
-                                            .size(120.dp)
-                                            .clip(RoundedCornerShape(16.dp))
-                                    ) {
-                                        AsyncImage(
-                                            model = tripImg.imageUri,
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .clickable { navController.navigate("${Routes.GALERIA_VIAJE_2}/${tripId}") },
-                                            contentScale = ContentScale.Crop
-                                        )
-                                        IconButton(
-                                            onClick = { viewModel.deleteTripImage(tripImg.id) },
-                                            modifier = Modifier
-                                                .align(Alignment.TopEnd)
-                                                .padding(4.dp)
-                                                .background(Color.Black.copy(alpha = 0.5f), CircleShape)
-                                                .size(24.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Close,
-                                                contentDescription = null,
-                                                tint = Color.White,
-                                                modifier = Modifier.size(12.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
                 }

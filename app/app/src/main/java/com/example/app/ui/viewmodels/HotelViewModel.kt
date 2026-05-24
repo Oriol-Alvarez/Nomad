@@ -140,31 +140,65 @@ class HotelViewModel @Inject constructor(
                     guestEmail = guestEmail
                 )
 
-                // Update selected Trip in Room
-                val trip = tripRepository.getTripById(selectedTripId)
-                if (trip != null) {
-                    val nights = calculateNights(start, end)
-                    val totalCost = nights * room.price
+                val nights = calculateNights(start, end)
+                val totalCost = nights * room.price
+                val hotelImageUrlFull = if (hotel.imageUrl.startsWith("http")) hotel.imageUrl else "http://15.224.84.148:8090${hotel.imageUrl}"
+
+                if (selectedTripId == "new_trip") {
+                    val currentUserId = authRepository.getCurrentUser()?.uid ?: ""
+                    val newTripId = UUID.randomUUID().toString()
+                    val countryName = hotel.address.split(",").lastOrNull()?.trim() ?: "España"
                     
-                    val updatedTrip = trip.copy(
+                    val newTrip = Trip(
+                        id = newTripId,
+                        userId = currentUserId,
+                        title = "Viaje a ${hotel.name.take(25)}",
+                        country = countryName,
+                        description = "Viaje creado automáticamente para la reserva en ${hotel.name}.",
+                        imageUri = hotelImageUrlFull,
+                        isFeatured = false,
+                        budget = totalCost,
+                        dataInici = start,
+                        dataFinal = end,
                         hasReservation = true,
                         reservationId = reservation.id,
                         hotelId = hotel.id,
                         hotelName = hotel.name,
                         hotelAddress = hotel.address,
                         hotelRating = hotel.rating,
-                        hotelImageUrl = hotel.imageUrl,
+                        hotelImageUrl = hotelImageUrlFull,
                         roomId = room.id,
                         roomType = room.roomType,
                         roomPrice = room.price,
                         reservationStartDate = start,
                         reservationEndDate = end,
                         guestName = guestName,
-                        guestEmail = guestEmail,
-                        budget = trip.budget + totalCost
+                        guestEmail = guestEmail
                     )
-
-                    tripRepository.updateTrip(updatedTrip)
+                    tripRepository.insertTrip(newTrip)
+                } else {
+                    // Update selected Trip in Room
+                    val trip = tripRepository.getTripById(selectedTripId)
+                    if (trip != null) {
+                        val updatedTrip = trip.copy(
+                            hasReservation = true,
+                            reservationId = reservation.id,
+                            hotelId = hotel.id,
+                            hotelName = hotel.name,
+                            hotelAddress = hotel.address,
+                            hotelRating = hotel.rating,
+                            hotelImageUrl = hotelImageUrlFull,
+                            roomId = room.id,
+                            roomType = room.roomType,
+                            roomPrice = room.price,
+                            reservationStartDate = start,
+                            reservationEndDate = end,
+                            guestName = guestName,
+                            guestEmail = guestEmail,
+                            budget = trip.budget + totalCost
+                        )
+                        tripRepository.updateTrip(updatedTrip)
+                    }
                 }
 
                 _bookingState.value = BookingState.Success(reservation)

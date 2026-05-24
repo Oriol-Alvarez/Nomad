@@ -198,12 +198,13 @@ fun HotelDetailScreen(
         val room = selectedRoomForBooking!!
         val totalPrice = nights * room.price
         val activeTrips by viewModel.activeTrips.collectAsState()
+        var isNewTripSelected by remember(activeTrips) { mutableStateOf(activeTrips.isEmpty()) }
         var selectedTrip by remember(activeTrips) { mutableStateOf(activeTrips.firstOrNull()) }
         var dropdownExpanded by remember { mutableStateOf(false) }
 
-        val isDatesValid = selectedTrip?.let { trip ->
+        val isDatesValid = isNewTripSelected || (selectedTrip?.let { trip ->
             isBookingWithinTripRange(uiStart, uiEnd, trip.dataInici, trip.dataFinal)
-        } ?: false
+        } ?: false)
 
         AlertDialog(
             onDismissRequest = {
@@ -240,7 +241,7 @@ fun HotelDetailScreen(
                         }
                     }
 
-                    // Dropdown Selector para Viajes Activos
+                    // Dropdown Selector para Viajes Activos / Nuevo Viaje
                     Column {
                         Text(
                             text = "Asociar a un viaje activo:",
@@ -248,58 +249,48 @@ fun HotelDetailScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        if (activeTrips.isEmpty()) {
-                            Surface(
-                                color = MaterialTheme.colorScheme.errorContainer,
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = if (isNewTripSelected) "Crear nuevo viaje con esta reserva" else (selectedTrip?.let { "${it.title} (${it.dataInici} - ${it.dataFinal})" } ?: "Selecciona un viaje..."),
+                                onValueChange = {},
+                                readOnly = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                trailingIcon = {
                                     Icon(
-                                        imageVector = Icons.Default.Info,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.error
+                                        imageVector = if (dropdownExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                                        contentDescription = null
                                     )
-                                    Text(
-                                        text = "No tienes ningún viaje activo. Crea un viaje antes de reservar.",
-                                        color = MaterialTheme.colorScheme.onErrorContainer,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-                        } else {
-                            Box(modifier = Modifier.fillMaxWidth()) {
-                                OutlinedTextField(
-                                    value = selectedTrip?.let { "${it.title} (${it.dataInici} - ${it.dataFinal})" } ?: "Selecciona un viaje...",
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    trailingIcon = {
-                                        Icon(
-                                            imageVector = if (dropdownExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
-                                            contentDescription = null
-                                        )
-                                    },
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .matchParentSize()
-                                        .clickable(enabled = bookingState !is BookingState.Loading) {
-                                            dropdownExpanded = true
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .matchParentSize()
+                                    .clickable(enabled = bookingState !is BookingState.Loading) {
+                                        dropdownExpanded = true
+                                    }
+                            )
+                            DropdownMenu(
+                                expanded = dropdownExpanded,
+                                onDismissRequest = { dropdownExpanded = false },
+                                modifier = Modifier.fillMaxWidth(0.9f),
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text("Crear nuevo viaje con esta reserva", fontWeight = FontWeight.Bold)
+                                            Text("Se creará un viaje con las fechas seleccionadas", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                                         }
+                                    },
+                                    onClick = {
+                                        isNewTripSelected = true
+                                        selectedTrip = null
+                                        dropdownExpanded = false
+                                    }
                                 )
-                                DropdownMenu(
-                                    expanded = dropdownExpanded,
-                                    onDismissRequest = { dropdownExpanded = false },
-                                    modifier = Modifier.fillMaxWidth(0.9f),
-                                    containerColor = MaterialTheme.colorScheme.surface
-                                ) {
+                                if (activeTrips.isNotEmpty()) {
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                                     activeTrips.forEach { trip ->
                                         DropdownMenuItem(
                                             text = {
@@ -309,6 +300,7 @@ fun HotelDetailScreen(
                                                 }
                                             },
                                             onClick = {
+                                                isNewTripSelected = false
                                                 selectedTrip = trip
                                                 dropdownExpanded = false
                                             }
@@ -383,7 +375,7 @@ fun HotelDetailScreen(
                             Toast.makeText(context, context.getString(R.string.hotel_detail_error_campos), Toast.LENGTH_SHORT).show()
                             return@Button
                         }
-                        val tripId = selectedTrip?.id ?: return@Button
+                        val tripId = if (isNewTripSelected) "new_trip" else (selectedTrip?.id ?: return@Button)
                         viewModel.bookRoom(
                             hotel = hotel,
                             room = room,
@@ -394,7 +386,7 @@ fun HotelDetailScreen(
                             selectedTripId = tripId
                         ) {}
                     },
-                    enabled = bookingState !is BookingState.Loading && selectedTrip != null && isDatesValid,
+                    enabled = bookingState !is BookingState.Loading && isDatesValid,
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Text(stringResource(id = R.string.hotel_detail_confirmar_reserva), color = Color.White)
