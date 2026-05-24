@@ -56,9 +56,6 @@ El desarrollo ha respetado estrictamente el patrón Repository, la arquitectura 
 * **Esquema de datos cambiante a mitad de sprint:** No prever la necesidad de almacenar la imagen de la habitación para el carrete de fotos modal de la lista de reservas nos obligó a realizar una migración destructiva de la base de datos Room a la versión 5. Esto provocó pérdida de datos de prueba locales y ralentizó las pruebas integradas manuales.
 * **Dependencia extrema de la API para las imágenes:** Si la API externa no está disponible, no solo fallan las reservas, sino que la visualización del carrete en las reservas previas se ve afectada al depender de URLs externas activas.
 
-### Qué mejoraremos en el próximo sprint
-* **Diseño previo de esquemas y migraciones:** Dedicaremos una fase inicial de diseño de la base de datos para planificar todas las columnas y relaciones de tablas necesarias, evitando migraciones destructivas a mitad del desarrollo.
-* **Manejo avanzado de estados offline:** Implementaremos estrategias de acache local más robustas y placeholders visuales de error para que la UI no se rompa o se vea vacía en caso de fallos de red.
 
 ---
 
