@@ -61,8 +61,8 @@ fun SobreNosotrosScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(16.dp))
 
             GlassCard(title = stringResource(id = R.string.sobre_tecnica_titulo)) {
-                InfoRowModern(stringResource(id = R.string.sobre_version), "3.0.0")
-                InfoRowModern(stringResource(id = R.string.sobre_sprint), "03")
+                InfoRowModern(stringResource(id = R.string.sobre_version), "4.0.0")
+                InfoRowModern(stringResource(id = R.string.sobre_sprint), "04")
                 InfoRowModern(stringResource(id = R.string.sobre_build), "100")
                 InfoRowModern(stringResource(id = R.string.sobre_plataforma), "Android")
                 InfoRowModern(stringResource(id = R.string.sobre_min_sdk), "24")
@@ -134,7 +134,7 @@ fun HeroHeader(navController: NavHostController) {
             )
 
             Text(
-                text = "v3.0.0 · Sprint 03",
+                text = "v4.0.0 · Sprint 04",
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.primary,
                 fontSize = 13.sp
