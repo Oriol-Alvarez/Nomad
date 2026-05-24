@@ -298,8 +298,19 @@ class TripListViewModel @Inject constructor(
                     budget = newBudget
                 )
 
-                // Update the trip in Room
-                tripRepository.updateTrip(updatedTrip)
+                // Check if there are no activities in the itinerary to delete the trip if it becomes empty
+                try {
+                    val activities = itineraryRepository.getItineraryItemsForTrip(trip.id).first()
+                    if (activities.isEmpty()) {
+                        Log.d(TAG_DB, "El viaje no tiene actividades en el itinerario. Eliminándolo.")
+                        tripRepository.deleteTrip(trip.id)
+                    } else {
+                        tripRepository.updateTrip(updatedTrip)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG_DB, "Error comprobando actividades al cancelar reserva, actualizando viaje por defecto", e)
+                    tripRepository.updateTrip(updatedTrip)
+                }
             }
         }
     }
