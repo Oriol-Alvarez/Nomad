@@ -17,4 +17,5 @@ object Routes {
     const val HOTEL_SEARCH = "hotel_search"
     const val HOTEL_DETAIL = "hotel_detail"
     const val RESERVAS_HOTELES = "reservas_hoteles"
+    const val RESERVATIONS_LIST = "reservations_list"
 }

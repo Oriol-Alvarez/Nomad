@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,6 +35,7 @@ fun ReservationsListScreen(
     selectedCurrency: String,
     viewModel: HotelViewModel
 ) {
+    // Importante: collectAsState requiere import androidx.compose.runtime.collectAsState
     val reservations by viewModel.localReservations.collectAsState()
     val context = LocalContext.current
 
@@ -153,7 +153,7 @@ fun ReservationCard(
             Column {
                 val imageSource = if (!trip.hotelImageUrl.isNullOrEmpty()) {
                     trip.hotelImageUrl
-                } else if (!trip.imageUri.isEmpty()) {
+                } else if (trip.imageUri.isNotEmpty()) {
                     trip.imageUri
                 } else {
                     R.drawable.viaje_predefinido
@@ -223,7 +223,6 @@ fun ReservationCard(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Related trip badge
                     Surface(
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
                         shape = RoundedCornerShape(6.dp)

@@ -14,7 +14,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,7 +33,7 @@ class HotelViewModel @Inject constructor(
     private val _bookingState = MutableStateFlow<BookingState>(BookingState.Idle)
     val bookingState: StateFlow<BookingState> = _bookingState.asStateFlow()
 
-    private fun parseTripDate(dateString: String): java.util.Date? {
+    private fun parseTripDate(dateString: String): Date? {
         val formatos = listOf("yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy")
         for (patron in formatos) {
             try {
@@ -78,8 +77,12 @@ class HotelViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val localReservations: StateFlow<List<Trip>> = activeTrips.map { list ->
+        list.filter { it.hasReservation }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     init {
-        // Pre-populate with dates: today and tomorrow
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val today = Date()
         val tomorrow = Date(today.time + (1000 * 60 * 60 * 24))
@@ -140,7 +143,6 @@ class HotelViewModel @Inject constructor(
                     guestEmail = guestEmail
                 )
 
-                // Update selected Trip in Room
                 val trip = tripRepository.getTripById(selectedTripId)
                 if (trip != null) {
                     val nights = calculateNights(start, end)
@@ -160,8 +162,6 @@ class HotelViewModel @Inject constructor(
                     trip.reservationEndDate = end
                     trip.guestName = guestName
                     trip.guestEmail = guestEmail
-                    
-                    // Increment trip budget with hotel cost
                     trip.budget = trip.budget + totalCost
 
                     tripRepository.updateTrip(trip)
@@ -171,6 +171,46 @@ class HotelViewModel @Inject constructor(
                 onSuccess()
             } catch (e: Exception) {
                 _bookingState.value = BookingState.Error(e.localizedMessage ?: "Error al reservar la habitación")
+            }
+        }
+    }
+
+    fun cancelReservation(
+        trip: Trip,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val reservationId = trip.reservationId
+                if (reservationId != null) {
+                    // Usamos cancelReservationById que solo requiere el ID
+                    hotelRepository.cancelReservationById(reservationId)
+                }
+                
+                val nights = calculateNights(trip.reservationStartDate ?: "", trip.reservationEndDate ?: "")
+                val totalCost = nights * trip.roomPrice
+                trip.budget = (trip.budget - totalCost).coerceAtLeast(0.0)
+                
+                trip.hasReservation = false
+                trip.reservationId = null
+                trip.hotelId = null
+                trip.hotelName = null
+                trip.hotelAddress = null
+                trip.hotelRating = 0
+                trip.hotelImageUrl = null
+                trip.roomId = null
+                trip.roomType = null
+                trip.roomPrice = 0.0
+                trip.reservationStartDate = null
+                trip.reservationEndDate = null
+                trip.guestName = null
+                trip.guestEmail = null
+
+                tripRepository.updateTrip(trip)
+                onSuccess()
+            } catch (e: Exception) {
+                onError(e.localizedMessage ?: "Error al cancelar la reserva")
             }
         }
     }
@@ -197,6 +237,7 @@ class HotelViewModel @Inject constructor(
     }
 
     fun calculateNights(start: String, end: String): Int {
+        if (start.isBlank() || end.isBlank()) return 1
         try {
             val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
             val startDateObj = sdf.parse(start)
@@ -206,9 +247,7 @@ class HotelViewModel @Inject constructor(
                 val nights = (diff / (1000 * 60 * 60 * 24)).toInt()
                 return if (nights > 0) nights else 1
             }
-        } catch (e: Exception) {
-            // fallback
-        }
+        } catch (e: Exception) { }
         return 1
     }
 }
