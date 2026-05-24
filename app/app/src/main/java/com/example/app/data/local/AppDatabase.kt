@@ -12,7 +12,7 @@ import com.example.app.domain.TripImage
 
 @Database(
     entities = [Trip::class, ItineraryItem::class, User::class, AccessLog::class, TripImage::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

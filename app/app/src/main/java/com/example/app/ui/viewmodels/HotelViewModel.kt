@@ -143,6 +143,8 @@ class HotelViewModel @Inject constructor(
                 val nights = calculateNights(start, end)
                 val totalCost = nights * room.price
                 val hotelImageUrlFull = if (hotel.imageUrl.startsWith("http")) hotel.imageUrl else "http://15.224.84.148:8090${hotel.imageUrl}"
+                val roomImgUrl = room.images.firstOrNull() ?: ""
+                val roomImageUrlFull = if (roomImgUrl.startsWith("http")) roomImgUrl else if (roomImgUrl.isNotEmpty()) "http://15.224.84.148:8090$roomImgUrl" else ""
 
                 if (selectedTripId == "new_trip") {
                     val currentUserId = authRepository.getCurrentUser()?.uid ?: ""
@@ -173,7 +175,8 @@ class HotelViewModel @Inject constructor(
                         reservationStartDate = start,
                         reservationEndDate = end,
                         guestName = guestName,
-                        guestEmail = guestEmail
+                        guestEmail = guestEmail,
+                        roomImageUrl = roomImageUrlFull
                     )
                     tripRepository.insertTrip(newTrip)
                 } else {
@@ -195,7 +198,8 @@ class HotelViewModel @Inject constructor(
                             reservationEndDate = end,
                             guestName = guestName,
                             guestEmail = guestEmail,
-                            budget = trip.budget + totalCost
+                            budget = trip.budget + totalCost,
+                            roomImageUrl = roomImageUrlFull
                         )
                         tripRepository.updateTrip(updatedTrip)
                     }

@@ -37,7 +37,8 @@ data class Trip(
     var reservationStartDate: String? = null,
     var reservationEndDate: String? = null,
     var guestName: String? = null,
-    var guestEmail: String? = null
+    var guestEmail: String? = null,
+    var roomImageUrl: String? = null
 ) {
     @Ignore
     var images: MutableList<Image> = mutableListOf()

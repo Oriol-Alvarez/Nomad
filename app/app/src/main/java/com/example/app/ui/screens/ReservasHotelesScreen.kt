@@ -11,6 +11,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Hotel
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.ui.window.Dialog
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.*
@@ -44,6 +48,7 @@ fun ReservasHotelesScreen(
 ) {
     val reservations by viewModel.hotelReservations.collectAsState(initial = emptyList())
     var reservationToDelete by remember { mutableStateOf<Trip?>(null) }
+    var reservationForGallery by remember { mutableStateOf<Trip?>(null) }
 
     Scaffold(
         bottomBar = { BottomNavigationBar(navController) },
@@ -136,6 +141,7 @@ fun ReservasHotelesScreen(
                         ReservaCardItem(
                             trip = trip,
                             selectedCurrency = selectedCurrency,
+                            onCardClick = { reservationForGallery = trip },
                             onDeleteClick = { reservationToDelete = trip }
                         )
                     }
@@ -183,12 +189,138 @@ fun ReservasHotelesScreen(
             containerColor = MaterialTheme.colorScheme.background
         )
     }
+
+    // Diálogo de Carrusel de Fotos (Hotel y Habitación)
+    if (reservationForGallery != null) {
+        val trip = reservationForGallery!!
+        val rawHotelImg = trip.hotelImageUrl ?: ""
+        val hotelImgUrl = if (rawHotelImg.startsWith("http")) rawHotelImg else "http://15.224.84.148:8090$rawHotelImg"
+        val rawRoomImg = trip.roomImageUrl ?: ""
+        val roomImgUrl = if (rawRoomImg.startsWith("http")) rawRoomImg else "http://15.224.84.148:8090$rawRoomImg"
+
+        val images = listOfNotNull(
+            hotelImgUrl.takeIf { rawHotelImg.isNotEmpty() },
+            roomImgUrl.takeIf { rawRoomImg.isNotEmpty() }
+        )
+
+        var currentImageIndex by remember { mutableStateOf(0) }
+
+        Dialog(onDismissRequest = { reservationForGallery = null }) {
+            Card(
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(350.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (images.isNotEmpty()) {
+                        val currentImg = images[currentImageIndex]
+                        AsyncImage(
+                            model = currentImg,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        // Barra inferior con títulos e indicador de página
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                                .background(Color.Black.copy(alpha = 0.6f))
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (currentImageIndex == 0) "Foto del Hotel" else "Foto de la Habitación",
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+                                Text(
+                                    text = "${currentImageIndex + 1} / ${images.size}",
+                                    color = Color.White.copy(alpha = 0.8f),
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+
+                        // Flechas de navegación
+                        if (images.size > 1) {
+                            IconButton(
+                                onClick = {
+                                    currentImageIndex = (currentImageIndex - 1 + images.size) % images.size
+                                },
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .padding(8.dp)
+                                    .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Anterior",
+                                    tint = Color.White
+                                )
+                            }
+
+                            IconButton(
+                                onClick = {
+                                    currentImageIndex = (currentImageIndex + 1) % images.size
+                                },
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
+                                    .padding(8.dp)
+                                    .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                    contentDescription = "Siguiente",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("No hay fotos disponibles para esta reserva")
+                        }
+                    }
+
+                    // Botón de cerrar
+                    IconButton(
+                        onClick = { reservationForGallery = null },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                            .size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Cerrar",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
 fun ReservaCardItem(
     trip: Trip,
     selectedCurrency: String,
+    onCardClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
     // Resolver URL completa de la imagen del hotel
@@ -199,7 +331,8 @@ fun ReservaCardItem(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        onClick = onCardClick
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             Row(
